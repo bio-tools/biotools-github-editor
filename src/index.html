@@ -11,9 +11,39 @@
 	</br>
 	<div>
 	<p>SEARCH A TOOL</p>
+	
+	<table id="search_table">
+		<tr>
+			<td>
+	<FORM>
+	<SELECT  id="tool_list" size="1">
+	<OPTION>No tools found
+	</SELECT>
+	</FORM>
+			</td>
+			<td>
+	<input type="button" id="btn_show" value="show" hidden>
+			</td>
+		</tr>
+		<tr>
+			<td>
 	<input type="text" id="search_tool" value="">
+			</td>
+			<td>
 	<input type="button" id="btn_search" value="search">
-	<input type="button" id="btn_send" value="send" hidden>
+			</td>
+		</tr>
+	</table>
+	<table id="modif_table" hidden>
+		<tr>
+			<td>
+	<input type="button" id="btn_send" value="send modif">
+			</td>
+			<td>
+	<input type="button" id="btn_cancel" value="search an other tool">
+			</td>
+		</tr>
+	</table>
 	</div>
 
 	<div>
@@ -24,20 +54,6 @@
 	</br></br>
 	<hr>
 	</br>
-	<p> TEST ZONE</p>
-	</br>
-	<div>
-	<table>
-		<tr>
-			<td>Tool Name: </td>
-			<td><p id="name_value">NAME</p><input type="text" id="name_value_edit" hidden value=""></td>
-			<!--td id="name_edit"> (✎)</td--><td id="name_validate" hidden> (✓)</td>
-		</tr>
-		<tr>
-			<td>	<input type="button" id="send_modif" value="Send modif" hidden>	</td>
-		</tr>
-	</table>
-	</div>
 
 	<script src="./index.js"></script>
     </body>

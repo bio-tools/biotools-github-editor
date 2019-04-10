@@ -26,7 +26,7 @@ function modif(nom,valeur) {
   	$name_value.text( valeur);
 }
 
-// ///////
+// ////////////////////
 
 function search_tool(print_tool){
 	var $search_tool = $('#search_tool');
@@ -34,10 +34,27 @@ function search_tool(print_tool){
 	console.log($tool_name);
 	repo.getContents('master','data/'+$tool_name+'/'+$tool_name+'.json',true, function(req, res) {
 	store_entry(res);
+	//store_modif([]);
 	print_tool(res);	
 	});
 
 }
+
+function show_tool(print_tool){
+	var $tool_list = $('#tool_list');
+	var $tool_name = $tool_list.val()
+	console.log($tool_name);
+	repo.getContents('master','data/'+$tool_name+'/'+$tool_name+'.json',true, function(req, res) {
+	store_entry(res);
+	//store_modif([]);
+	print_tool(res);	
+	});
+
+}
+
+
+
+// ////////////////////
 
 function print_tool(entry){
 	var $tool_content = $('#tool_content');
@@ -55,27 +72,35 @@ function print_tool(entry){
         $modifcell.on('click', function(event) {
 	    modif_value(this.id);
         });
+	var $newcell = $('p.new');
+        $newcell.on('click', function(event) {
+	    alert("you can't add a new value for now");
+		//modif_value(this.id);
+        });
+
 }
 
 
 function val_to_table(entry,id=""){
-	if (entry == null) {
-		return "<td><p id=\""+id+"\">null</p></td>"
-	}
-	else if (entry == ""){
-		if (Array.isArray(entry)){
-			return "<td><p id=\""+id+"\">[]</p></td>"
+	var value_to_print="";
+	if ((entry == "") || (entry == null)){
+		var val=""
+		if (entry == null){
+		  val="null"
+		}
+		else if (Array.isArray(entry)){
+		  val="[]"
 		}
 		else {
-			return "<td><p id=\""+id+"\"></p></td>"
+		  val="empty"
 		}
+		value_to_print += "<td class=\"none\"><p id=\""+id+"\" class=\"new\">"+val+"</p></td>"
+	        value_to_print += "<td id=\""+id+"_status\">⚪</td>";
 	}
-	var value_to_print="";
-	if (Array.isArray(entry)){
+	else if (Array.isArray(entry)){
 		value_to_print += "<td><table>";
 		for (var key in entry) {
 			 value_to_print += "<tr>"
-			 //value_to_print += val_to_table(key)
 			 value_to_print += val_to_table(entry[key],id+"___"+key)
 			 value_to_print += "</tr>"
 		}
@@ -137,25 +162,39 @@ function modif_value(id){
     $new_html += "<input type=\"text\" id=\""+id+"\" class=value_edit value=\""+$v+"\">";//</td>";
     $value.replaceWith($new_html);
     var $value_status = $('#'+id+'_status');
-    var $new_html = "<td id=\""+id+"_status\"> ✔️ </td>";
+    var $new_html = "<td id=\""+id+"_status\">✔️</td>";
     $value_status.replaceWith($new_html);
     var $value_status = $('#'+id+'_status');
     $value_status.on('click', function(event) {
         var $value_new = $('#'+id);
-        var $v = $value_new.val();
-	var entry=get_stored_entry();
-        entry = modif_dict(entry,liste[0],liste,$v)
-        store_entry(entry);
-        var $new_html = "";
+        var $new_v = $value_new.val();
+	var $new_html = "";
             $new_html += "<p id=\""+id+"\" class=value >";
-            $new_html += $v;
+            $new_html += $new_v;
             $new_html += "</p>";//</td>";
         $value_new.replaceWith($new_html);
+	if ($v != $new_v ){
+	    var entry=get_stored_entry();
+	    //var liste_modif=Array.from(liste);
+            entry = modif_dict(entry,liste[0],liste,$new_v)
+    	    store_entry(entry);
+	    //var modif_entry=get_stored_modif();
+	    //var modif_object = [];
+	    //modif_object[liste_modif[0]]=entry[liste_modif[0]];
+	    //modif_object=modif_dict(modif_object,liste_modif[0],liste_modif,$v);
+            //modif_entry.push(modif_object);
+	    //store_modif(modif_entry);
+            var new_status = "🆕";
+	}
+	else {
+	    var new_status = "🔵";
+	}
         var $value_status = $('#'+id+"_status");
-        var $new_html = "";  
-            $new_html += "<td id=\""+id+"_status\">🆕</td>";
+        var $new_html = "";
+        $new_html += "<td id=\""+id+"_status\">"+new_status+"</td>";
         $value_status.replaceWith($new_html);
-	var $modifcell = $('p.value');
+	
+        var $modifcell = $('p.value');
 	$modifcell.unbind('click').on('click', function(event) {
 	    modif_value(this.id);
         });
@@ -167,48 +206,114 @@ function modif_value(id){
 
 function send_modif(){
 	var my_bt_entry=get_stored_entry();
-	var file_name=my_bt_entry['name']+".json"
+	var tool_name=my_bt_entry['name'];
+	var file_name=tool_name+".json";
+	var branch_name="new_"+tool_name+"_"+Date.now();
+	var branch_to_push="dev";
 	my_bt_entry=JSON.stringify(my_bt_entry, null, " ");
-	repo.writeFile('dev',file_name,my_bt_entry,'Write in '+file_name,{})
-	alert("file writed in https://github.com/ValentinMarcon/TESTAPI/blob/dev/"+file_name);
+	repo.createBranch(branch_to_push,branch_name,function(){
+		repo.writeFile(branch_name,file_name,my_bt_entry,'Write in '+file_name,{},function(){
+			alert("file writed in https://github.com/ValentinMarcon/TESTAPI/blob/"+branch_name+"/"+file_name);  //catch error...
+			repo.createPullRequest({
+			  "title": "Update/create "+file_name,
+			  "body": "Please pull this in!",
+			  "head": branch_name,
+			  "base": branch_to_push
+			});
+		
+		});
+	});
 }
 
-function get_stored_entry(format="obj"){
-/*	if (format == "text"){
-		var stored=sessionStorage.getItem("biotools_entry");
-		if (stored) return(stored.);
-		else alert ("No biotools_entry stored"); // retourner code erreur
-	}
-	else {*/
-		var stored=sessionStorage.getItem("biotools_entry");
-		if (stored) return(JSON.parse(stored));
-		else alert ("No biotools_entry stored"); // retourner code erreur
-/*	}*/
+function modif_mode(){
+	var $search_table = $('#search_table');
+	$search_table.hide();
+	var $modif_table = $('#modif_table');
+	$modif_table.show();
+}
+
+function search_mode(){
+	var $search_table = $('#search_table');
+	$search_table.show();
+	var $modif_table = $('#modif_table');
+	$modif_table.hide();
+	var $tool_content = $('#tool_content');
+	$tool_content.html("");
+}
+
+
+
+function get_stored_entry(){
+	var stored=sessionStorage.getItem("biotools_entry");
+	if (stored) return(JSON.parse(stored));
+	else alert ("No biotools_entry stored"); // retourner code erreur
 }
 
 function store_entry(entry){
 	    sessionStorage.setItem('biotools_entry',JSON.stringify(entry));
 }
+
+/*
+function get_stored_modif(){
+	var stored=sessionStorage.getItem("biotools_modif");
+	if (stored) return(JSON.parse(stored));
+	else alert ("No biotools_modif stored"); // retourner code erreur
+}
+
+function store_modif(modif_entry){
+	    sessionStorage.setItem('biotools_modif',JSON.stringify(modif_entry));
+}
+*/
 // ///////////////////////////:
 
 
 var $btn_search = $('#btn_search');
+var $btn_show = $('#btn_show');
+var $btn_cancel = $('#btn_cancel');
 var $btn_send = $('#btn_send');
+
 $btn_search.on('click', function(event) {
 	search_tool(print_tool);
-	$btn_send.show();
+	modif_mode();
 });
 
-/*var $modifcell = $('p.value');
-$modifcell.on('click', function(event) {
-    modif_value(this.id);
-});*/
+$btn_show.on('click', function(event) {
+	show_tool(print_tool);
+	modif_mode();
+});
+
+$btn_cancel.on('click', function(event) {
+	search_mode();
+});
 
 $btn_send.on('click', function(event) {
 	send_modif();
 });
 
 
+
+/*var $modifcell = $('p.value');
+$modifcell.on('click', function(event) {
+    modif_value(this.id);
+});*/
+
+// ///////
+function fill_tool_list(){
+	var $tool_list_obj = $('#tool_list');
+	$tool_list_obj.html();
+	repo.getContents('master','data',true, function(req, res) {		
+		for (var tools in res) {
+		    var $tool_name=res[tools]["name"];
+		    $tool_list_obj.append("<OPTION>"+$tool_name);
+		}
+		var $btn_show = $('#btn_show');
+		$btn_show.show();
+	});
+}
+fill_tool_list()
+
+
+// ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 
 repo.getContents('master','affypipe.json',true, function(req, res) {
@@ -249,21 +354,9 @@ $name_validate.on('click', function(event) {
 var $send_modif = $('#send_modif');
 $send_modif.on('click', function(event) {
     repo.writeFile('dev','affypipe.json',$name_value.text(),'modif affypipe.json',{});
-    alert($name_value.text() + " sendt to github");
+    alert($name_value.text() + " sent to github");
 });
 
 
 // ///////////////////////////////////////////////////////
 
-var $test = $('#test');
-var $test_value = $('#test_value');
-
-$test.on('click', function(event) {
-  var date = new Date(event.timeStamp);
-  $test_value.text( "You clik at " + date);
-});
-
-
-
-//repo.writeFile('master','README.md','## HELLO there2','test write in existing file',{})
-//$("div.foo").attr()
