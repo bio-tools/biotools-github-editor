@@ -1,66 +1,64 @@
-<!DOCTYPE html>
 <html>
-    <head>
-        <title>Page title</title>
-        <link rel="stylesheet" href="css/styles.css" />
-    </head>
-    <body>
-        <p id="page">PAGE</p>
-	</br>
-	<hr>
-	</br>
-	<div>
-	<p>SEARCH A TOOL</p>
-	
-	<table id="search_table">
-		<tr>
-			<td>
-	<FORM>
-	<SELECT  id="tool_list" size="1">
-	<OPTION>No tools found
-	</SELECT>
-	</FORM>
-			</td>
-			<td>
-	<input type="button" id="btn_show" value="show" hidden>
-			</td>
-		</tr>
-		<tr>
-			<td>
-	<input type="text" id="search_tool" value="">
-			</td>
-			<td>
-	<input type="button" id="btn_search" value="search">
-			</td>
-		</tr>
-	</table>
-	<table id="modif_table" hidden>
-		<tr>
-			<td>
-	<input type="button" id="btn_send" value="send modif">
-			</td>
-			<td>
-	<input type="button" id="btn_cancel" value="search an other tool">
-			</td>
-		</tr>
-	</table>
-	</div>
 
-	<div>
-	<table id="tool_content">
+<head>
+    <title>Page title</title>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
 
-	</table>
-	</div>
-	</br></br>
-	<hr>
-	</br>
-	<div hidden>
-	<p>TEST SECTION</p>
-	<input type="button" id="btn_request" value="REQUEST">
-	<a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">Login</a>
+<body>
+    <p id="page">PAGE</p>
+    </br>
+    <hr>
+    </br>
+    <div>
+        <p>SEARCH A TOOL</p>
+        <table id="search_table">
+            <tr>
+                <td>
+                    <FORM>
+                        <SELECT id="tool_list" size="1">
+                            <OPTION>No tools found
+                        </SELECT>
+                    </FORM>
+                </td>
+                <td>
+                    <input type="button" id="btn_select" value="select" hidden>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="text" id="search_tool" value="">
+                </td>
+                <td>
+                    <input type="button" id="btn_search" value="search">
+                </td>
+            </tr>
+        </table>
+        <table id="modif_table" hidden>
+            <tr>
+                <td>
+                    <input type="button" id="btn_send" value="send modif">
+                </td>
+                <td>
+                    <input type="button" id="btn_cancel" value="search an other tool">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div>
+        <table id="tool_content">
+        </table>
+    </div>
+    </br>
+    </br>
+    <hr>
+    </br>
+    <div hidden>
+        <p>TEST SECTION</p>
+        <input type="button" id="btn_request" value="REQUEST">
+        <a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">Login</a>
+    </div>
+    <script src="./index.js"></script>
+</body>
 
-	</div>
-
-	<script src="./index.js"></script>
-    </body>
 </html>

@@ -5,58 +5,110 @@ import bar, { foo } from "./fonctions";
 import fs from "fs"; 
 import request from "superagent";
 
+//foo() // Tests
+//bar()
+
+// ///////////////////////////////////
+// Github authentification:
+
+// Use a personal github OAUTH token
 var OAUTH = fs.readFileSync('./src/OAUTH', 'utf8');
 OAUTH = OAUTH.substring(0, OAUTH.length-1);
 
-foo()
-//bar()
-
-// basic auth
+// Basic auth
 var gh = new GitHub({
   username: 'ValentinMarcon',
   token: `${OAUTH}`
-  //token: "fdbd207cb03ade61a3f4f318b00be80d2b8bfd90"
 });
+
+// Get the repo where tools.json are stocked
 var repo = gh.getRepo('ValentinMarcon','TESTAPI');
 
-// /////////////////////////////////////////////////////////
+
+// ///////////////////////////////////
+// Buttons events:
+
+var $btn_search = $('#btn_search');
+var $btn_select = $('#btn_select');
+var $btn_cancel = $('#btn_cancel');
+var $btn_send = $('#btn_send');
+
+$btn_search.on('click', function(event) {
+	search_tool(print_tool);
+	modif_mode();
+});
+
+$btn_select.on('click', function(event) {
+	select_tool(print_tool);
+	modif_mode();
+});
+
+$btn_cancel.on('click', function(event) {
+	search_mode();
+});
+
+$btn_send.on('click', function(event) {
+	send_modif();
+});
+
+// ///////////////////////////////////
+// Fill the tool list:
+fill_tool_list()
 
 
+// ////////////////////////////////////////////////////
+// FUNCTIONS :
+// ////////////////////////////////////////////////////
 
-function modif(nom,valeur) {
-	var $name_value = $('#name_value');
-  	$name_value.text( valeur);
-}
 
-// ////////////////////
+// /////////////////
+// SEARCH_TOOL
+// Search a tool entry from the github repository
+//
+// TODO : Manage error (if tool_name dont exist)
 
 function search_tool(print_tool){
+	// Input text to search a tool
 	var $search_tool = $('#search_tool');
+	// Value entered by the user
 	var $tool_name = $search_tool.val()
 	console.log($tool_name);
+	// Get the corresponding json file on the data repository on Github (Cf Github authentifiation above)
 	repo.getContents('master','data/'+$tool_name+'/'+$tool_name+'.json',true, function(req, res) {
+	// Store the json entry in memory to manipulate the entry later
 	store_entry(res);
-	//store_modif([]);
+	//store_modif([]); //WIP: Try to store the modif added to the tool
 	print_tool(res);	
 	});
-
 }
 
-function show_tool(print_tool){
+// /////////////////
+// SELECT_TOOL
+// Select a tool entry from the github repository
+//
+// TODO : Manage error (if tool_name dont exist)
+// TODO : Merge with "search_tool"
+
+function select_tool(print_tool){
+	// Select tag to choose the tool to search
 	var $tool_list = $('#tool_list');
+	// Value selected by the user
 	var $tool_name = $tool_list.val()
 	console.log($tool_name);
+	// Get the corresponding json file on the data repository on Github (Cf Github authentifiation above)
 	repo.getContents('master','data/'+$tool_name+'/'+$tool_name+'.json',true, function(req, res) {
+	// Store the json entry in memory to manipulate the entry later
 	store_entry(res);
-	//store_modif([]);
+	//store_modif([]); //WIP: Try to store the modif added to the tool
 	print_tool(res);	
 	});
-
 }
 
-
-
-// ////////////////////
+// /////////////////
+// PRINT_TOOL
+// Print all json values into an html tanle
+//
+// TODO : Finish the doc 
 
 function print_tool(entry){
 	var $tool_content = $('#tool_content');
@@ -82,6 +134,11 @@ function print_tool(entry){
 
 }
 
+// /////////////////
+// VAL_TO_TABLE 
+// 
+//
+// TODO : Finish the doc 
 
 function val_to_table(entry,id=""){
 	var value_to_print="";
@@ -136,11 +193,11 @@ function val_to_table(entry,id=""){
 	return value_to_print;
 }
 
-
-
-
-// //////////
-
+// /////////////////
+// MODIF_DICT 
+// 
+//
+// TODO : Finish the doc 
 
 function modif_dict(entry,pos,tab_pos,value){
 	var new_tab_pos=tab_pos;
@@ -154,6 +211,12 @@ function modif_dict(entry,pos,tab_pos,value){
 	}
 	return new_entry
 }
+
+// /////////////////
+// MODIF_VALUE 
+// 
+//
+// TODO : Finish the doc 
 
 function modif_value(id){
     var motif =  /___/;
@@ -180,12 +243,14 @@ function modif_value(id){
 	    //var liste_modif=Array.from(liste);
             entry = modif_dict(entry,liste[0],liste,$new_v)
     	    store_entry(entry);
+	    // WIP WIP WIP WIP WIP WIP
 	    //var modif_entry=get_stored_modif();
 	    //var modif_object = [];
 	    //modif_object[liste_modif[0]]=entry[liste_modif[0]];
 	    //modif_object=modif_dict(modif_object,liste_modif[0],liste_modif,$v);
             //modif_entry.push(modif_object);
 	    //store_modif(modif_entry);
+	    // WIP WIP WIP WIP WIP WIP
             var new_status = "🆕";
 	}
 	else {
@@ -203,8 +268,11 @@ function modif_value(id){
     });
  }
 
-// ///////////////////////////:
-
+// /////////////////
+// SEND_MODIF
+// 
+//
+// TODO : Finish the doc 
 
 function send_modif(){
 	var my_bt_entry=get_stored_entry();
@@ -227,12 +295,24 @@ function send_modif(){
 	});
 }
 
+// /////////////////
+// MODIF_MODE 
+// 
+//
+// TODO : Finish the doc 
+
 function modif_mode(){
 	var $search_table = $('#search_table');
 	$search_table.hide();
 	var $modif_table = $('#modif_table');
 	$modif_table.show();
 }
+
+// /////////////////
+// SEARCH_MODE 
+// 
+//
+// TODO : Finish the doc 
 
 function search_mode(){
 	var $search_table = $('#search_table');
@@ -243,7 +323,11 @@ function search_mode(){
 	$tool_content.html("");
 }
 
-
+// /////////////////
+// GET_STORED_ENTRY 
+// 
+//
+// TODO : Finish the doc 
 
 function get_stored_entry(){
 	var stored=sessionStorage.getItem("biotools_entry");
@@ -251,9 +335,44 @@ function get_stored_entry(){
 	else alert ("No biotools_entry stored"); // retourner code erreur
 }
 
+// /////////////////
+// STORE_ENTRY 
+// 
+//
+// TODO : Finish the doc 
+
 function store_entry(entry){
 	    sessionStorage.setItem('biotools_entry',JSON.stringify(entry));
 }
+
+// /////////////////
+// FILL_TOOL_LIST 
+// 
+//
+// TODO : Finish the doc 
+
+function fill_tool_list(){
+	var $tool_list_obj = $('#tool_list');
+	$tool_list_obj.html();
+	repo.getContents('master','data',true, function(req, res) {		
+		for (var tools in res) {
+		    var $tool_name=res[tools]["name"];
+		    $tool_list_obj.append("<OPTION>"+$tool_name);
+		}
+		var $btn_select = $('#btn_select');
+		$btn_select.show();
+	});
+}
+
+// ////////////////////////////////////////////////////
+// WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP 
+
+
+// ///////////////// 
+// 
+// 
+//
+// TODO : Finish the doc 
 
 /*
 function get_stored_modif(){
@@ -267,49 +386,5 @@ function store_modif(modif_entry){
 }
 */
 
-// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-var $btn_search = $('#btn_search');
-var $btn_show = $('#btn_show');
-var $btn_cancel = $('#btn_cancel');
-var $btn_send = $('#btn_send');
-
-$btn_search.on('click', function(event) {
-	search_tool(print_tool);
-	modif_mode();
-});
-
-$btn_show.on('click', function(event) {
-	show_tool(print_tool);
-	modif_mode();
-});
-
-$btn_cancel.on('click', function(event) {
-	search_mode();
-});
-
-$btn_send.on('click', function(event) {
-	send_modif();
-});
-
-
-// //////////////////////////
-
-function fill_tool_list(){
-	var $tool_list_obj = $('#tool_list');
-	$tool_list_obj.html();
-	repo.getContents('master','data',true, function(req, res) {		
-		for (var tools in res) {
-		    var $tool_name=res[tools]["name"];
-		    $tool_list_obj.append("<OPTION>"+$tool_name);
-		}
-		var $btn_show = $('#btn_show');
-		$btn_show.show();
-	});
-}
-fill_tool_list()
-
-
-// ///////////////////////////////////////////////////////
+// WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
+// ////////////////////////////////////////////////////
