@@ -106,12 +106,14 @@ function select_tool(print_tool){
 
 // /////////////////
 // PRINT_TOOL
-// Print all json values into an html tanle
+// Print all json values into a table (html)
 //
-// TODO : Finish the doc 
+// TODO : Manage new content 
 
 function print_tool(entry){
+	// Select table to add the tool content
 	var $tool_content = $('#tool_content');
+	// For every data of the tool entry, print it in a line in the table
 	for (var key in entry) {
 	    if (entry.hasOwnProperty(key)) {
 		var new_line = ""
@@ -122,26 +124,31 @@ function print_tool(entry){
 		$tool_content.append(new_line);
 	    }
 	}
+	// Table cell that could be modified are selected thanks to the id "value"
 	var $modifcell = $('p.value');
         $modifcell.on('click', function(event) {
 	    modif_value(this.id);
         });
+	// Table cell that could have a new entry are selected thanks to the id "new"
 	var $newcell = $('p.new');
         $newcell.on('click', function(event) {
 	    alert("you can't add a new value for now");
-		//modif_value(this.id);
+	    // WIP
+	    //modif_value(this.id); 
         });
 
 }
 
 // /////////////////
 // VAL_TO_TABLE 
-// 
+// Recursive function to create table cells 
+// according to the format of the entry
+// (Null/""; Array; String; Dict)
 //
-// TODO : Finish the doc 
 
 function val_to_table(entry,id=""){
 	var value_to_print="";
+	// If there is an empty entry, create a cell with the 'new' class and a cell with a blank indicator
 	if ((entry == "") || (entry == null)){
 		var val=""
 		if (entry == null){
@@ -156,6 +163,7 @@ function val_to_table(entry,id=""){
 		value_to_print += "<td class=\"none\"><p id=\""+id+"\" class=\"new\">"+val+"</p></td>"
 	        value_to_print += "<td id=\""+id+"_status\">⚪</td>";
 	}
+	// If the entry is an array, create a new inner table and recall the function for every sub-entry
 	else if (Array.isArray(entry)){
 		value_to_print += "<td><table>";
 		for (var key in entry) {
@@ -165,20 +173,24 @@ function val_to_table(entry,id=""){
 		}
 		value_to_print += "</table></td>";
 	}
+	// If the entry is a string:
+	//   IF "id" is empty it mean that this is the key ('label' class) 
+	//   ELSE create a cell with the 'value' class and a blue indicator (meaning 'unmodified')
 	else if (typeof entry == "string"){
 		if (id == ""){
 		    value_to_print += "<td><p class=label>";
+                    value_to_print += entry;
+		    value_to_print += "</p></td>";
 		}
 		else {
 		    value_to_print += "<td id=\""+id+"_td\">"
 		    value_to_print += "<p id=\""+id+"\" class=value>";
-		}
-		value_to_print += entry;
-		value_to_print += "</p></td>";
-		if (id != ""){
+		    value_to_print += entry;
+		    value_to_print += "</p></td>";
 	            value_to_print += "<td id=\""+id+"_status\">🔵</td>";
 		}
 	}
+	// Else, entry is (probably) a dict, recall the function
 	else{
 		value_to_print += "<td><table>"
 		for (var key in entry) {
@@ -195,17 +207,23 @@ function val_to_table(entry,id=""){
 
 // /////////////////
 // MODIF_DICT 
-// 
+// Recursive function to add modif made by the user 
+// to the dict loaded from the github json.
+// In input its take the dict (entry), the current position on the dict (pos),
+// the table of position to have the position of the entry if its a complex dict (tab_pos),
+// the value to add to the dict (value).
 //
-// TODO : Finish the doc 
 
 function modif_dict(entry,pos,tab_pos,value){
 	var new_tab_pos=tab_pos;
 	new_tab_pos.shift();
 	var new_entry=entry;
+	// While we don't arrived to the end of the table we relaunch the function with next pos entry (deeper in the dict) 
 	if (new_tab_pos.length != 0) {
 		new_entry[pos]=modif_dict(new_entry[pos],tab_pos[0],new_tab_pos,value);
 	}
+	// Here we arrived to the position to insert the value
+	// We insert it and return then the entry modified
 	else {
 		new_entry[pos]=value;
 	}
@@ -220,16 +238,23 @@ function modif_dict(entry,pos,tab_pos,value){
 
 function modif_value(id){
     var motif =  /___/;
+    // Get the position liste of the value from the id (Cf. "val_to_table")
     var liste = id.split(motif);
-    var $value = $('#'+id);
+    // Select the tag with this id
+    var $value = $('#'+id);i
+    // Get the original value on this tag
     var $v = $value.text();
+    // Transform the tag to an input with the original value
     var $new_html = ""
     $new_html += "<input type=\"text\" id=\""+id+"\" class=value_edit value=\""+$v+"\">";//</td>";
     $value.replaceWith($new_html);
+    // Change the indicator status to have a clickable symbol to validate the modification
     var $value_status = $('#'+id+'_status');
     var $new_html = "<td id=\""+id+"_status\">✔️</td>";
     $value_status.replaceWith($new_html);
     var $value_status = $('#'+id+'_status');
+
+    // Function to manage modification of the value
     $value_status.on('click', function(event) {
         var $value_new = $('#'+id);
         var $new_v = $value_new.val();
@@ -238,21 +263,24 @@ function modif_value(id){
             $new_html += $new_v;
             $new_html += "</p>";//</td>";
         $value_new.replaceWith($new_html);
+	// If the value is different from the original
+	// we store it and change the status to "new"
 	if ($v != $new_v ){
 	    var entry=get_stored_entry();
-	    //var liste_modif=Array.from(liste);
+	    //var liste_modif=Array.from(liste); // WIP
             entry = modif_dict(entry,liste[0],liste,$new_v)
     	    store_entry(entry);
-	    // WIP WIP WIP WIP WIP WIP
+	    // WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
 	    //var modif_entry=get_stored_modif();
 	    //var modif_object = [];
 	    //modif_object[liste_modif[0]]=entry[liste_modif[0]];
 	    //modif_object=modif_dict(modif_object,liste_modif[0],liste_modif,$v);
             //modif_entry.push(modif_object);
 	    //store_modif(modif_entry);
-	    // WIP WIP WIP WIP WIP WIP
+	    // WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
             var new_status = "🆕";
 	}
+	// Else we keep the blue ("original") status
 	else {
 	    var new_status = "🔵";
 	}
@@ -260,35 +288,43 @@ function modif_value(id){
         var $new_html = "";
         $new_html += "<td id=\""+id+"_status\">"+new_status+"</td>";
         $value_status.replaceWith($new_html);
-	
+
+	// Rebind the modif function to the tag
         var $modifcell = $('p.value');
 	$modifcell.unbind('click').on('click', function(event) {
 	    modif_value(this.id);
         });
     });
- }
+}
 
 // /////////////////
 // SEND_MODIF
-// 
+// 1) Get the stored entry (modified by the user)
+// 2) Create a new branch on the github repo from the "dev" branch
+// 3) Write a file in this new branch with this new entry
+// 4) Make a pull request to the dev branch
 //
-// TODO : Finish the doc 
+// TODO : IMprove user experience and error management
 
 function send_modif(){
+	// 1)
 	var my_bt_entry=get_stored_entry();
 	var tool_name=my_bt_entry['name'];
 	var file_name=tool_name+".json";
 	var branch_name="new_"+tool_name+"_"+Date.now();
-	var branch_to_push="dev";
+	var branch_origin="dev";
 	my_bt_entry=JSON.stringify(my_bt_entry, null, " ");
-	repo.createBranch(branch_to_push,branch_name,function(){
+	// 2)
+	repo.createBranch(branch_origin,branch_name,function(){
+		// 3)
 		repo.writeFile(branch_name,file_name,my_bt_entry,'Write in '+file_name,{},function(){
-			alert("file writed in https://github.com/ValentinMarcon/TESTAPI/blob/"+branch_name+"/"+file_name);  //catch error...
+			// 4)
+			alert("file writed in https://github.com/ValentinMarcon/TESTAPI/blob/"+branch_name+"/"+file_name);  // TODO catch error...
 			repo.createPullRequest({
 			  "title": "Update/create "+file_name,
 			  "body": "Please pull this in!",
 			  "head": branch_name,
-			  "base": branch_to_push
+			  "base": branch_origin
 			});
 		
 		});
@@ -297,9 +333,9 @@ function send_modif(){
 
 // /////////////////
 // MODIF_MODE 
-// 
+// - Hide the search table
+// - Show the modif table
 //
-// TODO : Finish the doc 
 
 function modif_mode(){
 	var $search_table = $('#search_table');
@@ -310,9 +346,10 @@ function modif_mode(){
 
 // /////////////////
 // SEARCH_MODE 
-// 
+// - Show the search table
+// - Hide the modif table
+// - Empty the tool content tag
 //
-// TODO : Finish the doc 
 
 function search_mode(){
 	var $search_table = $('#search_table');
@@ -325,9 +362,8 @@ function search_mode(){
 
 // /////////////////
 // GET_STORED_ENTRY 
-// 
+// Recover the stored "biotools_entry" 
 //
-// TODO : Finish the doc 
 
 function get_stored_entry(){
 	var stored=sessionStorage.getItem("biotools_entry");
@@ -337,9 +373,8 @@ function get_stored_entry(){
 
 // /////////////////
 // STORE_ENTRY 
-// 
+// Save the "biotools_entry" 
 //
-// TODO : Finish the doc 
 
 function store_entry(entry){
 	    sessionStorage.setItem('biotools_entry',JSON.stringify(entry));
@@ -347,7 +382,8 @@ function store_entry(entry){
 
 // /////////////////
 // FILL_TOOL_LIST 
-// 
+// Get the list of tool in the data repository 
+// Append the tools name as options of the select section "tool_list"
 //
 // TODO : Finish the doc 
 
