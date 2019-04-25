@@ -1,7 +1,7 @@
 import GitHub from "github-api";
 import Repository from "github-api";
 import $ from "jquery";
-import bar, { foo } from "./fonctions";
+//import bar, { foo } from "./fonctions";
 import fs from "fs"; 
 import request from "superagent";
 
@@ -14,6 +14,11 @@ import request from "superagent";
 // Use a personal github OAUTH token
 var OAUTH = fs.readFileSync('./src/OAUTH', 'utf8');
 OAUTH = OAUTH.substring(0, OAUTH.length-1);
+
+// Use OAUTH asked by log page
+//const OAUTH = sessionStorage.getItem("access_token");
+//console.log(OAUTH);
+//
 
 // Basic auth
 var gh = new GitHub({
@@ -185,6 +190,17 @@ function val_to_table(entry,id=""){
 		else {
 		    value_to_print += "<td id=\""+id+"_td\">"
 		    value_to_print += "<p id=\""+id+"\" class=value>";
+
+			//TODO En faire une fonction :
+			// Faire regex
+			// Si ~http://edamontology.org faire un lien <A>
+			//
+	        	var regex_website=/^http[s]?:\/\/\S*$/;
+                	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
+			if (regex_website.test(entry)){
+		    		entry="<a href=\"" + entry + "\" target=\"_blank\">" + entry + "</a>";
+			}
+
 		    value_to_print += entry;
 		    value_to_print += "</p></td>";
 	            value_to_print += "<td id=\""+id+"_status\">🔵</td>";
@@ -199,7 +215,7 @@ function val_to_table(entry,id=""){
 			value_to_print += val_to_table(entry[key],id+"___"+key)
 			value_to_print += "</tr>"
 		}
-		value_to_print += "<table></td>"
+		value_to_print += "</table></td>"
 
 	}
 	return value_to_print;
@@ -241,7 +257,7 @@ function modif_value(id){
     // Get the position liste of the value from the id (Cf. "val_to_table")
     var liste = id.split(motif);
     // Select the tag with this id
-    var $value = $('#'+id);i
+    var $value = $('#'+id);
     // Get the original value on this tag
     var $v = $value.text();
     // Transform the tag to an input with the original value
