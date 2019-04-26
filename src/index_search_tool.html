@@ -12,7 +12,7 @@
     </br>
     <div>
         <p>SEARCH A TOOL</p>
-        <table id="search_table">
+        <table class="search_table">
             <tr>
                 <td>
                     <FORM>
@@ -22,7 +22,7 @@
                     </FORM>
                 </td>
                 <td>
-                    <input type="button" id="btn_select" value="select" hidden>
+                    <input type="button" class="btn_select" value="select" hidden>
                 </td>
             </tr>
             <tr>
@@ -30,17 +30,17 @@
                     <input type="text" id="search_tool" value="">
                 </td>
                 <td>
-                    <input type="button" id="btn_search" value="search">
+                    <input type="button" class="btn_search" value="search">
                 </td>
             </tr>
         </table>
-        <table id="modif_table" hidden>
+        <table class="modif_table" hidden>
             <tr>
                 <td>
-                    <input type="button" id="btn_send" value="send modif">
+                    <input type="button" class="btn_send" value="send modif">
                 </td>
                 <td>
-                    <input type="button" id="btn_cancel" value="search an other tool">
+                    <input type="button" class="btn_cancel" value="search an other tool">
                 </td>
             </tr>
         </table>
@@ -49,13 +49,23 @@
         <table id="tool_content">
         </table>
     </div>
+    <table class="modif_table" hidden>
+        <tr>
+            <td>
+                <input type="button" class="btn_send" value="send modif">
+            </td>
+            <td>
+                <input type="button" class="btn_cancel" value="search an other tool">
+            </td>
+        </tr>
+    </table>
     </br>
     </br>
     <hr>
     </br>
     <div hidden>
         <p>TEST SECTION</p>
-        <input type="button" id="btn_request" value="REQUEST">
+        <input type="button" class="btn_request" value="REQUEST">
         <a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">Login</a>
     </div>
     <script src="./index_search_tool.js"></script>

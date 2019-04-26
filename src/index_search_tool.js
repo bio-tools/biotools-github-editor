@@ -33,10 +33,10 @@ var repo = gh.getRepo('ValentinMarcon','TESTAPI');
 // ///////////////////////////////////
 // Buttons events:
 
-var $btn_search = $('#btn_search');
-var $btn_select = $('#btn_select');
-var $btn_cancel = $('#btn_cancel');
-var $btn_send = $('#btn_send');
+var $btn_search = $('.btn_search');
+var $btn_select = $('.btn_select');
+var $btn_cancel = $('.btn_cancel');
+var $btn_send = $('.btn_send');
 
 $btn_search.on('click', function(event) {
 	search_tool(print_tool);
@@ -130,16 +130,17 @@ function print_tool(entry){
 	    }
 	}
 	// Table cell that could be modified are selected thanks to the id "value"
-	var $modifcell = $('p.value');
+	//var $modifcell = $('p.value');
+	var $modifcell = $('td.edit');
         $modifcell.on('click', function(event) {
-	    modif_value(this.id);
+	    modif_value(this.id.replace('_status', ''));
         });
 	// Table cell that could have a new entry are selected thanks to the id "new"
 	var $newcell = $('p.new');
         $newcell.on('click', function(event) {
-	    alert("you can't add a new value for now");
+	    //alert("you can't add a new value for now");
 	    // WIP
-	    //modif_value(this.id); 
+	    modif_value(this.id.replace('_status', '')); 
         });
 
 }
@@ -165,8 +166,8 @@ function val_to_table(entry,id=""){
 		else {
 		  val="empty"
 		}
-		value_to_print += "<td class=\"none\"><p id=\""+id+"\" class=\"new\">"+val+"</p></td>"
-	        value_to_print += "<td id=\""+id+"_status\">⚪</td>";
+		value_to_print += "<td class=none><p id=\""+id+"\" class=new>"+val+"</p></td>"
+	        value_to_print += "<td class=edit id=\""+id+"_status\">✍️</td>";
 	}
 	// If the entry is an array, create a new inner table and recall the function for every sub-entry
 	else if (Array.isArray(entry)){
@@ -203,7 +204,7 @@ function val_to_table(entry,id=""){
 
 		    value_to_print += entry;
 		    value_to_print += "</p></td>";
-	            value_to_print += "<td id=\""+id+"_status\">🔵</td>";
+	            value_to_print += "<td class=edit id=\""+id+"_status\">✏️</td>";
 		}
 	}
 	// Else, entry is (probably) a dict, recall the function
@@ -253,6 +254,8 @@ function modif_dict(entry,pos,tab_pos,value){
 // TODO : Finish the doc 
 
 function modif_value(id){
+
+    console.log(id);
     var motif =  /___/;
     // Get the position liste of the value from the id (Cf. "val_to_table")
     var liste = id.split(motif);
@@ -274,11 +277,7 @@ function modif_value(id){
     $value_status.on('click', function(event) {
         var $value_new = $('#'+id);
         var $new_v = $value_new.val();
-	var $new_html = "";
-            $new_html += "<p id=\""+id+"\" class=value >";
-            $new_html += $new_v;
-            $new_html += "</p>";//</td>";
-        $value_new.replaceWith($new_html);
+
 	// If the value is different from the original
 	// we store it and change the status to "new"
 	if ($v != $new_v ){
@@ -294,21 +293,31 @@ function modif_value(id){
             //modif_entry.push(modif_object);
 	    //store_modif(modif_entry);
 	    // WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
-            var new_status = "🆕";
+            var new_status = "✏️🆕";
+	    var new_class = "modified_cell";
+	    console.log($value_new);
 	}
-	// Else we keep the blue ("original") status
+	// Else we keep original status
 	else {
-	    var new_status = "🔵";
+	    var new_status = "✏️";
+	    var new_class = "value";
 	}
+
+	var $new_html = "";
+        $new_html += "<p id=\""+id+"\" class=\""+new_class+"\" >";
+        $new_html += $new_v;
+        $new_html += "</p>";//</td>";
+        $value_new.replaceWith($new_html);
+
         var $value_status = $('#'+id+"_status");
         var $new_html = "";
-        $new_html += "<td id=\""+id+"_status\">"+new_status+"</td>";
+        $new_html += "<td class=edit id=\""+id+"_status\">"+new_status+"</td>";
         $value_status.replaceWith($new_html);
 
 	// Rebind the modif function to the tag
-        var $modifcell = $('p.value');
+        var $modifcell = $('td.edit');
 	$modifcell.unbind('click').on('click', function(event) {
-	    modif_value(this.id);
+	    modif_value(this.id.replace('_status', ''));
         });
     });
 }
@@ -354,9 +363,9 @@ function send_modif(){
 //
 
 function modif_mode(){
-	var $search_table = $('#search_table');
+	var $search_table = $('.search_table');
 	$search_table.hide();
-	var $modif_table = $('#modif_table');
+	var $modif_table = $('.modif_table');
 	$modif_table.show();
 }
 
@@ -368,9 +377,9 @@ function modif_mode(){
 //
 
 function search_mode(){
-	var $search_table = $('#search_table');
+	var $search_table = $('.search_table');
 	$search_table.show();
-	var $modif_table = $('#modif_table');
+	var $modif_table = $('.modif_table');
 	$modif_table.hide();
 	var $tool_content = $('#tool_content');
 	$tool_content.html("");
@@ -411,7 +420,7 @@ function fill_tool_list(){
 		    var $tool_name=res[tools]["name"];
 		    $tool_list_obj.append("<OPTION>"+$tool_name);
 		}
-		var $btn_select = $('#btn_select');
+		var $btn_select = $('.btn_select');
 		$btn_select.show();
 	});
 }

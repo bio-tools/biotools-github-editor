@@ -8,3 +8,7 @@ td {
 td.none {
   font-style: italic;
 }
+
+.modified_cell {
+  background-color: #f4bc42;
+}
