@@ -1,14 +1,108 @@
-table {
+#tool_content {
+  border-collapse: collapse; 
   border: 1px solid #a6a6a6;
 }
-td {
-  border: 1px solid #d9d9d9;
+#tool_content td,th {
+  border-bottom: 1px solid #d9d9d9;
+  padding: 3px;
+}
+
+#tool_content td.label {
+  font-weight : bold;
+  background-color: #f5f5f5;
+  text-indent: 4px;
+}
+#tool_content td.edit {
+  background-color: #f2f2f2;
+}
+#tool_content td.valid {
+  background-color: #ecf9ec;
+}
+
+
+#tool_content table {
+  border-left: 1px solid #d9d9d9;
 }
 
 td.none {
   font-style: italic;
 }
 
-.modified_cell {
-  background-color: #f4bc42;
+div.line {
+  border-bottom: 1px solid #d9d9d9;
 }
+
+.modified_cell {
+  background-color: #ffeb99;
+}
+
+.new_line {
+  font-size: 70%;
+  text-color: grey;
+}
+
+#title {
+  text-shadow: 1px 1px grey;
+  font-size: 200%;
+  text-indent: 10px;
+}
+
+#tab{
+    font : normal 11px Batang, arial, serif;
+    list-style-type : none;
+    padding-bottom : 24px; /* à modifier suivant la taille de la police ET de la hauteur de l'onglet dans #onglets li */
+    border-bottom : 1px solid #9EA0A1;
+    margin-left : 0;
+
+}
+
+#tab li{
+    float : left;
+    height : 21px; /* à modifier suivant la taille de la police pour centrer le texte dans l'onglet */
+    background-color: #F4F9FD;
+    margin : 2px 2px 0 1px !important;  /* Pour les navigateurs autre que IE */
+    margin : 1px 2px 0 1px;  /* Pour IE  */
+    border : 1px solid #9EA0A1;
+    padding-top: 0px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+#tab li.active{
+    font-weight : bold;
+    border : 2px solid #111111;
+    border-bottom: 1px solid #fff;
+    background-color: #fff;
+}
+
+
+#tab li.master{
+    background-color: #ccd0ff;
+}
+
+#tab li.PR{
+    background-color: #f1ccff;
+}
+
+#tab li.edit{
+    background-color: #f4e1ba;
+}
+
+
+
+.loader {
+  border: 6px solid #f3f3f3; /* Light grey */
+  border-top: 6px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+

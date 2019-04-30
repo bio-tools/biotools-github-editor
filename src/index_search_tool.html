@@ -3,21 +3,27 @@
 <head>
     <title>Page title</title>
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 </head>
 
 <body>
-    <p id="page">PAGE</p>
     </br>
-    <hr>
-    </br>
-    <div>
-        <p>SEARCH A TOOL</p>
+        <hr>
+	<table><tr><td>
+        <p id="title">SEARCH A TOOL</p>
+	</td><td>    
+	<div class="loader" id="search_loader" hidden></div>
+	</td></tr></table>
+
+        <hr>
+        </br>
+
         <table class="search_table">
             <tr>
                 <td>
                     <FORM>
                         <SELECT id="tool_list" size="1">
-                            <OPTION>No tools found
+				<OPTION id="not_found">No tools found</OPTION>
                         </SELECT>
                     </FORM>
                 </td>
@@ -27,6 +33,13 @@
             </tr>
             <tr>
                 <td>
+  <!--datalist id="browsers">
+    <option value="Internet Explorer">
+    <option value="Firefox">
+    <option value="Chrome">
+    <option value="Opera">
+    <option value="Safari">
+  </datalist-->
                     <input type="text" id="search_tool" value="">
                 </td>
                 <td>
@@ -34,17 +47,23 @@
                 </td>
             </tr>
         </table>
+	<div id="menu">
+            <ul id="tab">
+            </ul>
+        </div>
         <table class="modif_table" hidden>
             <tr>
                 <td>
-                    <input type="button" class="btn_send" value="send modif">
+                    <input type="button" class="btn_send" value="send modif" hidden>
                 </td>
                 <td>
-                    <input type="button" class="btn_cancel" value="search an other tool">
+                    <input type="button" class="btn_cancel" value="cancel modif" hidden>
+                </td>
+                <td>
+                    <input type="button" class="btn_search_other" value="search an other tool">
                 </td>
             </tr>
         </table>
-    </div>
     <div>
         <table id="tool_content">
         </table>
@@ -52,10 +71,13 @@
     <table class="modif_table" hidden>
         <tr>
             <td>
-                <input type="button" class="btn_send" value="send modif">
+                <input type="button" class="btn_send" value="send modif" hidden>
             </td>
             <td>
-                <input type="button" class="btn_cancel" value="search an other tool">
+                <input type="button" class="btn_cancel" value="cancel modif" hidden>
+            </td>
+            <td>
+                <input type="button" class="btn_search_other" value="search an other tool">
             </td>
         </tr>
     </table>
