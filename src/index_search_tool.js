@@ -1,12 +1,12 @@
 import GitHub from "github-api";
 import Repository from "github-api";
 import $ from "jquery";
-//import bar, { foo } from "./fonctions";
-import fs from "fs"; 
 import request from "superagent";
+//import bar, { foo } from "./fonctions"; // Tests
+import fs from "fs"; // TEMP: TO READ LOCAL OAUTH FILE 
 
 //foo() // Tests
-//bar()
+//bar() // Tests
 
 // ///////////////////////////////////
 // Github authentification:
@@ -15,7 +15,7 @@ import request from "superagent";
 var OAUTH = fs.readFileSync('./src/OAUTH', 'utf8');
 OAUTH = OAUTH.substring(0, OAUTH.length-1);
 
-// Use OAUTH asked by log page
+// Use OAUTH asked and stored by log page
 //const OAUTH = sessionStorage.getItem("access_token");
 //console.log(OAUTH);
 //
@@ -28,7 +28,6 @@ var gh = new GitHub({
 
 // Get the repo where tools.json are stocked
 var repo = gh.getRepo('ValentinMarcon','TESTAPI');
-
 
 // ///////////////////////////////////
 // Buttons events:
@@ -166,6 +165,7 @@ function search_tool($search_tool){
 function print_branch_content(entry,name){
 	  // Store the original json entry in memory to manipulate the entry later
 	  store_entry(entry,name);
+	  console.log("entry: "+name);
 	  // Store the current mode to "print"
 	  store_entry("print","mode");
 	  // Store the current state of changes to false
@@ -232,12 +232,7 @@ function print_tool(entry){
 	$tool_content.append("<tr><td class=new_line id="+key+">➕ New Line </td></tr>" ); //WIPP
 	// Change the title with the tool name
 	var $title = $('p#title');
-	if (get_stored_entry("mode") == "edit") {
-		$title.text(entry['name']+ " [edit mode]")
-	}
-	else {
-		$title.text(entry['name'])
-	}
+	$title.text(entry['biotoolsID'])
 	// Table cell that could be modified are selected thanks to the id "value"
 	//var $modifcell = $('p.value');
 	var $modifcell = $('td.edit');
@@ -245,12 +240,12 @@ function print_tool(entry){
 	    modif_value(this.id.replace('_status', ''));
         });
 	// Table cell that could have a new entry are selected thanks to the id "new"
-	var $newcell = $('p.new');
+	/*var $newcell = $('p.new');
         $newcell.on('click', function(event) {
 	    //alert("you can't add a new value for now");
 	    // WIP
 	    modif_value(this.id.replace('_status', '')); 
-        });
+        }); // DEPRECATED*/
 	//WIP WIP WIP WIP
 	var $new_line = $('td.new_line');
 	$new_line.on('click', function(event) {
@@ -287,7 +282,7 @@ function val_to_table(entry,id=""){
 	}
 	// If the entry is an array, create a new inner table and recall the function for every sub-entry
 	else if (Array.isArray(entry)){
-		value_to_print += "<td><table>";
+		value_to_print += "<td class=content colspan=2><table>";
 		for (var key in entry) {
 			 value_to_print += "<tr>"
 			 value_to_print += val_to_table(entry[key],id+"___"+key)
@@ -306,7 +301,7 @@ function val_to_table(entry,id=""){
 		    value_to_print += "</td>";
 		}
 		else {
-		    value_to_print += "<td id=\""+id+"_td\">"
+		    value_to_print += "<td class=content id=\""+id+"_td\">"
 		    value_to_print += "<p id=\""+id+"\" class=value>";
 
 			//TODO En faire une fonction :
@@ -326,7 +321,7 @@ function val_to_table(entry,id=""){
 	}
 	// Else, entry is (probably) a dict, recall the function
 	else{
-		value_to_print += "<td><table>"
+		value_to_print += "<td class=content colspan=2><table>"
 		for (var key in entry) {
 			value_to_print += "<tr>"
 			value_to_print += val_to_table(key)
@@ -372,26 +367,28 @@ function modif_dict(entry,pos,tab_pos,value){
 // TODO : Finish the doc 
 
 function modif_value(id){
-    edit_mode();
     var motif =  /___/;
     // Get the position liste of the value from the id (Cf. "val_to_table")
     var liste = id.split(motif);
     // Select the tag with this id
     var $value = $('#'+id);
     // Get the original value on this tag
-    var $v = $value.text();
-    // Transform the tag to an input with the original value
-    var $new_html = ""
-    $new_html += "<input type=\"text\" id=\""+id+"\" class=value_edit value=\""+$v+"\">";//</td>";
-    $value.replaceWith($new_html);
-    // Change the indicator status to have a clickable symbol to validate the modification
-    var $value_status = $('#'+id+'_status');
-    var $new_html = "<td id=\""+id+"_status\" class=valid >✔️</td>";
-    $value_status.replaceWith($new_html);
+    var $v = $value.text();    // TODO MV $v v
 
-    var $value_status = $('#'+id+'_status');
-    // Function to manage modification of the value
-    $value_status.on('click', function(event) {
+    //Change mode to "modif"
+    edit_mode(function(){
+      // Transform the tag to an input with the original value
+      var $new_html = ""
+      $new_html += "<input style='width:100%' type=\"text\" id=\""+id+"\" class=value_edit value=\""+$v+"\">";//</td>";
+      var $value = $('#'+id);
+      $value.replaceWith($new_html);
+      // Change the indicator status to have a clickable symbol to validate the modification
+      var $value_status = $('#'+id+'_status');
+      var $new_html = "<td id=\""+id+"_status\" class=valid >✔️</td>";
+      $value_status.replaceWith($new_html);
+      var $value_status = $('#'+id+'_status');
+      // Function to manage modification of the value
+      $value_status.on('click', function(event) {
         var $value_new = $('#'+id);
         var $new_v = $value_new.val();
 
@@ -447,6 +444,7 @@ function modif_value(id){
 	$modifcell.unbind('click').on('click', function(event) {
 	    modif_value(this.id.replace('_status', ''));
         });
+      });
     });
 }
 
@@ -457,15 +455,17 @@ function modif_value(id){
 //
 // TODO : Finish the doc 
 
-function edit_mode(){
+function edit_mode(_cb){
     if (get_stored_entry("mode") != "edit"){
 	store_entry("edit","mode");
         var current_tool = $('li.active').attr('id');
         console.log(current_tool)
         var edit_tool = "edit_"+current_tool;
+    	store_entry(get_stored_entry(current_tool),edit_tool);
         add_tab(edit_tool,"✏️"+current_tool);
         change_tab(edit_tool);
     }
+    _cb();
 }
 
 
@@ -478,7 +478,7 @@ function edit_mode(){
 // 3) Write a file in this new branch with this new entry
 // 4) Make a pull request to the dev branch
 //
-// TODO : IMprove user experience and error management
+// TODO : IMprove user experience and error management (learn to use promise)
 
 function send_modif(){
 	// If we are here but no changes have been made don't create a pull request
@@ -487,16 +487,16 @@ function send_modif(){
 	}
 	// 1)
         var current_tool = $('li.active').attr('id');
-	var my_bt_entry=get_stored_entry(current_tool);
-	console.log(my_bt_entry);
-	var tool_name=my_bt_entry['name'];
+	var entry=get_stored_entry(current_tool);
+	console.log(entry);
+	var tool_name=entry['biotoolsID'];
 	var file_name=tool_name+".json";
 	var file_pos="data/"+tool_name+"/"+file_name;
 	var d = new Date();
         var now=d.getFullYear()  + "-" + (d.getMonth()+1) + "-" +  d.getDate() + "-" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + "-" + d.getMilliseconds();
 	var branch_name="new_"+tool_name+"_"+now;
 	var branch_origin="dev";
-	my_bt_entry=JSON.stringify(my_bt_entry, null, " ");
+	var my_bt_entry=JSON.stringify(entry, null, " ");
 	// 2)
 	repo.createBranch(branch_origin,branch_name,function(){
 		// 3)
@@ -513,7 +513,8 @@ function send_modif(){
 				console.log("----log-----");
 				console.log(res);
 				console.log("----log-----");
-				exit_modif(); // TODO Laisser afficher en mettant en avant que c'est une pull request
+				exit_modif();
+				print_branch_content(entry,branch_name);
 			});
 		});
 	});
@@ -641,6 +642,23 @@ function visual_select_tab(id){
 	$tab_active.removeClass('active');
 	$tab.toggleClass('active');
         add_tab_event();
+	var $title = $('p#title');
+        var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
+	var status = id.replace(regex, '$1');
+	var status_converter={"PR":"[Existing Pull Request]","new":"[New Pull Request]","edit":"[Edit mode]"};
+	var status_long=status_converter[status];
+        var $github_link = $('a#github_link');
+	if (!status_long) {
+		status_long="[Master]";
+		$github_link.hide();
+	}
+	else if (status == "new") {
+		$github_link.attr("href", "https://github.com/ValentinMarcon/TESTAPI/tree/"+id);
+		$github_link.show();
+	}
+	$title.text($title.text() + " " + status_long);
+
+
 }
 
 // /////////////////
@@ -652,7 +670,7 @@ function remove_tab(){
     	$tab_active.remove();
 	var entry=get_stored_entry();
 	print_tool(entry);
-	visual_select_tab(entry['name']);
+	visual_select_tab(entry['biotoolsID']);
 }
 
 // /////////////////
@@ -664,8 +682,6 @@ function create_tabs(tool){
 	//
 	//
 	//TODO Quand on fait une PR l'afficher aussi ("newPR")
-
-	//TODO quand on est en modif mode, on ne peux pas changer d'onglet (//TODO pop up sauvergarde)
 
 	//
 	add_tab(tool);
@@ -681,8 +697,15 @@ function create_tabs(tool){
 // TODO SELECTION PAR ID plutot que par TEXT au cas ou les PR sont pas belles
 function change_tab(id_tab_selected){
         if ((get_stored_entry("mode")=="edit") && (get_stored_entry("changes"))){
-		alert ("you cant leave us without saving the modification TODO :change this");
-		return;
+		var quit=confirm("If you change tab all modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
+		if (quit) {
+			remove_tab();
+			store_entry("print","mode");
+			store_entry(false,"changes");
+		}
+		else {
+			return;
+		}
 	}
 	else if ((get_stored_entry("mode")=="edit") && (!id_tab_selected.includes('edit'))) {
 		remove_tab();

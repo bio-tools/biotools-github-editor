@@ -1,7 +1,13 @@
 #tool_content {
   border-collapse: collapse; 
   border: 1px solid #a6a6a6;
+  width:100%;
 }
+
+#tool_content table {
+  width:100%;
+}
+
 #tool_content td,th {
   border-bottom: 1px solid #d9d9d9;
   padding: 3px;
@@ -12,6 +18,11 @@
   background-color: #f5f5f5;
   text-indent: 4px;
 }
+
+#tool_content td.content,.none{
+  width:100%;
+}
+
 #tool_content td.edit {
   background-color: #f2f2f2;
 }
@@ -88,7 +99,9 @@ div.line {
     background-color: #f4e1ba;
 }
 
-
+#tab li.new{
+    background-color: #e6f2ff;
+}
 
 .loader {
   border: 6px solid #f3f3f3; /* Light grey */
