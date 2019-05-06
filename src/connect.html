@@ -7,21 +7,30 @@
 </head>
 
 <body>
-    <p id="page">PAGE</p>
-    </br><hr></br>
-
-    <p>TEST SECTION</p>
-
-    <input type="button" id="btn_request" value="CONFIRM">
-    
-    <a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">Login</a>
-
+    <table>
+    <tr>
+    <td>
+    	<div class="loader" id="search_loader" hidden></div>
+    </td>
+    <td>
+	<p id="title">Get your access token from github</p>
+    </td>
+    </tr>
+    <tr>
+    <td rowspan="2">	    
+    	<input type="button" id="btn_request" value="CONFIRM">
+    <td/>
+    <tr/>
+    </table>
+    <!--a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">Login</a-->
     <div id="div_access_token" hidden=true>
         </br><hr></br>
         <p>Enter your access token here:</p>
-        <input name="access_token" id="access_token" type="password" />
+        <!--input name="access_token" id="access_token" type="password" /-->
+        <input name="access_token" id="access_token" type="text" />
         <input value="send" id="btn_access_token" type="button" />
     </div>
+
 
     <script src="./connect.js"></script>
 

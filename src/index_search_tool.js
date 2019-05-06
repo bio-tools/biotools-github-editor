@@ -12,18 +12,34 @@ import fs from "fs"; // TEMP: TO READ LOCAL OAUTH FILE
 // Github authentification:
 
 // Use a personal github OAUTH token
-var OAUTH = fs.readFileSync('./src/OAUTH', 'utf8');
-OAUTH = OAUTH.substring(0, OAUTH.length-1);
+//var OAUTH = fs.readFileSync('./src/OAUTH', 'utf8');
+//OAUTH = OAUTH.substring(0, OAUTH.length-1);
 
 // Use OAUTH asked and stored by log page
-//const OAUTH = sessionStorage.getItem("access_token");
-//console.log(OAUTH);
+const OAUTH = sessionStorage.getItem("access_token");
+console.log(OAUTH);
 //
 
 // Basic auth
 var gh = new GitHub({
-  username: 'ValentinMarcon',
+  //username: 'ValentinMarcon',
   token: `${OAUTH}`
+});
+
+// Get user info
+gh.getUser().getProfile(function(err, profile) { 
+		if(!profile){
+			alert("Authentication failure with token ");
+			location.href = "index.html";
+		}
+		else {
+			var login = profile["login"];
+			var avatar = profile["avatar_url"];
+			var $login = $('#username');
+			var $avatar = $('#avatar');
+			$login.text(login);
+			$avatar.attr('src', avatar);
+		}
 });
 
 // Get the repo where tools.json are stocked
@@ -59,6 +75,7 @@ $btn_send.on('click', function(event) {
 
 $btn_cancel.on('click', function(event) {
 	exit_modif();
+	change_tab(get_stored_entry()['biotoolsID'].toLowerCase());
 });
 
 /// ///////////////////////////////////
@@ -67,7 +84,7 @@ $btn_cancel.on('click', function(event) {
 function add_tab_event(){
     var $tab_not_active = $("li:not('.active')");
     $tab_not_active.unbind('click').on('click', function(event){
-        change_tab(this.id)
+        change_tab(this.id);
     });
 }
 add_tab_event();
@@ -134,22 +151,28 @@ function hide_loader(){
 // TODO : Manage error (if tool_name dont exist)
 // TODO                (if empty value)
 
-function search_tool($search_tool){
+function search_tool($search_tool,_cb){
 	// Value entered/choosed by the user
 	var tool_name = $search_tool.val()
 	if (tool_name != ""){
 		show_loader();
-		modif_mode();
 		// Get the corresponding json file on the data repository on Github (Cf Github authentifiation above)
 		repo.getContents('master','data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
-		// Store the master json entry in memory to manipulate the entry later
-		store_entry(res);
-		// Print the master entry into html
-		print_branch_content(res,tool_name);
-		// Search and print the other version of the entry into other tabs
-	        search_other_tool_version(tool_name);
-		//hide the loader
-		hide_loader();
+			if (!res) {
+				alert("This tool '"+tool_name+"' do not exist on bio.tools. You can also pick one in the list above");
+				hide_loader();
+				return;
+			}
+			else {
+				modif_mode();
+				// Store the master json entry in memory to manipulate the entry later
+				store_entry(res);
+				// Print the master entry into html
+				print_branch_content(res,tool_name);
+				// Search and print the other version of the entry into other tabs
+	       			search_other_tool_version(tool_name);
+				hide_loader();
+			}
         	});
 	}
 	else {
@@ -179,17 +202,20 @@ function print_branch_content(entry,name){
 // SEARCH_OTHER_TOOL_VERSIONS
 //
 // TODO : DOC
-// TODO : STOP WRITE ALL THE VERSION TO ERASE EACH OTHERS UNTILL THE LAST
+// TODO : STOP WRITE ALL THE VERSION TO ERASE EACH OTHERS UNTILL THE LAST (Need to learn promise and callback)
 
 function search_other_tool_version(tool_name){
         repo.listBranches(function(req, res) {
            res.forEach(function(branch){
-		var branch_name=branch['name'];
+		var branch_name=branch['name'];	
+		var branch_name_lc=branch_name.toLowerCase();
                 var regex = new RegExp("^.*_(" + tool_name + "_.*)$");
-		if (regex.test(branch_name)){
-			var other_name = "PR_"+branch_name.replace(regex, '$1'); 
+		if (regex.test(branch_name_lc)){
+			var other_name = "PR_"+branch_name_lc.replace(regex, '$1'); 
 		        get_branch_content(branch_name,tool_name,function(entry) {
-				print_branch_content(entry,other_name);
+				if(entry){
+					print_branch_content(entry,other_name);
+				}
 			});
 		}
            });
@@ -203,7 +229,13 @@ function search_other_tool_version(tool_name){
 
 function get_branch_content(branch_name,tool_name,_callback){
 	repo.getContents(branch_name,'data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
-	_callback(res);
+		if (!res) {
+			console.log('Error getting content of ' + branch_name);
+      			return;
+		}
+		else{
+			_callback(res);
+		}
 	});
 }
 
@@ -363,7 +395,7 @@ function modif_dict(entry,pos,tab_pos,value){
 // /////////////////
 // MODIF_VALUE 
 // 
-//
+// TODO : If we change a value two time keep the signal that it is new
 // TODO : Finish the doc 
 
 function modif_value(id){
@@ -373,35 +405,35 @@ function modif_value(id){
     // Select the tag with this id
     var $value = $('#'+id);
     // Get the original value on this tag
-    var $v = $value.text();    // TODO MV $v v
+    var orig_v = $value.text();    // TODO MV $v v
 
     //Change mode to "modif"
     edit_mode(function(){
       // Transform the tag to an input with the original value
-      var $new_html = ""
-      $new_html += "<input style='width:100%' type=\"text\" id=\""+id+"\" class=value_edit value=\""+$v+"\">";//</td>";
+      var new_html = ""
+      new_html += "<input style='width:100%' type=\"text\" id=\""+id+"\" class=value_edit value=\""+orig_v+"\">";//</td>";
+      // Re-select the tag with this id
       var $value = $('#'+id);
-      $value.replaceWith($new_html);
+      $value.replaceWith(new_html);
       // Change the indicator status to have a clickable symbol to validate the modification
       var $value_status = $('#'+id+'_status');
-      var $new_html = "<td id=\""+id+"_status\" class=valid >✔️</td>";
-      $value_status.replaceWith($new_html);
+      var new_html = "<td id=\""+id+"_status\" class=valid >✔️</td>";
+      $value_status.replaceWith(new_html);
       var $value_status = $('#'+id+'_status');
       // Function to manage modification of the value
       $value_status.on('click', function(event) {
         var $value_new = $('#'+id);
-        var $new_v = $value_new.val();
+        var new_v = $value_new.val();
 
 	// If the value is different from the original
 	// we store it and change the status to "new"
-	if ($v != $new_v ){
+	if (orig_v != new_v ){
 	    // Retrieve stored entry
             var entry_id = $('li.active').attr('id');
-	    console.log(entry_id);	
 	    var entry=get_stored_entry(entry_id);
 	    console.log(entry);	
 	    //var liste_modif=Array.from(liste); // WIP
-            entry = modif_dict(entry,liste[0],liste,$new_v)
+            entry = modif_dict(entry,liste[0],liste,new_v)
 	    console.log(entry);	
     	    store_entry(entry,entry_id);
             // Changes have been made, we record the status to true and show the btn to send changes into PR
@@ -428,16 +460,16 @@ function modif_value(id){
 	    var new_class = "value";
 	}
 
-	var $new_html = "";
-        $new_html += "<p id=\""+id+"\" class=\""+new_class+"\" >";
-        $new_html += $new_v;
-        $new_html += "</p>";//</td>";
-        $value_new.replaceWith($new_html);
+	var new_html = "";
+        new_html += "<p id=\""+id+"\" class=\""+new_class+"\" >";
+        new_html += new_v;
+        new_html += "</p>";//</td>";
+        $value_new.replaceWith(new_html);
 
         var $value_status = $('#'+id+"_status");
-        var $new_html = "";
-        $new_html += "<td class=edit id=\""+id+"_status\">"+new_status+"</td>";
-        $value_status.replaceWith($new_html);
+        var new_html = "";
+        new_html += "<td class=edit id=\""+id+"_status\">"+new_status+"</td>";
+        $value_status.replaceWith(new_html);
 
 	// Rebind the modif function to the tag
         var $modifcell = $('td.edit');
@@ -485,11 +517,12 @@ function send_modif(){
 	if (!get_stored_entry("changes")){
 		return;
 	}
+	show_loader();	
 	// 1)
         var current_tool = $('li.active').attr('id');
 	var entry=get_stored_entry(current_tool);
 	console.log(entry);
-	var tool_name=entry['biotoolsID'];
+	var tool_name=entry['biotoolsID'].toLowerCase();
 	var file_name=tool_name+".json";
 	var file_pos="data/"+tool_name+"/"+file_name;
 	var d = new Date();
@@ -498,27 +531,33 @@ function send_modif(){
 	var branch_origin="dev";
 	var my_bt_entry=JSON.stringify(entry, null, " ");
 	// 2)
-	repo.createBranch(branch_origin,branch_name,function(){
-		// 3)
-		repo.writeFile(branch_name,file_pos,my_bt_entry,'Write in '+file_name,{},function(){
-			// 4)
-
-			var res=repo.createPullRequest({
-			  "title": "Update/create "+file_name,
-			  "body": "Please pull this in!",
-			  "head": branch_name,
-			  "base": branch_origin
-			},function(){
-				alert("file writed in https://github.com/ValentinMarcon/TESTAPI/blob/"+branch_name+"/"+file_pos);  // TODO catch error...
-				console.log("----log-----");
-				console.log(res);
-				console.log("----log-----");
-				exit_modif();
-				print_branch_content(entry,branch_name);
+	repo.createBranch(branch_origin,branch_name,function(req,res){
+		if (!res) {
+			console.log("Error creating branch '"+branch_name+"' from '"+branch_origin);
+		}
+		else {
+			// 3)
+			repo.writeFile(branch_name,file_pos,my_bt_entry,'Write in '+file_name,{},function(req,res){
+				if (!res) {
+					console.log("Error creating file '"+file_name+"' in '"+branch_name);
+				}
+				else {
+					// 4)
+					var result=repo.createPullRequest({
+			  		"title": "Update/create "+file_name,
+			  		"body": "Please pull this in!",
+			  		"head": branch_name,
+			  		"base": branch_origin
+					},function(){
+						alert("File writed in https://github.com/ValentinMarcon/TESTAPI/blob/"+branch_name+"/"+file_pos);  // TODO catch error...
+						hide_loader();	
+						exit_modif();
+						print_branch_content(entry,branch_name);
+					});
+				}
 			});
-		});
+		}
 	});
-
 }
 
 // /////////////////
@@ -532,6 +571,9 @@ function modif_mode(){
 	$search_table.hide();
 	var $modif_table = $('.modif_table');
 	$modif_table.show();
+	var $tab_menu = $('#menu');
+	$tab_menu.show();
+
 }
 
 function exit_modif(){
@@ -557,20 +599,25 @@ function exit_modif(){
 //
 
 function search_mode(){
+	var $tool_content = $('#tool_content');
+	$tool_content.html("");
+	var $title = $('p#title');
+	$title.text("SEARCH A TOOL");
 	var $search_table = $('.search_table');
 	$search_table.show();
 	var $modif_table = $('.modif_table');
 	$modif_table.hide();
-	var $tool_content = $('#tool_content');
-	$tool_content.html("");
 	var $tab = $('#tab');
 	$tab.html("");
+	var $tab_menu = $('#menu');
+	$tab_menu.hide();
 	store_entry("print","mode");
 	store_entry(false,"changes");
         var $btn_send = $('.btn_send');
         var $btn_cancel = $('.btn_cancel');
 	$btn_send.hide();
         $btn_cancel.hide();
+	hide_loader();
 }
 
 
@@ -596,18 +643,18 @@ function store_entry(entry,name="new_entry"){
 
 // /////////////////
 // FILL_TOOL_LIST 
-// Get the list of tool in the data repository 
+// Get the list of tool from the index file 
 // Append the tools name as options of the select section "tool_list"
 //
 // TODO : Finish the doc & manage requestsuccessornot
-// TODO : Show more than 1000 entries
 
 function fill_tool_list(){
 	var $tool_list_obj = $('#tool_list');
-	repo.getContents('master','data',true, function(req, res) {		
-		for (var tools in res) {
-		    var $tool_name=res[tools]["name"];
-		    $tool_list_obj.append("<OPTION>"+$tool_name);
+	repo.getContents('master','index.txt',true, function(req, res) {
+		var tools = res.split("\n");
+		tools.pop();
+		for (var tool in tools) {
+		    $tool_list_obj.append("<OPTION>"+tools[tool]);
 		}
 		var $btn_select = $('.btn_select');
 		$btn_select.show();
@@ -623,7 +670,7 @@ function fill_tool_list(){
 // TODO: Finish the doc
 function add_tab(id,value=id){
 	var $tab = $('#tab');
-        var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
+        var regex = new RegExp("^(new|PR|edit)_[a-zA-Z0-9_-]*$");
 	var classs="master";
         if (regex.test(id)){
 		classs=id.replace(regex,'$1');
@@ -648,17 +695,15 @@ function visual_select_tab(id){
 	var status_converter={"PR":"[Existing Pull Request]","new":"[New Pull Request]","edit":"[Edit mode]"};
 	var status_long=status_converter[status];
         var $github_link = $('a#github_link');
+	$github_link.hide();
 	if (!status_long) {
 		status_long="[Master]";
-		$github_link.hide();
 	}
 	else if (status == "new") {
 		$github_link.attr("href", "https://github.com/ValentinMarcon/TESTAPI/tree/"+id);
 		$github_link.show();
 	}
 	$title.text($title.text() + " " + status_long);
-
-
 }
 
 // /////////////////
@@ -668,9 +713,9 @@ function visual_select_tab(id){
 function remove_tab(){
 	var $tab_active = $('li.active');
     	$tab_active.remove();
-	var entry=get_stored_entry();
+	/*var entry=get_stored_entry(); // TODO Ensure i can remove that part
 	print_tool(entry);
-	visual_select_tab(entry['biotoolsID']);
+	visual_select_tab(entry['biotoolsID']);*/
 }
 
 // /////////////////
@@ -678,12 +723,6 @@ function remove_tab(){
 //
 // TODO:
 function create_tabs(tool){
-	//TODO gerer l'info présente lors du modif mode (bug )
-	//
-	//
-	//TODO Quand on fait une PR l'afficher aussi ("newPR")
-
-	//
 	add_tab(tool);
         // TODO Change this visual selct by a change_tab (and remove the print tool from the functions that calls create_tabs)
         visual_select_tab(tool)
@@ -694,14 +733,21 @@ function create_tabs(tool){
 // /////////////////
 // TAB_SELECTED
 //
-// TODO SELECTION PAR ID plutot que par TEXT au cas ou les PR sont pas belles
+//TODO doc
+//TODO MERGE functions with btnsendhide btncancelhide and printmode and changefalse (see exit_modif)
+//
 function change_tab(id_tab_selected){
+	console.log(id_tab_selected);
         if ((get_stored_entry("mode")=="edit") && (get_stored_entry("changes"))){
 		var quit=confirm("If you change tab all modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
 		if (quit) {
 			remove_tab();
 			store_entry("print","mode");
 			store_entry(false,"changes");
+			var $btn_send = $('.btn_send');
+		        var $btn_cancel = $('.btn_cancel');
+			$btn_send.hide();
+		        $btn_cancel.hide();
 		}
 		else {
 			return;
