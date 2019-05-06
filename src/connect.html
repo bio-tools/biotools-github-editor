@@ -25,11 +25,13 @@
     <!--a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">Login</a-->
     <div id="div_access_token" hidden=true>
         </br><hr></br>
-        <p>Enter your access token here:</p>
+	<p>Enter your <a href="https://github.com/settings/tokens" target="_blank">access token</a> here :</p>
         <!--input name="access_token" id="access_token" type="password" /-->
         <input name="access_token" id="access_token" type="text" />
-        <input value="send" id="btn_access_token" type="button" />
+	<input value="send" id="btn_access_token" type="button" /><br>
+    	<i>(<a href="https://developer.github.com/v3/auth/#basic-authentication" target="_blank">help</a>)</i>
     </div>
+
 
 
     <script src="./connect.js"></script>

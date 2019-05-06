@@ -1,3 +1,19 @@
+input[type=button]{
+  cursor:pointer;
+}
+
+
+#title {
+  text-shadow: 1px 1px grey;
+  font-size: 200%;
+  text-indent: 10px;
+}
+
+/* ------------ */
+/* TOOL CONTENT */
+/* ------------ */
+
+
 #tool_content {
   border-collapse: collapse; 
   border: 1px solid #a6a6a6;
@@ -25,6 +41,11 @@
 
 #tool_content td.edit {
   background-color: #f2f2f2;
+  border-left : 1px solid #b3b3b3;
+  border-bottom : 1px solid #b3b3b3;
+  border-top : 1px solid #e6e6e6;
+  border-right : 1px solid #e6e6e6;
+  cursor:pointer;
 }
 #tool_content td.valid {
   background-color: #ecf9ec;
@@ -48,14 +69,15 @@ div.line {
 }
 
 .new_line {
-  font-size: 70%;
+  font-size: 60%;
   text-color: grey;
 }
+/* -------- */
+/* TAB MENU */
+/* -------- */
 
-#title {
-  text-shadow: 1px 1px grey;
-  font-size: 200%;
-  text-indent: 10px;
+#menu {
+    overflow : auto;
 }
 
 #tab{
@@ -64,7 +86,6 @@ div.line {
     padding-bottom : 24px; /* à modifier suivant la taille de la police ET de la hauteur de l'onglet dans #onglets li */
     border-bottom : 1px solid #9EA0A1;
     margin-left : 0;
-
 }
 
 #tab li{
@@ -77,6 +98,10 @@ div.line {
     padding-top: 0px;
     padding-left: 6px;
     padding-right: 6px;
+}
+
+#tab li:not(.active){
+  cursor:pointer;
 }
 
 #tab li.active{
@@ -103,7 +128,9 @@ div.line {
     background-color: #e6f2ff;
 }
 
+/* ------------ */
 /* HEADER Title */
+/* ------------ */
 
 table#head{
   width:100%;
@@ -134,7 +161,9 @@ table#head{
 }
 
 
+/* ------ */
 /* LOADER */
+/* ------ */
 
 .loader {
   border: 6px solid #f3f3f3; /* Light grey */

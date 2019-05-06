@@ -148,8 +148,6 @@ function hide_loader(){
 // SEARCH_TOOL
 // Search a tool entry from the github repository
 //
-// TODO : Manage error (if tool_name dont exist)
-// TODO                (if empty value)
 
 function search_tool($search_tool,_cb){
 	// Value entered/choosed by the user
@@ -261,7 +259,7 @@ function print_tool(entry){
 		$tool_content.append(new_line);
 	    }
 	}
-	$tool_content.append("<tr><td class=new_line id="+key+">➕ New Line </td></tr>" ); //WIPP
+	$tool_content.append("<tr><td class=new_line id="+key+" colspan=2>➕ New Line </td></tr>" ); //WIPP
 	// Change the title with the tool name
 	var $title = $('p#title');
 	$title.text(entry['biotoolsID'])
@@ -309,8 +307,8 @@ function val_to_table(entry,id=""){
 		else {
 		  val="empty"
 		}
-		value_to_print += "<td class=none><p id=\""+id+"\" class=new>"+val+"</p></td>"
 	        value_to_print += "<td class=edit id=\""+id+"_status\">✍️</td>";
+		value_to_print += "<td class=none><p id=\""+id+"\" class=new>"+val+"</p></td>"
 	}
 	// If the entry is an array, create a new inner table and recall the function for every sub-entry
 	else if (Array.isArray(entry)){
@@ -320,7 +318,7 @@ function val_to_table(entry,id=""){
 			 value_to_print += val_to_table(entry[key],id+"___"+key)
 			 value_to_print += "</tr>"
 		}
-		value_to_print += "<tr><td class=new_line id="+id+">➕ New Line</td></tr>" //WIPP
+		value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //WIPP
 		value_to_print += "</table></td>";
 	}
 	// If the entry is a string:
@@ -333,6 +331,7 @@ function val_to_table(entry,id=""){
 		    value_to_print += "</td>";
 		}
 		else {
+	            value_to_print += "<td class=edit id=\""+id+"_status\">✏️</td>";
 		    value_to_print += "<td class=content id=\""+id+"_td\">"
 		    value_to_print += "<p id=\""+id+"\" class=value>";
 
@@ -348,7 +347,6 @@ function val_to_table(entry,id=""){
 
 		    value_to_print += entry;
 		    value_to_print += "</p></td>";
-	            value_to_print += "<td class=edit id=\""+id+"_status\">✏️</td>";
 		}
 	}
 	// Else, entry is (probably) a dict, recall the function
@@ -360,7 +358,7 @@ function val_to_table(entry,id=""){
 			value_to_print += val_to_table(entry[key],id+"___"+key)
 			value_to_print += "</tr>"
 		}
-		value_to_print += "<tr><td class=new_line id="+id+">➕ New Line</td></tr>" //WIPP
+		value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //WIPP
 		value_to_print += "</table></td>"
 
 	}
