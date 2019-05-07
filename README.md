@@ -4,7 +4,7 @@
 
 `git clone https://github.com/ValentinMarcon/biotools_to_github.git`
 
-`cd https://github.com/ValentinM`
+`cd biotools_to_github`
 
 `npm install`
 
