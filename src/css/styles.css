@@ -10,9 +10,40 @@ input[type=button]{
 }
 
 /* ------------ */
-/* TOOL CONTENT */
+/* HEADER Title */
 /* ------------ */
 
+table#head{
+  width:100%;
+}
+
+#head img.avatar{
+    width:30px;
+    height:30px;
+}
+
+#head td.title{
+    width:80%;
+}
+
+#head div.user{
+    text-size:70%;
+}
+
+
+#head div.user table{
+    border : 1px solid #9EA0A1;
+    padding : 2px
+}
+
+#head td.avatar{
+  width : 40px;
+  text-align : center;
+}
+
+/* ------------ */
+/* TOOL CONTENT */
+/* ------------ */
 
 #tool_content {
   border-collapse: collapse; 
@@ -127,39 +158,6 @@ div.line {
 #tab li.new{
     background-color: #e6f2ff;
 }
-
-/* ------------ */
-/* HEADER Title */
-/* ------------ */
-
-table#head{
-  width:100%;
-}
-
-#head img.avatar{
-    width:30px;
-    height:30px;
-}
-
-#head td.title{
-    width:80%;
-}
-
-#head div.user{
-    text-size:70%;
-}
-
-
-#head div.user table{
-    border : 1px solid #9EA0A1;
-    padding : 2px
-}
-
-#head td.avatar{
-  width : 40px;
-  text-align : center;
-}
-
 
 /* ------ */
 /* LOADER */

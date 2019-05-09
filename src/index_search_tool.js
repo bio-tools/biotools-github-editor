@@ -3,7 +3,7 @@ import Repository from "github-api";
 import $ from "jquery";
 import request from "superagent";
 //import bar, { foo } from "./fonctions"; // Tests
-import fs from "fs"; // TEMP: TO READ LOCAL OAUTH FILE 
+//import fs from "fs"; // TEMP: TO READ LOCAL OAUTH FILE 
 
 //foo() // Tests
 //bar() // Tests
@@ -17,7 +17,14 @@ import fs from "fs"; // TEMP: TO READ LOCAL OAUTH FILE
 
 // Use OAUTH asked and stored by log page
 const OAUTH = sessionStorage.getItem("access_token");
+
+// If the user is here without OAUTH token, redirect to connexion page
 console.log(OAUTH);
+if(!OAUTH){
+	location.href = "index.html";
+}
+
+//console.log(OAUTH);
 //
 
 // Basic auth

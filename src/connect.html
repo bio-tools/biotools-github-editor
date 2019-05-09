@@ -2,34 +2,52 @@
 <html>
 
 <head>
-    <title>Page title</title>
+    <title>bio.tools editor - Github Login</title>
     <link rel="stylesheet" href="css/styles.css" />
 </head>
 
 <body>
-    <table>
-    <tr>
-    <td>
-    	<div class="loader" id="search_loader" hidden></div>
-    </td>
-    <td>
-	<p id="title">Get your access token from github</p>
-    </td>
-    </tr>
-    <tr>
+
+    </br>
+    <hr>
+    <table id="head">
+	<tr>
+	<td>
+    		<div class="loader" id="search_loader" hidden></div>
+	</td>
+	<td class="title">
+		<p id="title">Get your access token from github</p>
+	</td>
+	<td>
+		<div class="user" align="right">
+			<table>
+			<tr><td>
+				<i>Disconnected</i>
+			</td><td class="avatar">
+				<img src="https://avatars3.githubusercontent.com/u/18133?s=200&v=4" alt="Github User" class="avatar" id="avatar">
+			</td></tr>
+			</table>
+		</div>
+	</td>
+	</tr>
+    <!--TEST ZONE   tr> 
     <td rowspan="2">	    
     	<input type="button" id="btn_request" value="CONFIRM">
     <td/>
-    <tr/>
+    <tr/-->
     </table>
-    <!--a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">Login</a-->
+    </br><hr></br></br>
     <div id="div_access_token" hidden=true>
-        </br><hr></br>
-	<p>Enter your <a href="https://github.com/settings/tokens" target="_blank">access token</a> here :</p>
+	<i>We could not authentify you with the API request.</br> Please enter you gihub access_token in the the form or try to get a new code</i>
+	</br></br></br>
+	- Enter your <a href="https://github.com/settings/tokens" target="_blank">access token</a> here :
         <!--input name="access_token" id="access_token" type="password" /-->
         <input name="access_token" id="access_token" type="text" />
 	<input value="send" id="btn_access_token" type="button" /><br>
     	<i>(<a href="https://developer.github.com/v3/auth/#basic-authentication" target="_blank">help</a>)</i>
+	</br></br></br>
+	- Or if the code don't work <a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">click here</a> to generate a new one:</br>
+	</br></br><hr>
     </div>
 
 
