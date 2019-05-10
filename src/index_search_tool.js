@@ -34,13 +34,14 @@ var gh = new GitHub({
 });
 
 // Get user info
+var login="";
 gh.getUser().getProfile(function(err, profile) { 
 		if(!profile){
 			alert("Authentication failure with token ");
 			location.href = "index.html";
 		}
 		else {
-			var login = profile["login"];
+			login = profile["login"];
 			var avatar = profile["avatar_url"];
 			var $login = $('#username');
 			var $avatar = $('#avatar');
@@ -208,6 +209,9 @@ function print_branch_content(entry,name){
 //
 // TODO : DOC
 // TODO : STOP WRITE ALL THE VERSION TO ERASE EACH OTHERS UNTILL THE LAST (Need to learn promise and callback)
+//
+//
+// TODO: WRITE PR OF CONNECTED USER TOO
 
 function search_other_tool_version(tool_name){
         repo.listBranches(function(req, res) {
@@ -511,57 +515,85 @@ function edit_mode(_cb){
 // /////////////////
 // SEND_MODIF
 // 1) Get the stored entry (modified by the user)
-// 2) Create a new branch on the github repo from the "dev" branch
-// 3) Write a file in this new branch with this new entry
-// 4) Make a pull request to the dev branch
+// 2) Fork the bio.tools repo into user github
+// 3) Create a new branch on the github repo from the "dev" branch
+// 4) Write a file in this new branch with this new entry
+// 5) Make a pull request to the dev branch
 //
 // TODO : IMprove user experience and error management (learn to use promise)
 
 function send_modif(){
+	var repo_name="TESTAPI" // TODO Global variable?
+
 	// If we are here but no changes have been made don't create a pull request
 	if (!get_stored_entry("changes")){
 		return;
 	}
+	var confirm_fork=confirm("If you don't have the repo '"+repo_name+"' forked on your account the app will do it for you. Do you allow it?"); //TODO checker si le repo existe déja
+	if (!confirm_fork){
+		return;
+	}
 	show_loader();	
 	// 1)
+	// Find the id of the current tool edited
         var current_tool = $('li.active').attr('id');
 	var entry=get_stored_entry(current_tool);
-	console.log(entry);
+	console.log(entry+" changes will be recorded");
+	// Lower Case id of the tool
 	var tool_name=entry['biotoolsID'].toLowerCase();
+	// File name in which changes will be saved
 	var file_name=tool_name+".json";
-	var file_pos="data/"+tool_name+"/"+file_name;
+	// Path of the file in github
+	var file_path="data/"+tool_name+"/"+file_name;
+	// Current date
 	var d = new Date();
         var now=d.getFullYear()  + "-" + (d.getMonth()+1) + "-" +  d.getDate() + "-" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + "-" + d.getMilliseconds();
+	// Branch name with current date and 'new' tag
 	var branch_name="new_"+tool_name+"_"+now;
+	// Origin branch in which the Fork and Pull Request will be done
 	var branch_origin="dev";
+	// Convert the entry to JSON to record it on the json file
 	var my_bt_entry=JSON.stringify(entry, null, " ");
+
 	// 2)
-	repo.createBranch(branch_origin,branch_name,function(req,res){
-		if (!res) {
-			console.log("Error creating branch '"+branch_name+"' from '"+branch_origin);
-		}
-		else {
-			// 3)
-			repo.writeFile(branch_name,file_pos,my_bt_entry,'Write in '+file_name,{},function(req,res){
-				if (!res) {
-					console.log("Error creating file '"+file_name+"' in '"+branch_name);
-				}
-				else {
-					// 4)
-					var result=repo.createPullRequest({
-			  		"title": "Update/create "+file_name,
-			  		"body": "Please pull this in!",
-			  		"head": branch_name,
-			  		"base": branch_origin
-					},function(){
-						alert("File writed in https://github.com/ValentinMarcon/TESTAPI/blob/"+branch_name+"/"+file_pos);  // TODO catch error...
-						hide_loader();	
-						exit_modif();
-						print_branch_content(entry,branch_name);
-					});
-				}
-			});
-		}
+	// Fork the repo into registered user github
+	repo.fork(function(req,res){
+		// Retrieve then the forked repo
+		var repo_forked = gh.getRepo(login,repo_name);
+
+		// 3)
+		// Create the new branch on the forked repo
+		repo_forked.createBranch(branch_origin,branch_name,function(req,res){
+			if (!res) {
+				console.log("Error creating branch '"+branch_name+"' from '"+branch_origin);
+			}
+			else {
+
+				// 4)
+				// Create the json file on this new branch on the forked repo
+				repo_forked.writeFile(branch_name,file_path,my_bt_entry,'Write in '+file_name,{},function(req,res){
+					if (!res) {
+						console.log("Error creating file '"+file_name+"' in '"+branch_name);
+					}
+					else {
+
+						// 5)
+						// Create Pull Request from the new branch on the repo forked to the base repository dev branch
+						var result=repo.createPullRequest({
+					  		"title": "Update/create "+file_name,
+					  		"body": "Please pull this in!",
+					  		"head": login+":"+branch_name,
+					  		"base": branch_origin
+						},function(){
+							alert("File writed in https://github.com/"+login+"/"+repo_name+"/blob/"+branch_name+"/"+file_path);  // TODO catch error...
+							hide_loader();	
+							exit_modif();
+							print_branch_content(entry,branch_name);
+						});
+					}
+				});
+			}
+		});
 	});
 }
 
