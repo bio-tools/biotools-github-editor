@@ -147,16 +147,20 @@ div.line {
     background-color: #ccd0ff;
 }
 
+#tab li.OWN_PR{
+    background-color: #e0ccff;
+}
+
 #tab li.PR{
-    background-color: #f1ccff;
+    background-color: #f0e6ff;
 }
 
 #tab li.edit{
     background-color: #f4e1ba;
 }
 
-#tab li.new{
-    background-color: #e6f2ff;
+#tab li.NEW{
+    background-color: #fcd8b6;
 }
 
 /* ------ */

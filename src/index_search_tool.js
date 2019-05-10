@@ -19,13 +19,14 @@ import request from "superagent";
 const OAUTH = sessionStorage.getItem("access_token");
 
 // If the user is here without OAUTH token, redirect to connexion page
+console.log("/!\\-token-/!\\");
 console.log(OAUTH);
+console.log("/!\\-------/!\\");
 if(!OAUTH){
 	location.href = "index.html";
 }
 
 //console.log(OAUTH);
-//
 
 // Basic auth
 var gh = new GitHub({
@@ -52,6 +53,11 @@ gh.getUser().getProfile(function(err, profile) {
 
 // Get the repo where tools.json are stocked
 var repo = gh.getRepo('ValentinMarcon','TESTAPI');
+
+// Init metadata var
+// It is a variable to stock all data that we don't want to add to JSON file
+var tools_metadata={};
+
 
 // ///////////////////////////////////
 // Buttons events:
@@ -194,7 +200,7 @@ function search_tool($search_tool,_cb){
 function print_branch_content(entry,name){
 	  // Store the original json entry in memory to manipulate the entry later
 	  store_entry(entry,name);
-	  console.log("entry: "+name);
+	  //console.log("entry: "+name);
 	  // Store the current mode to "print"
 	  store_entry("print","mode");
 	  // Store the current state of changes to false
@@ -210,25 +216,35 @@ function print_branch_content(entry,name){
 // TODO : DOC
 // TODO : STOP WRITE ALL THE VERSION TO ERASE EACH OTHERS UNTILL THE LAST (Need to learn promise and callback)
 //
+// TODO : TRIER PAR NUM DE PR
 //
-// TODO: WRITE PR OF CONNECTED USER TOO
 
 function search_other_tool_version(tool_name){
-        repo.listBranches(function(req, res) {
-           res.forEach(function(branch){
-		var branch_name=branch['name'];	
+        repo.listPullRequests({},function(req, res) {
+           res.forEach(function(pullrequest){
+		var branch_name=pullrequest['head']['ref'];	
 		var branch_name_lc=branch_name.toLowerCase();
                 var regex = new RegExp("^.*_(" + tool_name + "_.*)$");
 		if (regex.test(branch_name_lc)){
-			var other_name = "PR_"+branch_name_lc.replace(regex, '$1'); 
-		        get_branch_content(branch_name,tool_name,function(entry) {
+			var pr_number=pullrequest['number'];
+			var pr_link=pullrequest['html_url'];
+			var repo_user=pullrequest['head']['repo']['owner']['login'];
+			var repo_name=pullrequest['head']['repo']['name'];
+			var new_name = "PR_"+pr_number+"_"+tool_name;
+			// INIT tools_metadata[id_tool]
+			tools_metadata[new_name]={};
+			tools_metadata[new_name]['pr_user']=repo_user;
+			tools_metadata[new_name]['pr_link']=pr_link;
+			var my_repo = gh.getRepo(repo_user,repo_name);
+		        get_branch_content(branch_name,tool_name,my_repo,function(entry) {
 				if(entry){
-					print_branch_content(entry,other_name);
+					print_branch_content(entry,new_name);
 				}
 			});
 		}
            });
 	});
+
 }
 
 // /////////////////
@@ -236,8 +252,8 @@ function search_other_tool_version(tool_name){
 //
 // TODO : DOC
 
-function get_branch_content(branch_name,tool_name,_callback){
-	repo.getContents(branch_name,'data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
+function get_branch_content(branch_name,tool_name,my_repo,_callback){
+	my_repo.getContents(branch_name,'data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
 		if (!res) {
 			console.log('Error getting content of ' + branch_name);
       			return;
@@ -440,10 +456,8 @@ function modif_value(id){
 	    // Retrieve stored entry
             var entry_id = $('li.active').attr('id');
 	    var entry=get_stored_entry(entry_id);
-	    console.log(entry);	
 	    //var liste_modif=Array.from(liste); // WIP
             entry = modif_dict(entry,liste[0],liste,new_v)
-	    console.log(entry);	
     	    store_entry(entry,entry_id);
             // Changes have been made, we record the status to true and show the btn to send changes into PR
 	    store_entry(true,"changes");
@@ -500,7 +514,7 @@ function edit_mode(_cb){
     if (get_stored_entry("mode") != "edit"){
 	store_entry("edit","mode");
         var current_tool = $('li.active').attr('id');
-        console.log(current_tool)
+        console.log(current_tool +" : edit mode")
         var edit_tool = "edit_"+current_tool;
     	store_entry(get_stored_entry(current_tool),edit_tool);
         add_tab(edit_tool,"✏️"+current_tool);
@@ -521,6 +535,7 @@ function edit_mode(_cb){
 // 5) Make a pull request to the dev branch
 //
 // TODO : IMprove user experience and error management (learn to use promise)
+//
 
 function send_modif(){
 	var repo_name="TESTAPI" // TODO Global variable?
@@ -565,7 +580,7 @@ function send_modif(){
 		// Create the new branch on the forked repo
 		repo_forked.createBranch(branch_origin,branch_name,function(req,res){
 			if (!res) {
-				console.log("Error creating branch '"+branch_name+"' from '"+branch_origin);
+				console.log("Error creating branch '"+branch_name+"' from '"+branch_origin+"'");
 			}
 			else {
 
@@ -573,7 +588,7 @@ function send_modif(){
 				// Create the json file on this new branch on the forked repo
 				repo_forked.writeFile(branch_name,file_path,my_bt_entry,'Write in '+file_name,{},function(req,res){
 					if (!res) {
-						console.log("Error creating file '"+file_name+"' in '"+branch_name);
+						console.log("Error creating file '"+file_name+"' in '"+branch_name+"'");
 					}
 					else {
 
@@ -584,11 +599,20 @@ function send_modif(){
 					  		"body": "Please pull this in!",
 					  		"head": login+":"+branch_name,
 					  		"base": branch_origin
-						},function(){
-							alert("File writed in https://github.com/"+login+"/"+repo_name+"/blob/"+branch_name+"/"+file_path);  // TODO catch error...
-							hide_loader();	
-							exit_modif();
-							print_branch_content(entry,branch_name);
+						},function(req,res){
+							if (!res) {
+								console.log("Error creating Pull Request from '"+login+":"+file_name+"' to origin:'"+branch_origin);
+							}
+							else {
+								alert("File writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
+								hide_loader();	
+								exit_modif();
+								var pr_number=res["number"];
+								var new_name="NEW_PR_"+pr_number+"_"+tool_name;
+								tools_metadata[new_name]={}
+								tools_metadata[new_name]['pr_link']=res["html_url"];
+								print_branch_content(entry,new_name);
+							}
 						});
 					}
 				});
@@ -707,10 +731,14 @@ function fill_tool_list(){
 // TODO: Finish the doc
 function add_tab(id,value=id){
 	var $tab = $('#tab');
-        var regex = new RegExp("^(new|PR|edit)_[a-zA-Z0-9_-]*$");
+        var regex = new RegExp("^(PR|edit|NEW)_[a-zA-Z0-9_-]*$");
 	var classs="master";
         if (regex.test(id)){
 		classs=id.replace(regex,'$1');
+	}
+	// If the tool has a Pull Request of the user add the class 'OWN_PR' to color it differently
+	if (tools_metadata[id]){
+		if (tools_metadata[id]["pr_user"] == login) classs="OWN_PR ";
 	}
 	$tab.append("<li id="+id+" class="+classs+">"+value+"</li>");
 	add_tab_event();
@@ -729,17 +757,29 @@ function visual_select_tab(id){
 	var $title = $('p#title');
         var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
 	var status = id.replace(regex, '$1');
-	var status_converter={"PR":"[Existing Pull Request]","new":"[New Pull Request]","edit":"[Edit mode]"};
+	var status_converter={"PR":"[Existing Pull Request","NEW":"[New Pull Request]","edit":"[Edit mode"};
 	var status_long=status_converter[status];
+
         var $github_link = $('a#github_link');
 	$github_link.hide();
 	if (!status_long) {
-		status_long="[Master]";
+		status_long="[Master";
 	}
 	else if (status == "new") {
 		$github_link.attr("href", "https://github.com/ValentinMarcon/TESTAPI/tree/"+id);
 		$github_link.show();
 	}
+	if (tools_metadata[id]){
+		var pr_user=tools_metadata[id]['pr_user'];
+		var pr_link=tools_metadata[id]['pr_link'];
+		if (pr_user)  status_long=status_long+" by '"+pr_user+"']";
+		if (pr_link) {
+			$github_link.attr("href", pr_link);
+			$github_link.show();
+		}
+
+	}
+	else status_long=status_long+"]";
 	$title.text($title.text() + " " + status_long);
 }
 
@@ -774,7 +814,7 @@ function create_tabs(tool){
 //TODO MERGE functions with btnsendhide btncancelhide and printmode and changefalse (see exit_modif)
 //
 function change_tab(id_tab_selected){
-	console.log(id_tab_selected);
+	console.log(id_tab_selected+" : selected");
         if ((get_stored_entry("mode")=="edit") && (get_stored_entry("changes"))){
 		var quit=confirm("If you change tab all modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
 		if (quit) {
