@@ -9,6 +9,12 @@ input[type=button]{
   text-indent: 10px;
 }
 
+#subtitle {
+  font-size: 140%;
+  padding: 25px;
+  text-decoration: none;
+}
+
 /* ------------ */
 /* HEADER Title */
 /* ------------ */

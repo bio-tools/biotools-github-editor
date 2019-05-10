@@ -56,7 +56,7 @@ var repo = gh.getRepo('ValentinMarcon','TESTAPI');
 
 // Init metadata var
 // It is a variable to stock all data that we don't want to add to JSON file
-var tools_metadata={};
+var tool_metadata={};
 
 
 // ///////////////////////////////////
@@ -89,7 +89,7 @@ $btn_send.on('click', function(event) {
 
 $btn_cancel.on('click', function(event) {
 	exit_modif();
-	change_tab(get_stored_entry()['biotoolsID'].toLowerCase());
+	change_tab(tool_metadata["name"].toLowerCase());
 });
 
 /// ///////////////////////////////////
@@ -102,6 +102,48 @@ function add_tab_event(){
     });
 }
 add_tab_event();
+
+// /////////////////////////////////// WIP
+// If a tool is on the parameter show it
+//
+/* WIP
+function addOrUpdateUrlParameter(name,value)
+{
+  var href = window.location.href;
+  var regex = new RegExp("[&\\?]" + name + "=");
+  if(regex.test(href))
+  {
+    regex = new RegExp("([&\\?])" + name + "=\\d+");
+    window.location.href = href.replace(regex, "$1" + name + "=" + value);
+  }
+  else
+  {
+    if(href.indexOf("?") > -1)
+      window.location.href = href + "&" + name + "=" + value;
+    else
+      window.location.href = href + "?" + name + "=" + value;
+  }
+}
+*/
+function GetURLParameter(sParam){
+	    var sPageURL = window.location.search.substring(1);
+	    var sURLVariables = sPageURL.split('&');
+	    for (var i = 0; i < sURLVariables.length; i++)
+	    {
+	        var sParameterName = sURLVariables[i].split('=');
+	        if (sParameterName[0] == sParam)
+	        {
+	            return sParameterName[1];
+	        }
+	    }
+}
+var tool_on_url=GetURLParameter("tool");
+if (tool_on_url){
+	// TODO change that by wrapping search_tool to have a part to retrieve tool_name from jqueryobject and other to do what it actually do
+	$('#search_tool').val(tool_on_url);
+    	// WIP window.location.href = "tool.html?"+tool_on_url;
+	search_tool($('#search_tool'));
+}
 
 // ///////////////////////////////////
 // Fill the tool list:
@@ -176,12 +218,18 @@ function search_tool($search_tool,_cb){
 				return;
 			}
 			else {
+    				//WIP window.location.href = "tool.html?"+tool_name;
 				modif_mode();
+				tool_metadata["name"]=tool_name;
+				//addOrUpdateUrlParameter('tool',tool_name);
 				// Store the master json entry in memory to manipulate the entry later
 				store_entry(res);
+				// Store the json entry in memory to manipulate the entry later
+				store_entry(res,tool_name);
+				//console.log("entry: "+name);
 				// Print the master entry into html
 				print_branch_content(res,tool_name);
-				// Search and print the other version of the entry into other tabs
+				// Search the other version of the entry and print corresponding tabs
 	       			search_other_tool_version(tool_name);
 				hide_loader();
 			}
@@ -198,9 +246,6 @@ function search_tool($search_tool,_cb){
 // TODO : WRITE doc
 
 function print_branch_content(entry,name){
-	  // Store the original json entry in memory to manipulate the entry later
-	  store_entry(entry,name);
-	  //console.log("entry: "+name);
 	  // Store the current mode to "print"
 	  store_entry("print","mode");
 	  // Store the current state of changes to false
@@ -214,13 +259,11 @@ function print_branch_content(entry,name){
 // SEARCH_OTHER_TOOL_VERSIONS
 //
 // TODO : DOC
-// TODO : STOP WRITE ALL THE VERSION TO ERASE EACH OTHERS UNTILL THE LAST (Need to learn promise and callback)
-//
-// TODO : TRIER PAR NUM DE PR
 //
 
 function search_other_tool_version(tool_name){
         repo.listPullRequests({},function(req, res) {
+	   console.log(res);
            res.forEach(function(pullrequest){
 		var branch_name=pullrequest['head']['ref'];	
 		var branch_name_lc=branch_name.toLowerCase();
@@ -231,14 +274,17 @@ function search_other_tool_version(tool_name){
 			var repo_user=pullrequest['head']['repo']['owner']['login'];
 			var repo_name=pullrequest['head']['repo']['name'];
 			var new_name = "PR_"+pr_number+"_"+tool_name;
-			// INIT tools_metadata[id_tool]
-			tools_metadata[new_name]={};
-			tools_metadata[new_name]['pr_user']=repo_user;
-			tools_metadata[new_name]['pr_link']=pr_link;
+			// INIT tool_metadata[id_tool]
+			tool_metadata[new_name]={};
+			tool_metadata[new_name]['pr_user']=repo_user;
+			tool_metadata[new_name]['pr_link']=pr_link;
 			var my_repo = gh.getRepo(repo_user,repo_name);
 		        get_branch_content(branch_name,tool_name,my_repo,function(entry) {
 				if(entry){
-					print_branch_content(entry,new_name);
+					// Store the json entry in memory to manipulate the entry later
+					store_entry(entry,new_name);
+					//console.log("entry: "+name);
+					create_tabs(new_name);
 				}
 			});
 		}
@@ -289,7 +335,7 @@ function print_tool(entry){
 	$tool_content.append("<tr><td class=new_line id="+key+" colspan=2>➕ New Line </td></tr>" ); //WIPP
 	// Change the title with the tool name
 	var $title = $('p#title');
-	$title.text(entry['biotoolsID'])
+	$title.text(tool_metadata["name"]);
 	// Table cell that could be modified are selected thanks to the id "value"
 	//var $modifcell = $('p.value');
 	var $modifcell = $('td.edit');
@@ -555,7 +601,7 @@ function send_modif(){
 	var entry=get_stored_entry(current_tool);
 	console.log(entry+" changes will be recorded");
 	// Lower Case id of the tool
-	var tool_name=entry['biotoolsID'].toLowerCase();
+	var tool_name = tool_metadata["name"].toLowerCase();
 	// File name in which changes will be saved
 	var file_name=tool_name+".json";
 	// Path of the file in github
@@ -609,8 +655,11 @@ function send_modif(){
 								exit_modif();
 								var pr_number=res["number"];
 								var new_name="NEW_PR_"+pr_number+"_"+tool_name;
-								tools_metadata[new_name]={}
-								tools_metadata[new_name]['pr_link']=res["html_url"];
+								tool_metadata[new_name]={}
+								tool_metadata[new_name]['pr_link']=res["html_url"];
+								// Store the json entry in memory to manipulate the entry later
+								store_entry(entry,new_name);
+					  			//console.log("entry: "+name);
 								print_branch_content(entry,new_name);
 							}
 						});
@@ -737,8 +786,8 @@ function add_tab(id,value=id){
 		classs=id.replace(regex,'$1');
 	}
 	// If the tool has a Pull Request of the user add the class 'OWN_PR' to color it differently
-	if (tools_metadata[id]){
-		if (tools_metadata[id]["pr_user"] == login) classs="OWN_PR ";
+	if (tool_metadata[id]){
+		if (tool_metadata[id]["pr_user"] == login) classs="OWN_PR ";
 	}
 	$tab.append("<li id="+id+" class="+classs+">"+value+"</li>");
 	add_tab_event();
@@ -755,32 +804,29 @@ function visual_select_tab(id){
 	$tab.toggleClass('active');
         add_tab_event();
 	var $title = $('p#title');
+	var $subtitle = $('a#subtitle');
         var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
 	var status = id.replace(regex, '$1');
 	var status_converter={"PR":"[Existing Pull Request","NEW":"[New Pull Request]","edit":"[Edit mode"};
 	var status_long=status_converter[status];
-
-        var $github_link = $('a#github_link');
-	$github_link.hide();
 	if (!status_long) {
 		status_long="[Master";
+		$subtitle.attr("href", "https://github.com/ValentinMarcon/TESTAPI");
 	}
-	else if (status == "new") {
-		$github_link.attr("href", "https://github.com/ValentinMarcon/TESTAPI/tree/"+id);
-		$github_link.show();
-	}
-	if (tools_metadata[id]){
-		var pr_user=tools_metadata[id]['pr_user'];
-		var pr_link=tools_metadata[id]['pr_link'];
+	if (tool_metadata[id]){
+		var pr_user=tool_metadata[id]['pr_user'];
+		var pr_link=tool_metadata[id]['pr_link'];
 		if (pr_user)  status_long=status_long+" by '"+pr_user+"']";
 		if (pr_link) {
-			$github_link.attr("href", pr_link);
-			$github_link.show();
+			$subtitle.attr("href", pr_link);
 		}
 
 	}
 	else status_long=status_long+"]";
-	$title.text($title.text() + " " + status_long);
+
+	var name = tool_metadata["name"];
+	$title.text(name);
+	$subtitle.text(status_long);
 }
 
 // /////////////////
@@ -790,9 +836,6 @@ function visual_select_tab(id){
 function remove_tab(){
 	var $tab_active = $('li.active');
     	$tab_active.remove();
-	/*var entry=get_stored_entry(); // TODO Ensure i can remove that part
-	print_tool(entry);
-	visual_select_tab(entry['biotoolsID']);*/
 }
 
 // /////////////////
