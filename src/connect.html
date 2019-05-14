@@ -1,59 +1,59 @@
-<!DOCTYPE html>
 <html>
+	<head>
+		<title>bio.tools editor - Github Login</title>
+		<link rel="stylesheet" href="css/styles.css" />
+	</head>
 
-<head>
-    <title>bio.tools editor - Github Login</title>
-    <link rel="stylesheet" href="css/styles.css" />
-</head>
+	<body>
+		</br><hr>
 
-<body>
+		<table id="head">
+			<tr>
+				<td>
+					<div class="loader" id="search_loader" hidden></div>
+				</td>
+				<td class="title">
+					<p id="title">Get your access token from github</p>
+				</td>
+				<td class="user">
+					<div class="user" align="right">
+						<table>
+							<tr>
+								<td class="avatar">
+									<img src="https://avatars3.githubusercontent.com/u/18133?s=200&v=4" alt="Github User" class="avatar" id="avatar">
+								</td>
+								<td class="username">
+									<i>Disconnected</i>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<hr>
 
-    </br>
-    <hr>
-    <table id="head">
-	<tr>
-	<td>
-    		<div class="loader" id="search_loader" hidden></div>
-	</td>
-	<td class="title">
-		<p id="title">Get your access token from github</p>
-	</td>
-	<td>
-		<div class="user" align="right">
-			<table>
-			<tr><td>
-				<i>Disconnected</i>
-			</td><td class="avatar">
-				<img src="https://avatars3.githubusercontent.com/u/18133?s=200&v=4" alt="Github User" class="avatar" id="avatar">
-			</td></tr>
-			</table>
+		</br></br>
+
+		<div id="div_access_token" hidden=true>
+
+			<i>We could not authentify you with the API request.</br> Please enter you gihub access_token in the the form or try to get a new code</i>
+
+			</br></br></br>
+
+			- (1) If the code doesn't work <a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">click here</a> to generate a new one.
+
+			</br></br></br>
+
+			- (2) If it still doesn't work, enter your <a href="https://github.com/settings/tokens" target="_blank">access token</a> here :
+			<input name="access_token" id="access_token" type="text" />
+			<input value="send" id="btn_access_token" type="button" /><br>
+			<i>(<a href="https://developer.github.com/v3/auth/#basic-authentication" target="_blank">help</a>)</i>
+
+			</br></br></br><hr>
 		</div>
-	</td>
-	</tr>
-    <!--TEST ZONE   tr> 
-    <td rowspan="2">	    
-    	<input type="button" id="btn_request" value="CONFIRM">
-    <td/>
-    <tr/-->
-    </table>
-    </br><hr></br></br>
-    <div id="div_access_token" hidden=true>
-	<i>We could not authentify you with the API request.</br> Please enter you gihub access_token in the the form or try to get a new code</i>
-	</br></br></br>
-	- Enter your <a href="https://github.com/settings/tokens" target="_blank">access token</a> here :
-        <!--input name="access_token" id="access_token" type="password" /-->
-        <input name="access_token" id="access_token" type="text" />
-	<input value="send" id="btn_access_token" type="button" /><br>
-    	<i>(<a href="https://developer.github.com/v3/auth/#basic-authentication" target="_blank">help</a>)</i>
-	</br></br></br>
-	- Or if the code don't work <a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">click here</a> to generate a new one:</br>
-	</br></br><hr>
-    </div>
 
+		<script src="./connect.js"></script>
 
-
-    <script src="./connect.js"></script>
-
-</body>
-
+	</body>
 </html>

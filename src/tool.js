@@ -1,14 +1,23 @@
 import GitHub from "github-api";
 import Repository from "github-api";
 import $ from "jquery";
-import request from "superagent";
-//import bar, { foo } from "./fonctions"; // Tests
-//import fs from "fs"; // TEMP: TO READ LOCAL OAUTH FILE 
-
-//foo() // Tests
-//bar() // Tests
 
 // ///////////////////////////////////
+// VARIABLE
+// TODO DOC
+
+const page_search="search_tool.html";
+const page_home="index.html";
+
+const gh_bt_user = 'ValentinMarcon';
+const gh_bt_repo = 'TESTAPI';
+const OAUTH = sessionStorage.getItem("access_token");
+var login="";
+// Variable to stock all data that we don't want to add to JSON file
+var tool_metadata={};
+
+// ///////////////////////////////////
+// TODO  CREATE A FUNCTION ON AN OTHER FILE
 // Github authentification:
 
 // Use a personal github OAUTH token
@@ -16,30 +25,28 @@ import request from "superagent";
 //OAUTH = OAUTH.substring(0, OAUTH.length-1);
 
 // Use OAUTH asked and stored by log page
-const OAUTH = sessionStorage.getItem("access_token");
+
 
 // If the user is here without OAUTH token, redirect to connexion page
 console.log("/!\\-token-/!\\");
 console.log(OAUTH);
 console.log("/!\\-------/!\\");
 if(!OAUTH){
-	location.href = "index.html";
+	location.href = page_home;
 }
 
 //console.log(OAUTH);
 
 // Basic auth
 var gh = new GitHub({
-  //username: 'ValentinMarcon',
   token: `${OAUTH}`
 });
 
 // Get user info
-var login="";
 gh.getUser().getProfile(function(err, profile) { 
 		if(!profile){
 			alert("Authentication failure with token ");
-			location.href = "index.html";
+			location.href = page_home;
 		}
 		else {
 			login = profile["login"];
@@ -52,79 +59,13 @@ gh.getUser().getProfile(function(err, profile) {
 });
 
 // Get the repo where tools.json are stocked
-var repo = gh.getRepo('ValentinMarcon','TESTAPI');
+var repo = gh.getRepo(gh_bt_user,gh_bt_repo);
 
-// Init metadata var
-// It is a variable to stock all data that we don't want to add to JSON file
-var tool_metadata={};
 
 
 // ///////////////////////////////////
-// Buttons events:
-// TODO: Create function if redondant
+// Parse URL and redirect:
 
-var $btn_search = $('.btn_search');
-var $btn_select = $('.btn_select');
-var $btn_search_other = $('.btn_search_other');
-var $btn_send = $('.btn_send');
-var $btn_cancel = $('.btn_cancel');
-
-$btn_search.on('click', function(event) {
-	// Input text to search a tool
-	search_tool($('#search_tool'));
-});
-
-$btn_select.on('click', function(event) {
-	// Select tag to choose the tool to search
-	search_tool($('#tool_list'));
-});
-
-$btn_search_other.on('click', function(event) {
-	search_mode();
-});
-
-$btn_send.on('click', function(event) {
-	send_modif();
-});
-
-$btn_cancel.on('click', function(event) {
-	exit_modif();
-	change_tab(tool_metadata["name"].toLowerCase());
-});
-
-/// ///////////////////////////////////
-// Menu events:
-
-function add_tab_event(){
-    var $tab_not_active = $("li:not('.active')");
-    $tab_not_active.unbind('click').on('click', function(event){
-        change_tab(this.id);
-    });
-}
-add_tab_event();
-
-// /////////////////////////////////// WIP
-// If a tool is on the parameter show it
-//
-/* WIP
-function addOrUpdateUrlParameter(name,value)
-{
-  var href = window.location.href;
-  var regex = new RegExp("[&\\?]" + name + "=");
-  if(regex.test(href))
-  {
-    regex = new RegExp("([&\\?])" + name + "=\\d+");
-    window.location.href = href.replace(regex, "$1" + name + "=" + value);
-  }
-  else
-  {
-    if(href.indexOf("?") > -1)
-      window.location.href = href + "&" + name + "=" + value;
-    else
-      window.location.href = href + "?" + name + "=" + value;
-  }
-}
-*/
 function GetURLParameter(sParam){
 	    var sPageURL = window.location.search.substring(1);
 	    var sURLVariables = sPageURL.split('&');
@@ -139,50 +80,35 @@ function GetURLParameter(sParam){
 }
 var tool_on_url=GetURLParameter("tool");
 if (tool_on_url){
-	// TODO change that by wrapping search_tool to have a part to retrieve tool_name from jqueryobject and other to do what it actually do
-	$('#search_tool').val(tool_on_url);
-    	// WIP window.location.href = "tool.html?"+tool_on_url;
-	search_tool($('#search_tool'));
+	search_tool(tool_on_url);
+}
+else {
+	window.location.href = page_search;
+
 }
 
 // ///////////////////////////////////
-// Fill the tool list:
-fill_tool_list();
+// Buttons events:
+// TODO: Create function if redondant
 
-// ///////////////////////////////////
-// Autocomplete TODO  WIPWIPWIP TODO (JQUERY PROBLEMS)
-/*
-var availableTags = [
-      "ActionScript",
-      "AppleScript",
-      "Asp",
-      "BASIC",
-      "C",
-      "C++",
-      "Clojure",
-      "COBOL",
-      "ColdFusion",
-      "Erlang",
-      "Fortran",
-      "Groovy",
-      "Haskell",
-      "Java",
-      "JavaScript",
-      "Lisp",
-      "Perl",
-      "PHP",
-      "Python",
-      "Ruby",
-      "Scala",
-      "Scheme"
- ];
+var $btn_search_other = $('.btn_search_other');
+var $btn_send = $('.btn_send');
+var $btn_cancel = $('.btn_cancel');
 
-var $search_tool = $('#search_tool');
-console.log($search_tool);
-('#search_tool').autocomplete({
-     source: availableTags
+$btn_search_other.on('click', function(event) {
+	window.location.href = page_search;
+	//search_mode();
 });
-*/
+
+$btn_send.on('click', function(event) {
+	send_modif();
+});
+
+$btn_cancel.on('click', function(event) {
+	exit_modif();
+	change_tab(tool_metadata["name"].toLowerCase());
+});
+
 
 // ////////////////////////////////////////////////////
 // FUNCTIONS :
@@ -205,20 +131,19 @@ function hide_loader(){
 // Search a tool entry from the github repository
 //
 
-function search_tool($search_tool,_cb){
+function search_tool(tool_name){
 	// Value entered/choosed by the user
-	var tool_name = $search_tool.val()
 	if (tool_name != ""){
 		show_loader();
 		// Get the corresponding json file on the data repository on Github (Cf Github authentifiation above)
 		repo.getContents('master','data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
 			if (!res) {
-				alert("This tool '"+tool_name+"' do not exist on bio.tools. You can also pick one in the list above");
+				alert("This tool '"+tool_name+"' does not exist on bio.tools. You can also pick one in the list");
 				hide_loader();
+				window.location.href = page_search;
 				return;
 			}
 			else {
-    				//WIP window.location.href = "tool.html?"+tool_name;
 				modif_mode();
 				tool_metadata["name"]=tool_name;
 				//addOrUpdateUrlParameter('tool',tool_name);
@@ -252,18 +177,20 @@ function print_branch_content(entry,name){
     	  store_entry(false,"changes");
 	  //store_modif([]); //WIP: Try to store the modif added to the tool
 	  print_tool(entry);
-	  create_tabs(name);
+          add_tab(name);
+          // TODO Change this visual selct by a change_tab (and remove the print tool from the functions that calls create_tabs)
+          visual_select_tab(name);
 }
 
 // /////////////////
 // SEARCH_OTHER_TOOL_VERSIONS
 //
 // TODO : DOC
-//
 
 function search_other_tool_version(tool_name){
         repo.listPullRequests({},function(req, res) {
 	   console.log(res);
+	   var itemsProcessed = 0;
            res.forEach(function(pullrequest){
 		var branch_name=pullrequest['head']['ref'];	
 		var branch_name_lc=branch_name.toLowerCase();
@@ -271,20 +198,24 @@ function search_other_tool_version(tool_name){
 		if (regex.test(branch_name_lc)){
 			var pr_number=pullrequest['number'];
 			var pr_link=pullrequest['html_url'];
+			var pr_date=pullrequest['created_at'];
 			var repo_user=pullrequest['head']['repo']['owner']['login'];
 			var repo_name=pullrequest['head']['repo']['name'];
 			var new_name = "PR_"+pr_number+"_"+tool_name;
 			// INIT tool_metadata[id_tool]
 			tool_metadata[new_name]={};
 			tool_metadata[new_name]['pr_user']=repo_user;
+			tool_metadata[new_name]['pr_number']=pr_number;
 			tool_metadata[new_name]['pr_link']=pr_link;
+			tool_metadata[new_name]['pr_date']=pr_date;
 			var my_repo = gh.getRepo(repo_user,repo_name);
+
 		        get_branch_content(branch_name,tool_name,my_repo,function(entry) {
 				if(entry){
 					// Store the json entry in memory to manipulate the entry later
 					store_entry(entry,new_name);
 					//console.log("entry: "+name);
-					create_tabs(new_name);
+					add_tab(new_name);
 				}
 			});
 		}
@@ -584,7 +515,7 @@ function edit_mode(_cb){
 //
 
 function send_modif(){
-	var repo_name="TESTAPI" // TODO Global variable?
+	var repo_name=gh_bt_repo // TODO Global variable?
 
 	// If we are here but no changes have been made don't create a pull request
 	if (!get_stored_entry("changes")){
@@ -804,29 +735,52 @@ function visual_select_tab(id){
 	$tab.toggleClass('active');
         add_tab_event();
 	var $title = $('p#title');
-	var $subtitle = $('a#subtitle');
-        var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
+	var $subtitle = $('p#subtitle');
+	var $subtitle_link = $('a#pr_link');
+	var $subtitle_date = $('p#pr_date');
+	var $subtitle_author = $('p#pr_author');
+	$title.text(tool_metadata["name"]);
+	$subtitle.text("");
+	$subtitle_link.text("");
+	$subtitle_date.text("");
+	$subtitle_author.text("");
+	var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
 	var status = id.replace(regex, '$1');
-	var status_converter={"PR":"[Existing Pull Request","NEW":"[New Pull Request]","edit":"[Edit mode"};
+	var status_converter={"PR":"Existing Pull Request","NEW":"New Pull Request","edit":"Edit mode"};
 	var status_long=status_converter[status];
 	if (!status_long) {
-		status_long="[Master";
-		$subtitle.attr("href", "https://github.com/ValentinMarcon/TESTAPI");
+		status_long="Origin";
+		$subtitle_link.text("Master");
+		$subtitle_link.attr("href", "https://github.com/"+gh_bt_user+"/"+gh_bt_repo);
 	}
+	$subtitle.text(status_long);
 	if (tool_metadata[id]){
 		var pr_user=tool_metadata[id]['pr_user'];
 		var pr_link=tool_metadata[id]['pr_link'];
-		if (pr_user)  status_long=status_long+" by '"+pr_user+"']";
+		var pr_date=tool_metadata[id]['pr_date'];
+		var pr_number=tool_metadata[id]['pr_number'];
+		if (pr_user)  $subtitle_author.text("By '"+pr_user+"' ");
+
 		if (pr_link) {
-			$subtitle.attr("href", pr_link);
+			if (pr_number) $subtitle_link.text(" Pull Request #"+pr_number);
+			else $subtitle_link.text(" Pull Request");
+			$subtitle_link.attr("href", pr_link);
 		}
 
-	}
-	else status_long=status_long+"]";
+		if (pr_date) $subtitle_date.text("Created on "+pr_date.split("T")[0]);
 
-	var name = tool_metadata["name"];
-	$title.text(name);
-	$subtitle.text(status_long);
+	}
+	
+}
+
+/// ///////////////////////////////////
+// ADD_TAB_EVENT
+
+function add_tab_event(){
+    var $tab_not_active = $("li:not('.active')");
+    $tab_not_active.unbind('click').on('click', function(event){
+        change_tab(this.id);
+    });
 }
 
 // /////////////////
@@ -837,18 +791,6 @@ function remove_tab(){
 	var $tab_active = $('li.active');
     	$tab_active.remove();
 }
-
-// /////////////////
-// CREATE_TABS
-//
-// TODO:
-function create_tabs(tool){
-	add_tab(tool);
-        // TODO Change this visual selct by a change_tab (and remove the print tool from the functions that calls create_tabs)
-        visual_select_tab(tool)
-}
-
-
 
 // /////////////////
 // TAB_SELECTED

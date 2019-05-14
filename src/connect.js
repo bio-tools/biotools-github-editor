@@ -3,11 +3,23 @@ import GitHub from "github-api";
 import $ from "jquery";
 import request from "request"; //( add to package.json)
 
+// ///////////////////////////////////
+// VARIABLE
+// TODO DOC
+
+const page_search="search_tool.html";
 const OAUTH = sessionStorage.getItem("access_token");
+
+
+// //////////////////////////////////////////////////////////////
 // If the user is already logged, redirect to search tool page
 if(OAUTH){
-	location.href = "index_search_tool.html";
+	location.href = page_search;
 }
+
+// //////////////////////////////////////////////////////////////
+// MAIN /////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////
 
 main();
 
@@ -37,6 +49,7 @@ function github_access(code){
 	  };
 
 	request(options, function (error, response, body) {
+	  console.log(body);
           var data = JSON.parse(body);
           if (data['error']){
 	          hide_loader();
@@ -58,7 +71,7 @@ function github_access(code){
 //
 function home(access_token){
     sessionStorage.setItem("access_token",access_token);
-    location.href = "index_search_tool.html";
+    location.href = page_search;
 }
 
 
@@ -75,7 +88,6 @@ function ask_token(){
          var $access_token = $('#access_token');
 	 console.log($access_token.val()); //
 	 var gh = new GitHub({
-	   //username: 'ValentinMarcon',
 	   token: $access_token.val()
 	 });
         gh.getUser().getProfile(function(err, profile) { 
