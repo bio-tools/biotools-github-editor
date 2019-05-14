@@ -1,43 +1,47 @@
+// #####################################################
+// 			SEARCH_TOOL.js 
+// #####################################################
+//
+// - Retrieve all biotools from index.txt 
+// - Display the list of tools
+// - Display a free input text
+// - Request the tool page with the choosen tool in parameter
+//
+// #####################################################
+
+
+// /////////////////////////////////////////////////////
+// IMPORTS
+// /////////////////////////////////////////////////////
+
 import GitHub from "github-api";
 import Repository from "github-api";
 import $ from "jquery";
 
-// ///////////////////////////////////
+
+// /////////////////////////////////////////////////////
 // VARIABLE
-//
+// /////////////////////////////////////////////////////
+
+// Pages
 const page_tool="tool.html";
 const page_home="index.html";
-
+// Github repository and user were tools.json are stocked
 const gh_bt_user = 'ValentinMarcon';
 const gh_bt_repo = 'content';
-
-// ///////////////////////////////////
-// Parse URL and redirect:
-
-function GetURLParameter(sParam){
-	    var sPageURL = window.location.search.substring(1);
-	    var sURLVariables = sPageURL.split('&');
-	    for (var i = 0; i < sURLVariables.length; i++)
-	    {
-	        var sParameterName = sURLVariables[i].split('=');
-	        if (sParameterName[0] == sParam)
-	        {
-	            return sParameterName[1];
-	        }
-	    }
-}
-
-// If a tool is on the url parameter as "?tool=tool_name" redirect to tool page.
-var tool_on_url=GetURLParameter("tool");
-if (tool_on_url){
-    	window.location.href = page_tool+"?tool="+tool_on_url;
-}
-
-// ///////////////////////////////////
-// Github authentification:
-
-// Use OAUTH asked and stored by log page
+// Github personal token of the user
 const OAUTH = sessionStorage.getItem("access_token");
+
+
+// /////////////////////////////////////////////////////
+// INIT
+// /////////////////////////////////////////////////////
+
+// -----------------------------------------------------
+// GITHUB AUTHENTIFICATION
+// -----------------------
+// Use OAUTH asked and stored by log page
+// TODO  CREATE A FUNCTION ON AN OTHER FILE
 
 // If the user is here without OAUTH token, redirect to connexion page
 if(!OAUTH){
@@ -68,8 +72,33 @@ gh.getUser().getProfile(function(err, profile) {
 // Get the repo where tools.json are stocked
 var repo = gh.getRepo(gh_bt_user,gh_bt_repo);
 
-// ///////////////////////////////////
+// -----------------------------------------------------
+// PARSE URL
+// ---------
+// Get parameter and redirect if necessary
+
+function GetURLParameter(sParam){
+	    var sPageURL = window.location.search.substring(1);
+	    var sURLVariables = sPageURL.split('&');
+	    for (var i = 0; i < sURLVariables.length; i++)
+	    {
+	        var sParameterName = sURLVariables[i].split('=');
+	        if (sParameterName[0] == sParam)
+	        {
+	            return sParameterName[1];
+	        }
+	    }
+}
+
+// If a tool is on the url parameter as "?tool=tool_name" redirect to tool page.
+var tool_on_url=GetURLParameter("tool");
+if (tool_on_url){
+    	window.location.href = page_tool+"?tool="+tool_on_url;
+}
+
+// -----------------------------------------------------
 // FILL_TOOL_LIST
+// --------------
 
 function fill_tool_list(repo){
 	var $tool_list_obj = $('#tool_list');
@@ -86,11 +115,19 @@ function fill_tool_list(repo){
 	});
 }
 
+// -----------------------------------------------------
 // Fill the tool list:
+// TODO HAVE AUTOCOMPLETION WILL BE NICE
 fill_tool_list(repo);
 
-// ///////////////////////////////////
+
+// ////////////////////////////////////////////////////
+// FUNCTIONS :
+// ////////////////////////////////////////////////////
+
+// -----------------------------------------------------
 // SEARCH_TOOL
+// -----------
 // Search a tool entry from the github repository
 
 function search_tool($search_tool,_cb){
@@ -99,31 +136,25 @@ function search_tool($search_tool,_cb){
 	location.href = page_tool + "?tool=" + tool_name;
 }
 
-// ///////////////////////////////////
+
+// /////////////////////////////////////////////////////
 // Buttons events:
+// /////////////////////////////////////////////////////
 
-var $btn_search = $('.btn_search');
-var $btn_select = $('.btn_select');
-
-$btn_search.on('click', function(event) {
+$('.btn_search').on('click', function(event) {
 	// Input text to search a tool
 	search_tool($('#search_tool'));
 });
 
-$btn_select.on('click', function(event) {
+// -----------------------------------------------------
+$('.btn_select').on('click', function(event) {
 	// Select tag to choose the tool to search
 	search_tool($('#tool_list'));
 });
 
-// ///////////////////////////////////
-
-
-
-// WIP ZONE // WIP ZONE // WIP ZONE //
-// WIP ZONE // WIP ZONE // WIP ZONE //
-// WIP ZONE // WIP ZONE // WIP ZONE //
-// WIP ZONE // WIP ZONE // WIP ZONE //
-
+// -----------------------------------------------------
+//   WIP ZONE // WIP ZONE // WIP ZONE // WIP ZONE //
+// -----------------------------------------------------
 
 // ///////////////////////////////////
 // Autocomplete TODO  WIPWIPWIP TODO (JQUERY PROBLEMS)
@@ -160,11 +191,4 @@ console.log($search_tool);
 });
 */
 
-
-// WIP ZONE // WIP ZONE // WIP ZONE //
-// WIP ZONE // WIP ZONE // WIP ZONE //
-// WIP ZONE // WIP ZONE // WIP ZONE //
-// WIP ZONE // WIP ZONE // WIP ZONE //
-
-
-
+// -----------------------------------------------------

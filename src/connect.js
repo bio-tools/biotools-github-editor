@@ -1,29 +1,65 @@
+// #####################################################
+// 			CONNECT.js 
+// #####################################################
+//
+// - Get the code returned by OAUTH App call (See index.html)
+// --> https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/#1-request-a-users-github-identity
+// - Make a POST request to https://github.com/login/oauth/access_token
+// --> https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/#2-users-are-redirected-back-to-your-site-by-github
+// - If all is ok redirect to search tool page
+// - If not ask the user to write is token manally or try to regenerate the code
+//
+// #####################################################
+
+// /////////////////////////////////////////////////////
+// IMPORTS
+// /////////////////////////////////////////////////////
+
 import GitHub from "github-api";
-//import Repository from "github-api";
 import $ from "jquery";
 import request from "request";
 
-// ///////////////////////////////////
-// VARIABLE
-// TODO DOC
 
+// /////////////////////////////////////////////////////
+// VARIABLE
+// /////////////////////////////////////////////////////
+
+// Pages
 const page_search="search_tool.html";
+// Github personal token of the user
 const OAUTH = sessionStorage.getItem("access_token");
 
 
-// //////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////
+// INIT
+// /////////////////////////////////////////////////////
+
+// -----------------------------------------------------
+// GITHUB AUTHENTIFICATION
+// -----------------------
+// Use OAUTH asked and stored by log page
+// TODO  CREATE A FUNCTION ON AN OTHER FILE
+
+
 // If the user is already logged, redirect to search tool page
 if(OAUTH){
 	location.href = page_search;
 }
 
-// //////////////////////////////////////////////////////////////
-// MAIN /////////////////////////////////////////////////////////
-// //////////////////////////////////////////////////////////////
 
+// -----------------------------------------------------
 main();
+// -----------------------------------------------------
 
-// //////////////////////////////////////////////////////////////
+
+// /////////////////////////////////////////////////////
+// FUNCTIONS
+// /////////////////////////////////////////////////////
+
+// -----------------------------------------------------
+// MAIN
+// ----
+// TODO doc 
 
 function main(){
 
@@ -36,7 +72,11 @@ function main(){
 
 }
 
-// //////////////////////////////////////////////////////////////
+// -----------------------------------------------------
+// GITHUB_ACCESS
+// -------------
+//
+// TODO doc 
 
 function github_access(code){
 	var options = { method: 'POST',
@@ -66,17 +106,21 @@ function github_access(code){
 	});
 }
 
-// //////////////////////////////////////////////////////////////
+// -----------------------------------------------------
 // HOME
+// ----
+// TODO: DOC
 //
+
 function home(access_token){
     sessionStorage.setItem("access_token",access_token);
     location.href = page_search;
 }
 
 
-// //////////////////////////////////////////////////////////////
+// -----------------------------------------------------
 // ASK_TOKEN
+// ---------
 // TODO: DOC
 //
 function ask_token(){
@@ -107,29 +151,18 @@ function ask_token(){
     });
 }
 
-// //////////////////////////////////////////////////////////////
+// -----------------------------------------------------
+// LOADER
+// ------
 
 function show_loader(){
 	var $loader = $('#search_loader');
 	$loader.show();
 }
+
 function hide_loader(){
 	var $loader = $('#search_loader');
 	$loader.hide();
 }
 
-
-
-
-// //////////////////////////////////////////////////////////////
-/////// TEST ZONE ////////
-
-// GET action of "Request" button
-var $btn_request = $('#btn_request');
-$btn_request.on('click', function(event) {
-	github_access();
-});
-
-/////// TEST ZONE ////////
-
-
+// -----------------------------------------------------

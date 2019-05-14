@@ -1,5 +1,7 @@
-// RESET access_token
+// #####################################################
+// 			index.js 
+// #####################################################
+//
+// - Remove github API token 
+
 sessionStorage.removeItem("access_token");
-
-// TODO disconnect from github api to
-
