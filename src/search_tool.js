@@ -9,7 +9,7 @@ const page_tool="tool.html";
 const page_home="index.html";
 
 const gh_bt_user = 'ValentinMarcon';
-const gh_bt_repo = 'TESTAPI';
+const gh_bt_repo = 'content';
 
 // ///////////////////////////////////
 // Parse URL and redirect:

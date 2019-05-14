@@ -8,40 +8,55 @@ input[type=button]{
 
 table#head{
   width:100%;
-  height:0%;
 }
 
 #head td.title{
     width:100%;
+    height:60%;
 }
 
-#title {
+#head td.bt_link{
+    width:100%;
+    height:40%;
+    padding-top: 15px;
+}
+
+#head #table_title {
+  width:100%;
+  height:100%;
+}
+
+#head #table_title,#title {
+  text-align: center;
+}
+
+#head #title {
   text-shadow: 2px 2px grey;
   font-size: 300%;
-  text-align: center;
   line-height: 0px;
 }
 
-.tool_meta {
-    border: 1px solid #4d4d4d;
+#head .tool_meta {
+    border: 1px solid #d9d9d9;
     padding: 2px;
     text-indent: 5px;
 }
 
-.tool_meta td{
+#head .tool_meta td{
     white-space: nowrap;
 }
 
-.subtitle {
+#head .subtitle {
   padding : 2px;
   font-weight : bold;
   font-size: 110%;
 }
 
-.subsubtitle {
+#head .subsubtitle {
   font-size: 80%;
   text-decoration: none;
 }
+
 
 /* ------------ */
 /* HEADER user */
@@ -59,7 +74,7 @@ table#head{
 }
 
 #head div.user table{
-  border: 1px solid #4d4d4d;
+  border: 1px solid #d9d9d9;
   padding:  2px;
   height: 100%;
 }
@@ -131,22 +146,23 @@ table#head{
   border-left: 1px solid #d9d9d9;
 }
 
-td.none {
+#tool_content td.none {
   font-style: italic;
 }
 
-div.line {
+#tool_content div.line {
   border-bottom: 1px solid #d9d9d9;
 }
 
-.modified_cell {
+#tool_content .modified_cell {
   background-color: #ffeb99;
 }
 
-.new_line {
+#tool_content .new_line {
   font-size: 60%;
   text-color: grey;
 }
+
 /* -------- */
 /* TAB MENU */
 /* -------- */
@@ -155,7 +171,7 @@ div.line {
     overflow : auto;
 }
 
-#tab{
+#menu #tab{
     font : normal 11px Batang, arial, serif;
     list-style-type : none;
     padding-bottom : 24px; /* à modifier suivant la taille de la police ET de la hauteur de l'onglet dans #onglets li */
@@ -163,7 +179,7 @@ div.line {
     margin-left : 0;
 }
 
-#tab li{
+#menu #tab li{
     float : left;
     height : 21px; /* à modifier suivant la taille de la police pour centrer le texte dans l'onglet */
     background-color: #F4F9FD;
@@ -175,11 +191,11 @@ div.line {
     padding-right: 6px;
 }
 
-#tab li:not(.active){
+#menu #tab li:not(.active){
   cursor:pointer;
 }
 
-#tab li.active{
+#menu #tab li.active{
     font-weight : bold;
     border : 2px solid #111111;
     border-bottom: 1px solid #fff;
@@ -187,23 +203,23 @@ div.line {
 }
 
 
-#tab li.master{
+#menu #tab li.master{
     background-color: #ccd0ff;
 }
 
-#tab li.OWN_PR{
+#menu #tab li.OWN_PR{
     background-color: #e0ccff;
 }
 
-#tab li.PR{
+#menu #tab li.PR{
     background-color: #f0e6ff;
 }
 
-#tab li.edit{
+#menu #tab li.edit{
     background-color: #f4e1ba;
 }
 
-#tab li.NEW{
+#menu #tab li.NEW{
     background-color: #fcd8b6;
 }
 
@@ -225,5 +241,10 @@ div.line {
   100% { transform: rotate(360deg); }
 }
 
+/* ----- */
+/* OTHER  */
+/* ----- */
 
-
+.little {
+  font-size: 80%;
+}

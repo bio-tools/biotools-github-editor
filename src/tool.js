@@ -1,49 +1,66 @@
+// #####################################################
+// 			TOOL.js 
+// #####################################################
+//
+// - Search a tool on the biotools github repository
+// - Record the tool information from json
+// - Display the tool
+// - Display the PR on the tool
+// - Manage tool edition
+// - Create Fork,branch,file,pull_request for new entry
+//
+// #####################################################
+
+
+// /////////////////////////////////////////////////////
+// IMPORTS
+// /////////////////////////////////////////////////////
+
 import GitHub from "github-api";
 import Repository from "github-api";
 import $ from "jquery";
 import diff from 'deep-diff'; 
 
-// ///////////////////////////////////
-// VARIABLE
-// TODO DOC
 
+// /////////////////////////////////////////////////////
+// VARIABLE
+// /////////////////////////////////////////////////////
+
+// Pages
 const page_search="search_tool.html";
 const page_home="index.html";
-
+// Github repository and user were tools.json are stocked
 const gh_bt_user = 'ValentinMarcon';
-const gh_bt_repo = 'TESTAPI';
+const gh_bt_repo = 'content';
+// Github personal token of the user
 const OAUTH = sessionStorage.getItem("access_token");
+// Global stock of the user login 
 var login="";
-// Variable to stock all data that we don't want to add to JSON file
+// Global stock of all data that we don't want to add to JSON file
 var tool_metadata={};
 
-// ///////////////////////////////////
-// TODO  CREATE A FUNCTION ON AN OTHER FILE
-// Github authentification:
 
-// Use a personal github OAUTH token
-//var OAUTH = fs.readFileSync('./src/OAUTH', 'utf8');
-//OAUTH = OAUTH.substring(0, OAUTH.length-1);
+// /////////////////////////////////////////////////////
+// INIT
+// /////////////////////////////////////////////////////
 
+// -----------------------------------------------------
+// GITHUB AUTHENTIFICATION
+// -----------------------
 // Use OAUTH asked and stored by log page
-
+// TODO  CREATE A FUNCTION ON AN OTHER FILE
 
 // If the user is here without OAUTH token, redirect to connexion page
-console.log("/!\\-token-/!\\");
-console.log(OAUTH);
-console.log("/!\\-------/!\\");
 if(!OAUTH){
 	location.href = page_home;
 }
 
-//console.log(OAUTH);
-
-// Basic auth
+// Basic auth on Github API with the token
 var gh = new GitHub({
   token: `${OAUTH}`
 });
 
-// Get user info
+// Retrieve user informations
 gh.getUser().getProfile(function(err, profile) { 
 		if(!profile){
 			alert("Authentication failure with token ");
@@ -62,10 +79,10 @@ gh.getUser().getProfile(function(err, profile) {
 // Get the repo where tools.json are stocked
 var repo = gh.getRepo(gh_bt_user,gh_bt_repo);
 
-
-
-// ///////////////////////////////////
-// Parse URL and redirect:
+// -----------------------------------------------------
+// PARSE URL
+// ---------
+// Get parameter and redirect if necessary
 
 function GetURLParameter(sParam){
 	    var sPageURL = window.location.search.substring(1);
@@ -79,32 +96,38 @@ function GetURLParameter(sParam){
 	        }
 	    }
 }
+
+// Get "tool" parameter on the url
 var tool_on_url=GetURLParameter("tool");
+// If a tool is on the parameters search it
 if (tool_on_url){
 	search_tool(tool_on_url);
 }
+// If not return to search tool page
 else {
 	window.location.href = page_search;
 
 }
 
-// ///////////////////////////////////
+// /////////////////////////////////////////////////////
 // Buttons events:
-// TODO: Create function if redondant
+// /////////////////////////////////////////////////////
 
 var $btn_search_other = $('.btn_search_other');
 var $btn_send = $('.btn_send');
 var $btn_cancel = $('.btn_cancel');
 
+// Redirect to search tool page
 $btn_search_other.on('click', function(event) {
 	window.location.href = page_search;
-	//search_mode();
 });
 
+// Send modif made in the form
 $btn_send.on('click', function(event) {
 	send_modif();
 });
 
+// Cancel modif mode and come back to the "master" tab
 $btn_cancel.on('click', function(event) {
 	exit_modif();
 	change_tab(tool_metadata["name"].toLowerCase());
@@ -115,8 +138,9 @@ $btn_cancel.on('click', function(event) {
 // FUNCTIONS :
 // ////////////////////////////////////////////////////
 
-// /////////////////
+// -----------------------------------------------------
 // LOADER
+// ------
 
 function show_loader(){
 	var $loader = $('#search_loader');
@@ -127,71 +151,62 @@ function hide_loader(){
 	$loader.hide();
 }
 
-// /////////////////
+// -----------------------------------------------------
 // SEARCH_TOOL
+// -----------
 // Search a tool entry from the github repository
-//
+// -If 
 
 function search_tool(tool_name){
 	// Value entered/choosed by the user
-	if (tool_name != ""){
-		show_loader();
-		// Get the corresponding json file on the data repository on Github (Cf Github authentifiation above)
-		repo.getContents('master','data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
-			if (!res) {
-				alert("This tool '"+tool_name+"' does not exist on bio.tools. You can also pick one in the list");
+	show_loader();
+	// Get the corresponding json file on the data repository on Github (Cf Github authentifiation above)
+	repo.getContents('master','data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
+		if (!res) {
+			alert(""+tool_name+"' does not exist on bio.tools. You can also pick one in the list");
 				hide_loader();
-				window.location.href = page_search;
-				return;
-			}
-			else {
-				modif_mode();
-				tool_metadata["name"]=tool_name;
-				//addOrUpdateUrlParameter('tool',tool_name);
-				// Store the master json entry in memory to manipulate the entry later
-				store_entry(res);
-				// Store the json entry in memory to manipulate the entry later
-				store_entry(res,tool_name);
-				//console.log("entry: "+name);
-				// Print the master entry into html
-				print_branch_content(res,tool_name);
-				// Search the other version of the entry and print corresponding tabs
-	       			search_other_tool_version(tool_name);
-				hide_loader();
-			}
-        	});
-	}
-	else {
-		alert("Enter a tool name. You can also pick one in the list above");
-	}
+			window.location.href = page_search;
+			return;
+		}
+		else {
+			modif_mode();
+			tool_metadata["name"]=tool_name;
+			// Store the master json entry in memory to manipulate the entry later
+			store_entry(res);
+			// Store the json entry in memory to manipulate the entry later
+			store_entry(res,tool_name);
+			// Display the master entry into the page
+			display_new_entry(res,tool_name);
+			// Search the Pull requests on the entry and print corresponding tabs
+       			display_entry_pull_requests(tool_name);
+			hide_loader();
+		}
+       	});
 }
 
-// /////////////////
-// PRINT_BRANCH_CONTENT
-//
-// TODO : WRITE doc
+// -----------------------------------------------------
+// DISPLAY_NEW_ENTRY
+// -----------------
+// - Display mode 
+// - Print the tool
+// - Add the tab of the tool on the menu
+// - Select this tab
 
-function print_branch_content(entry,name){
-	  // Store the current mode to "print"
-	  store_entry("print","mode");
-	  // Store the current state of changes to false
-    	  store_entry(false,"changes");
-	  //store_modif([]); //WIP: Try to store the modif added to the tool
+function display_new_entry(entry,name){
+	  // Store the current mode to "display"
+	  store_entry("display","mode");
 	  print_tool(entry);
           add_tab(name);
-          // TODO Change this visual selct by a change_tab (and remove the print tool from the functions that calls create_tabs)
           visual_select_tab(name);
 }
 
-// /////////////////
-// SEARCH_OTHER_TOOL_VERSIONS
-//
-// TODO : DOC
+// -----------------------------------------------------
+// DISPLAY_ENTRY_PULL_REQUESTS
+// ---------------------------
+// Search the Pull requests on the entry and print corresponding tabs
 
-function search_other_tool_version(tool_name){
+function display_entry_pull_requests(tool_name){
         repo.listPullRequests({},function(req, res) {
-	   console.log(res);
-	   var itemsProcessed = 0;
            res.forEach(function(pullrequest){
 		var branch_name=pullrequest['head']['ref'];	
 		var branch_name_lc=branch_name.toLowerCase();
@@ -215,7 +230,6 @@ function search_other_tool_version(tool_name){
 				if(entry){
 					// Store the json entry in memory to manipulate the entry later
 					store_entry(entry,new_name);
-					//console.log("entry: "+name);
 					add_tab(new_name);
 
 				}
@@ -226,9 +240,9 @@ function search_other_tool_version(tool_name){
 
 }
 
-// /////////////////
+// -----------------------------------------------------
 // GET_BRANCH_CONTENT
-//
+// ------------------
 // TODO : DOC
 
 function get_branch_content(branch_name,tool_name,my_repo,_callback){
@@ -243,8 +257,9 @@ function get_branch_content(branch_name,tool_name,my_repo,_callback){
 	});
 }
 
-// /////////////////
+// -----------------------------------------------------
 // PRINT_TOOL
+// ----------
 // Print all json values into a table (html)
 //
 // TODO : Manage new content 
@@ -266,10 +281,10 @@ function print_tool(entry){
 	    }
 	}
 	$tool_content.append("<tr><td class=new_line id="+key+" colspan=2>➕ New Line </td></tr>" ); //WIPP
+
 	// Change the title with the tool name
 	var $title = $('p#title');
 	$title.text(tool_metadata["name"]);
-
 	
 	// Show cells that are differennt from master
 	show_diff(entry);
@@ -283,10 +298,8 @@ function print_tool(entry){
 	// Table cell that could have a new entry are selected thanks to the id "new"
 	/*var $newcell = $('p.new');
         $newcell.on('click', function(event) {
-	    //alert("you can't add a new value for now");
 	    // WIP
-	    modif_value(this.id.replace('_status', '')); 
-        }); // DEPRECATED*/
+        });*/
 	//WIP WIP WIP WIP
 	var $new_line = $('td.new_line');
 	$new_line.on('click', function(event) {
@@ -297,8 +310,9 @@ function print_tool(entry){
 
 }
 
-// /////////////////
+// -----------------------------------------------------
 // VAL_TO_TABLE 
+// ------------
 // Recursive function to create table cells 
 // according to the format of the entry
 // (Null/""; Array; String; Dict)
@@ -374,8 +388,9 @@ function val_to_table(entry,id=""){
 }
 
 
-// //////////////////
+// -----------------------------------------------------
 // GET_DIFF
+// --------
 // Return difference between two dict
 
 function get_diff(entry){
@@ -383,9 +398,9 @@ function get_diff(entry){
 	return diff(entry, orig_entry);
 }
 
-
-// //////////////////
+// -----------------------------------------------------
 // SHOW_DIFF
+// ---------
 //
 // TODO  TODO DOOOOOOOOOC 
 
@@ -407,8 +422,9 @@ function show_diff(entry){
 	}
 }
 
-// //////////////////
+// -----------------------------------------------------
 // GET_DIFF_MESSAGE
+// ----------------
 // Get differences between entry to pull and original entry
 // Make a Pull Request message from these differences
 
@@ -438,8 +454,9 @@ function get_diff_message(entry){
 }
 
 
-// /////////////////
+// -----------------------------------------------------
 // MODIF_DICT 
+// ----------
 // Recursive function to add modif made by the user 
 // to the dict loaded from the github json.
 // In input its take the dict (entry), the current position on the dict (pos),
@@ -463,8 +480,9 @@ function modif_dict(entry,pos,tab_pos,value){
 	return new_entry
 }
 
-// /////////////////
+// -----------------------------------------------------
 // MODIF_VALUE 
+// -----------
 // 
 // TODO : If we change a value two time keep the signal that it is new
 // TODO : Finish the doc 
@@ -550,8 +568,9 @@ function modif_value(id){
 }
 
 
-// /////////////////
+// -----------------------------------------------------
 // EDIT_MODE 
+// ---------
 // 
 //
 // TODO : Finish the doc 
@@ -572,8 +591,9 @@ function edit_mode(_cb){
 
 
 
-// /////////////////
+// -----------------------------------------------------
 // SEND_MODIF
+// ----------
 // 1) Get the stored entry (modified by the user)
 // 2) Fork the bio.tools repo into user github
 // 3) Create a new branch on the github repo from the "dev" branch
@@ -619,62 +639,74 @@ function send_modif(){
 	// 2)
 	// Fork the repo into registered user github
 	repo.fork(function(req,res){
-		// Retrieve then the forked repo
-		var repo_forked = gh.getRepo(login,repo_name);
-
-		// 3)
-		// Create the new branch on the forked repo
-		repo_forked.createBranch(branch_origin,branch_name,function(req,res){
-			if (!res) {
-				console.log("Error creating branch '"+branch_name+"' from '"+branch_origin+"'");
-			}
-			else {
-
-				// 4)
-				// Create the json file on this new branch on the forked repo
-				repo_forked.writeFile(branch_name,file_path,my_bt_entry,'Write in '+file_name,{},function(req,res){
-					if (!res) {
-						console.log("Error creating file '"+file_name+"' in '"+branch_name+"'");
-					}
-					else {
-
-						// 5)
-						// 5.1) Get differences between orig tool entry and new one
-						var body=get_diff_message(entry);
-						console.log(body);
-						// 5.2) Create Pull Request from the new branch on the repo forked to the base repository dev branch
-						var result=repo.createPullRequest({
-					  		"title": "Update/create "+file_name,
-					  		"body": "Please pull this in!\n--------------------\n"+body,
-					  		"head": login+":"+branch_name,
-					  		"base": branch_origin
-						},function(req,res){
-							if (!res) {
-								console.log("Error creating Pull Request from '"+login+":"+file_name+"' to origin:'"+branch_origin);
-							}
-							else {
-								alert("File writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
-								hide_loader();	
-								exit_modif();
-								var pr_number=res["number"];
-								var new_name="NEW_PR_"+pr_number+"_"+tool_name;
-								tool_metadata[new_name]={}
-								tool_metadata[new_name]['pr_link']=res["html_url"];
-								// Store the json entry in memory to manipulate the entry later
-								store_entry(entry,new_name);
-					  			//console.log("entry: "+name);
-								print_branch_content(entry,new_name);
-							}
-						});
-					}
-				});
-			}
-		});
+		if (!res) {
+			alert("Error creating fork of '"+gh_bt_user+"/"+gh_bt_repo+"' in your Github account");
+			hide_loader();	
+			console.log(req);
+		}
+		else {
+			// Retrieve then the forked repo
+			var repo_forked = gh.getRepo(login,repo_name);
+	
+			// 3)
+			// Create the new branch on the forked repo
+			repo_forked.createBranch(branch_origin,branch_name,function(req,res){
+				if (!res) {
+					alert("Error creating branch '"+branch_name+"' from '"+branch_origin+"'");
+					hide_loader();	
+					console.log(req);
+				}
+				else {
+	
+					// 4)
+					// Create the json file on this new branch on the forked repo
+					repo_forked.writeFile(branch_name,file_path,my_bt_entry,'Write in '+file_name,{},function(req,res){
+						if (!res) {
+							alert("Error creating file '"+file_name+"' in '"+branch_name+"'");
+							hide_loader();	
+							console.log(req);
+						}
+						else {
+	
+							// 5)
+							// 5.1) Get differences between orig tool entry and new one
+							var body=get_diff_message(entry);
+							// 5.2) Create Pull Request from the new branch on the repo forked to the base repository dev branch
+							var result=repo.createPullRequest({
+						  		"title": "Update/create "+file_name,
+						  		"body": "Please pull this in!\n--------------------\n"+body,
+						  		"head": login+":"+branch_name,
+						  		"base": branch_origin
+							},function(req,res){
+								if (!res) {
+									alert("Error creating Pull Request from '"+login+":"+file_name+"' to origin:'"+branch_origin);
+									hide_loader();
+									console.log(req);
+								}
+								else {
+									alert("File writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
+									hide_loader();	
+									exit_modif();
+									var pr_number=res["number"];
+									var new_name="NEW_PR_"+pr_number+"_"+tool_name;
+									tool_metadata[new_name]={}
+									tool_metadata[new_name]['pr_link']=res["html_url"];
+									// Store the json entry in memory to manipulate the entry later
+									store_entry(entry,new_name);
+									display_new_entry(entry,new_name);
+								}
+							});
+						}
+					});
+				}
+			});
+		}
 	});
 }
 
-// /////////////////
+// -----------------------------------------------------
 // MODIF_MODE 
+// ----------
 // - Hide the search table
 // - Show the modif table
 //
@@ -689,9 +721,15 @@ function modif_mode(){
 
 }
 
+// -----------------------------------------------------
+// EXIT_MODIF
+// ----------
+// - Hide the search table
+// - Show the modif table
+//  TODO Doc RENAME?
+
 function exit_modif(){
-	store_entry("print","mode");
-	store_entry(false,"changes");
+	store_entry("display","mode");
         var $btn_send = $('.btn_send');
 	$btn_send.hide();
 	var $btn_cancel = $('.btn_cancel');
@@ -700,13 +738,14 @@ function exit_modif(){
 }
 
 
-// /////////////////
+// -----------------------------------------------------
 // SEARCH_MODE 
+// -----------
 // - Show the search table
 // - Hide the modif table
 // - Empty the tool content tag
 // - Delete the tabs
-// - Change to "print" mode
+// - Change to "display" mode
 // - Change to no (false) changes
 // - Hide "send modif" button
 //
@@ -724,8 +763,7 @@ function search_mode(){
 	$tab.html("");
 	var $tab_menu = $('#menu');
 	$tab_menu.hide();
-	store_entry("print","mode");
-	store_entry(false,"changes");
+	store_entry("display","mode");
         var $btn_send = $('.btn_send');
         var $btn_cancel = $('.btn_cancel');
 	$btn_send.hide();
@@ -734,28 +772,36 @@ function search_mode(){
 }
 
 
-// /////////////////
+// -----------------------------------------------------
 // GET_STORED_ENTRY 
+// ----------------
 // Recover the stored "biotools_entry" 
-//
+// If no name is specified it will return the "default" entry stored
 
-function get_stored_entry(name="new_entry"){
+function get_stored_entry(name="default"){
 	var stored=sessionStorage.getItem(name);
 	if (stored) return(JSON.parse(stored));
 	else return false; // TODO manage this false return for callers
 }
 
-// /////////////////
+// -----------------------------------------------------
 // STORE_ENTRY 
-// Save the "biotools_entry" 
-//
+// -----------
+// Save an entry in session storage
+// If no name is specified the entry will be stored in "default"
 
-function store_entry(entry,name="new_entry"){
-	    sessionStorage.setItem(name,JSON.stringify(entry));
+function store_entry(entry,name="default"){
+	sessionStorage.setItem(name,JSON.stringify(entry));
+	if ((name == "mode") && (entry == "display")){
+		// If we change the mode to display we inform the app that there is no changes.
+		store_entry(false,"changes");
+	}
+
 }
 
-// /////////////////
+// -----------------------------------------------------
 // FILL_TOOL_LIST 
+// --------------
 // Get the list of tool from the index file 
 // Append the tools name as options of the select section "tool_list"
 //
@@ -777,8 +823,9 @@ function fill_tool_list(){
 }
 
 
-// /////////////////
+// -----------------------------------------------------
 // ADD_TAB
+// -------
 //
 // TODO: Finish the doc
 function add_tab(id,value=id){
@@ -796,8 +843,9 @@ function add_tab(id,value=id){
 	add_tab_event();
 }
 
-// /////////////////
+// -----------------------------------------------------
 // SELECT_TAB
+// ----------
 //
 // TODO: Finish the doc
 function visual_select_tab(id){
@@ -807,11 +855,13 @@ function visual_select_tab(id){
 	$tab.toggleClass('active');
         add_tab_event();
 	var $title = $('p#title');
+	var $bt_link = $('a#bt_link');
 	var $subtitle = $('p#subtitle');
 	var $subtitle_link = $('a#pr_link');
 	var $subtitle_date = $('p#pr_date');
 	var $subtitle_author = $('p#pr_author');
 	$title.text(tool_metadata["name"]);
+	$bt_link.attr("href", "https://bio.tools/"+tool_metadata["name"]);
 	$subtitle.text("");
 	$subtitle_link.text("");
 	$subtitle_date.text("");
@@ -831,8 +881,14 @@ function visual_select_tab(id){
 		var pr_link=tool_metadata[id]['pr_link'];
 		var pr_date=tool_metadata[id]['pr_date'];
 		var pr_number=tool_metadata[id]['pr_number'];
-		if (pr_user)  $subtitle_author.text("By '"+pr_user+"' ");
+		if (pr_user) {
+			var you="";
+			if (pr_user === login) {
+				you = "[you]"
+			}
+			$subtitle_author.text("By '"+pr_user+"' "+you);
 
+		}
 		if (pr_link) {
 			if (pr_number) $subtitle_link.text(" Pull Request #"+pr_number);
 			else $subtitle_link.text(" Pull Request");
@@ -845,8 +901,9 @@ function visual_select_tab(id){
 	
 }
 
-/// ///////////////////////////////////
+// -----------------------------------------------------
 // ADD_TAB_EVENT
+// -------------
 
 function add_tab_event(){
     var $tab_not_active = $("li:not('.active')");
@@ -855,29 +912,31 @@ function add_tab_event(){
     });
 }
 
-// /////////////////
+// -----------------------------------------------------
 // REMOVE_TAB
+// ----------
 //
 // TODO: Finish the doc
+
 function remove_tab(){
 	var $tab_active = $('li.active');
     	$tab_active.remove();
 }
 
-// /////////////////
+// -----------------------------------------------------
 // TAB_SELECTED
+// ------------
 //
 //TODO doc
-//TODO MERGE functions with btnsendhide btncancelhide and printmode and changefalse (see exit_modif)
-//
+//TODO MERGE functions with btnsendhide btncancelhide and displaymode and changefalse (see exit_modif)
+
 function change_tab(id_tab_selected){
 	console.log(id_tab_selected+" : selected");
         if ((get_stored_entry("mode")=="edit") && (get_stored_entry("changes"))){
 		var quit=confirm("If you change tab all modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
 		if (quit) {
 			remove_tab();
-			store_entry("print","mode");
-			store_entry(false,"changes");
+			store_entry("display","mode");
 			var $btn_send = $('.btn_send');
 		        var $btn_cancel = $('.btn_cancel');
 			$btn_send.hide();
@@ -889,7 +948,7 @@ function change_tab(id_tab_selected){
 	}
 	else if ((get_stored_entry("mode")=="edit") && (!id_tab_selected.includes('edit'))) {
 		remove_tab();
-		store_entry("print","mode");
+		store_entry("display","mode");
 	}
 	var $tab_selected = $('#'+id_tab_selected);
      	var entry=get_stored_entry(id_tab_selected);
@@ -897,34 +956,12 @@ function change_tab(id_tab_selected){
 		print_tool(entry);
 	}
 	else {
-		entry=get_stored_entry("new_entry");
+		// Get the default entry (=Master), store it into the new id and print it
+		entry=get_stored_entry("default");
      	        store_entry(entry,id_tab_selected);
 		print_tool(entry);
 	}
 	visual_select_tab(id_tab_selected);
 }
 
-// ////////////////////////////////////////////////////
-// WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP 
-
-
-// ///////////////// 
-// 
-// 
-//
-// TODO : Finish the doc 
-
-/*
-function get_stored_modif(){
-	var stored=sessionStorage.getItem("biotools_modif");
-	if (stored) return(JSON.parse(stored));
-	else alert ("No biotools_modif stored"); // retourner code erreur
-}
-
-function store_modif(modif_entry){
-	    sessionStorage.setItem('biotools_modif',JSON.stringify(modif_entry));
-}
-*/
-
-// WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
-// ////////////////////////////////////////////////////
+// -----------------------------------------------------
