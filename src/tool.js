@@ -1,6 +1,7 @@
 import GitHub from "github-api";
 import Repository from "github-api";
 import $ from "jquery";
+import diff from 'deep-diff'; 
 
 // ///////////////////////////////////
 // VARIABLE
@@ -216,6 +217,7 @@ function search_other_tool_version(tool_name){
 					store_entry(entry,new_name);
 					//console.log("entry: "+name);
 					add_tab(new_name);
+
 				}
 			});
 		}
@@ -267,6 +269,11 @@ function print_tool(entry){
 	// Change the title with the tool name
 	var $title = $('p#title');
 	$title.text(tool_metadata["name"]);
+
+	
+	// Show cells that are differennt from master
+	show_diff(entry);
+
 	// Table cell that could be modified are selected thanks to the id "value"
 	//var $modifcell = $('p.value');
 	var $modifcell = $('td.edit');
@@ -327,7 +334,7 @@ function val_to_table(entry,id=""){
 	}
 	// If the entry is a string:
 	//   IF "id" is empty it mean that this is the key ('label' class) 
-	//   ELSE create a cell with the 'value' class and a blue indicator (meaning 'unmodified')
+	//   ELSE create a cell with the 'value' class and pencill (meaning 'unmodified')
 	else if (typeof entry == "string"){
 		if (id == ""){
 		    value_to_print += "<td class=label>";
@@ -340,9 +347,6 @@ function val_to_table(entry,id=""){
 		    value_to_print += "<p id=\""+id+"\" class=value>";
 
 			//TODO En faire une fonction :
-			// Faire regex
-			// Si ~http://edamontology.org faire un lien <A>
-			//
 	        	var regex_website=/^http[s]?:\/\/\S*$/;
                 	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
 			if (regex_website.test(entry)){
@@ -368,6 +372,71 @@ function val_to_table(entry,id=""){
 	}
 	return value_to_print;
 }
+
+
+// //////////////////
+// GET_DIFF
+// Return difference between two dict
+
+function get_diff(entry){
+	var orig_entry=get_stored_entry();
+	return diff(entry, orig_entry);
+}
+
+
+// //////////////////
+// SHOW_DIFF
+//
+// TODO  TODO DOOOOOOOOOC 
+
+function show_diff(entry){
+	// Get diff
+	var differences=get_diff(entry);
+	// For each differences
+	for (var i in differences) {
+		var table_path = differences[i]["path"];
+		//Search path of changed element in html
+		var path=""
+		for (var j in table_path){
+			if (path) path += "___"; // Separator of deepness of the json (Cf. print_tool())
+			path += table_path[j];
+		}
+		////path += "_td"; // To change bg of <td> instead of <p>
+		//Add the "different" class that will color corresponding background <p> tag
+		$('#'+path).toggleClass('different');
+	}
+}
+
+// //////////////////
+// GET_DIFF_MESSAGE
+// Get differences between entry to pull and original entry
+// Make a Pull Request message from these differences
+
+function get_diff_message(entry){
+	// Get diff
+	var differences=get_diff(entry);
+	// Create PR Message
+	var message="### Here are the changes:\n";
+	// For each differences
+	for (var i in differences) {
+		var dif_num=Number(i)+1;
+		var dif=differences[i];
+		message += dif_num+") Diff in **{"
+		var table_path = dif["path"];
+		var path=""
+		for (var j in table_path){
+			if (path) path += "}{"
+			path += table_path[j]
+		}
+		path += "}**";
+		message += path + "\n"
+		message += "-Orig val : "+dif["rhs"]+"\n";
+		message += "-New  val : "+dif["lhs"]+"\n";
+		message += "\n";
+	}
+	return message;
+}
+
 
 // /////////////////
 // MODIF_DICT 
@@ -570,10 +639,13 @@ function send_modif(){
 					else {
 
 						// 5)
-						// Create Pull Request from the new branch on the repo forked to the base repository dev branch
+						// 5.1) Get differences between orig tool entry and new one
+						var body=get_diff_message(entry);
+						console.log(body);
+						// 5.2) Create Pull Request from the new branch on the repo forked to the base repository dev branch
 						var result=repo.createPullRequest({
 					  		"title": "Update/create "+file_name,
-					  		"body": "Please pull this in!",
+					  		"body": "Please pull this in!\n--------------------\n"+body,
 					  		"head": login+":"+branch_name,
 					  		"base": branch_origin
 						},function(req,res){

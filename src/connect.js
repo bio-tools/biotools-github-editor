@@ -1,7 +1,7 @@
 import GitHub from "github-api";
 //import Repository from "github-api";
 import $ from "jquery";
-import request from "request"; //( add to package.json)
+import request from "request";
 
 // ///////////////////////////////////
 // VARIABLE
