@@ -25,7 +25,7 @@
 					<table style="width: 100%;">
 					<tr>
 						<td colspan=2>
-							<p class="subtitle" id="subtitle"></p>
+							<p class="subtitle" id="subtitle">Branch</p>
 						</td>
 					</tr>
 					<tr>
@@ -40,7 +40,7 @@
 					</tr>
 					<tr>
 						<td>
-							<a class="subsubtitle" id="pr_link" target="_blank" href="https://github.com/404"></a>
+							<a class="subsubtitle" id="pr_link" target="_blank" href="https://github.com/404">Link on Github</a>
 						</td>	
 					</tr>
 					</table>
@@ -87,23 +87,23 @@
 		</table>
 		<hr>
 
-		<div id="menu" hidden=true>
+		<div id="menu">
 			<ul id="tab">
 			</ul>
 		</div>
 		<br>
 
 		<div>
-			<table class="modif_table" hidden>
+			<table class="modif_table">
 				<tr>
 					<td>
 						<input type="button" class="btn_search_other" value="search an other tool">
 					</td>
 					<td>
-						<input type="button" class="btn_cancel" value="cancel modif" hidden>
+						<input type="button" class="btn_cancel edit_mode" value="cancel modif" hidden>
 					</td>
 					<td>
-						<input type="button" class="btn_send" value="send modif" hidden>
+						<input type="button" class="btn_send edit_mode" value="send modif" hidden>
 					</td>
 				</tr>
 			</table>
@@ -114,20 +114,22 @@
 			</table>
 		</div>
 
-		<table class="modif_table" hidden>
-			<tr>
-				<td>
-					<input type="button" class="btn_search_other" value="search an other tool">
-				</td>
-				<td>
-					<input type="button" class="btn_cancel" value="cancel modif" hidden>
-				</td>
-				<td>
-					<input type="button" class="btn_send" value="send modif" hidden>
-				</td>
-			</tr>
-		</table>
-
+		<div>
+			<table class="modif_table">
+				<tr>
+					<td>
+						<input type="button" class="btn_search_other" value="search an other tool">
+					</td>
+					<td>
+						<input type="button" class="btn_cancel edit_mode" value="cancel modif" hidden>
+					</td>
+					<td>
+						<input type="button" class="btn_send edit_mode" value="send modif" hidden>
+					</td>
+				</tr>
+			</table>
+		</div>
+	
 		</br></br><hr></br>
 
 		<script src="./tool.js"></script>

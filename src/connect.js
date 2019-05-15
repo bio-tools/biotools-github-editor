@@ -59,7 +59,8 @@ main();
 // -----------------------------------------------------
 // MAIN
 // ----
-// TODO doc 
+// Get the 'code' URL parameter
+// Try to get access_token with this code (Cf. github_access())
 
 function main(){
 
@@ -75,8 +76,13 @@ function main(){
 // -----------------------------------------------------
 // GITHUB_ACCESS
 // -------------
-//
-// TODO doc 
+// Post Request on https://github.com/login/oauth/access_token
+//   with client_id and client_secret of the app
+//   and with personnal code returned by github after login.
+//   Response is the access_token to access API.
+// -If ot works: redirect to search tool page.   
+// -If it does not works: ask the user to enter manually is token
+//   (Cf. ask_token())
 
 function github_access(code){
 	var options = { method: 'POST',
@@ -101,28 +107,27 @@ function github_access(code){
 	    	  const access_token=data['access_token'];
 	          hide_loader();
 	          console.log("connected");
-	          home(access_token);
+	          search_page(access_token);
 	  }
 	});
 }
 
 // -----------------------------------------------------
-// HOME
-// ----
-// TODO: DOC
-//
+// SEARCH_PAGE
+// -----------
+// Redirect to Search Page
 
-function home(access_token){
+function search_page(access_token){
     sessionStorage.setItem("access_token",access_token);
     location.href = page_search;
 }
 
-
 // -----------------------------------------------------
 // ASK_TOKEN
 // ---------
-// TODO: DOC
-//
+// Ask the user to enter manually is OAUTH access token
+// Try to conenct to Github API with this token
+
 function ask_token(){
     var $div_access_token = $('#div_access_token');
     $div_access_token.show();

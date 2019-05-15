@@ -102,17 +102,26 @@ table#head{
 
 #tool_content {
   border-collapse: collapse; 
-  border: 1px solid #a6a6a6;
+  border: 2px solid #a6a6a6;
   width:100%;
 }
 
 #tool_content table {
+  border-collapse: collapse; 
   width:100%;
 }
 
-#tool_content td,th {
+#tool_content table, tr, td{
+    padding:0 !important;
+    margin:0 !important;
+}
+
+#tool_content p{
+    padding:3px;
+}
+
+#tool_content td {
   border-bottom: 1px solid #d9d9d9;
-  padding: 3px;
 }
 
 #tool_content td.label {
@@ -158,10 +167,10 @@ table#head{
   background-color: #ffeb99;
 }
 
-#tool_content .new_line {
+/*#tool_content .new_line {
   font-size: 60%;
   text-color: grey;
-}
+}*/
 
 /* -------- */
 /* TAB MENU */

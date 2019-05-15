@@ -99,6 +99,8 @@ if (tool_on_url){
 // -----------------------------------------------------
 // FILL_TOOL_LIST
 // --------------
+// Get the bio.tools list from the index of the Master Branch
+// List these tools on the html tool list
 
 function fill_tool_list(repo){
 	var $tool_list_obj = $('#tool_list');
@@ -133,7 +135,7 @@ fill_tool_list(repo);
 function search_tool($search_tool,_cb){
 	// Value entered/choosed by the user
 	var tool_name = $search_tool.val();
-	location.href = page_tool + "?tool=" + tool_name;
+	if (tool_name) location.href = page_tool + "?tool=" + tool_name;
 }
 
 

@@ -129,7 +129,7 @@ $btn_send.on('click', function(event) {
 
 // Cancel modif mode and come back to the "master" tab
 $btn_cancel.on('click', function(event) {
-	exit_modif();
+	exit_edit_mode();
 	change_tab(tool_metadata["name"].toLowerCase());
 });
 
@@ -141,6 +141,8 @@ $btn_cancel.on('click', function(event) {
 // -----------------------------------------------------
 // LOADER
 // ------
+// Call show_loader when something is loading (Search a tool, Pull Request, ...).
+// Then hide it.
 
 function show_loader(){
 	var $loader = $('#search_loader');
@@ -152,36 +154,65 @@ function hide_loader(){
 }
 
 // -----------------------------------------------------
+// STORE_ENTRY 
+// -----------
+// Save an entry in session storage
+// If no name is specified the entry will be stored in "default"
+
+function store_entry(entry,name="default"){
+	sessionStorage.setItem(name,JSON.stringify(entry));
+	if ((name == "mode") && (entry == "display")){
+		// If we change the mode to display we inform the app that there is no changes.
+		store_entry(false,"changes");
+	}
+
+}
+
+// -----------------------------------------------------
+// GET_STORED_ENTRY 
+// ----------------
+// Recover the stored "biotools_entry" 
+// If no name is specified it will return the "default" entry stored
+
+function get_stored_entry(name="default"){
+	var stored=sessionStorage.getItem(name);
+	if (stored) return(JSON.parse(stored));
+	else return false; // TODO manage this false return for callers
+}
+
+// -----------------------------------------------------
 // SEARCH_TOOL
 // -----------
 // Search a tool entry from the github repository
-// -If 
+// -If the tool does not exist redirect to search page
+//  TODO Autocompletion
 
 function search_tool(tool_name){
 	// Value entered/choosed by the user
 	show_loader();
 	// Get the corresponding json file on the data repository on Github (Cf Github authentifiation above)
-	repo.getContents('master','data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
+	
+	
+	//repo.getContents('master','data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
+	get_tool_entry("master",tool_name,repo,function(res){
 		if (!res) {
-			alert(""+tool_name+"' does not exist on bio.tools. You can also pick one in the list");
+			alert("'"+tool_name+"' does not exist on bio.tools. \n You can pick a tool in the list");
 				hide_loader();
 			window.location.href = page_search;
 			return;
 		}
 		else {
-			modif_mode();
+			// 1) Store the name of the tool
 			tool_metadata["name"]=tool_name;
-			// Store the master json entry in memory to manipulate the entry later
-			store_entry(res);
-			// Store the json entry in memory to manipulate the entry later
+			// 2) Store the json entry in memory 
 			store_entry(res,tool_name);
-			// Display the master entry into the page
+			// 3) Display the master entry into the page
 			display_new_entry(res,tool_name);
-			// Search the Pull requests on the entry and print corresponding tabs
+			// 4) Search the Pull requests on the entry, store them and print corresponding tabs
        			display_entry_pull_requests(tool_name);
 			hide_loader();
 		}
-       	});
+       });
 }
 
 // -----------------------------------------------------
@@ -193,45 +224,57 @@ function search_tool(tool_name){
 // - Select this tab
 
 function display_new_entry(entry,name){
-	  // Store the current mode to "display"
 	  store_entry("display","mode");
 	  print_tool(entry);
           add_tab(name);
-          visual_select_tab(name);
+          select_tab(name);
 }
 
 // -----------------------------------------------------
 // DISPLAY_ENTRY_PULL_REQUESTS
 // ---------------------------
-// Search the Pull requests on the entry and print corresponding tabs
+// Search the Pull requests on the entry
+// For each:
+// 1) Store metadata
+// 2) Get and store entry 
+// 3) Print corresponding tabs
+//
+// TODO manage get_tool_entry error
 
 function display_entry_pull_requests(tool_name){
         repo.listPullRequests({},function(req, res) {
            res.forEach(function(pullrequest){
+
+		// Search with the branch name if the Pull Request is on the query tool name
 		var branch_name=pullrequest['head']['ref'];	
 		var branch_name_lc=branch_name.toLowerCase();
                 var regex = new RegExp("^.*_(" + tool_name + "_.*)$");
 		if (regex.test(branch_name_lc)){
+
+			// Get Metadatas
 			var pr_number=pullrequest['number'];
-			var pr_link=pullrequest['html_url'];
-			var pr_date=pullrequest['created_at'];
 			var repo_user=pullrequest['head']['repo']['owner']['login'];
 			var repo_name=pullrequest['head']['repo']['name'];
+			var pr_link=pullrequest['html_url'];
+			var pr_date=pullrequest['created_at'];
+
+			// ID of the new entry on the app
 			var new_name = "PR_"+pr_number+"_"+tool_name;
-			// INIT tool_metadata[id_tool]
+
+			// Store metadata
 			tool_metadata[new_name]={};
-			tool_metadata[new_name]['pr_user']=repo_user;
 			tool_metadata[new_name]['pr_number']=pr_number;
+			tool_metadata[new_name]['pr_user']=repo_user;
 			tool_metadata[new_name]['pr_link']=pr_link;
 			tool_metadata[new_name]['pr_date']=pr_date;
+	
+			// Search entry corresponding to the Pull Request
 			var my_repo = gh.getRepo(repo_user,repo_name);
-
-		        get_branch_content(branch_name,tool_name,my_repo,function(entry) {
+		        get_tool_entry(branch_name,tool_name,my_repo,function(entry) {
 				if(entry){
 					// Store the json entry in memory to manipulate the entry later
 					store_entry(entry,new_name);
 					add_tab(new_name);
-
 				}
 			});
 		}
@@ -241,19 +284,18 @@ function display_entry_pull_requests(tool_name){
 }
 
 // -----------------------------------------------------
-// GET_BRANCH_CONTENT
-// ------------------
-// TODO : DOC
+// GET_TOOL_ENTRY
+// --------------
+// WRAP of github.js "getContents()" method.
+// Get a json entry from a repo,branch and tool name
+// _callback with res of getContents (i.e. entry)
 
-function get_branch_content(branch_name,tool_name,my_repo,_callback){
+function get_tool_entry(branch_name,tool_name,my_repo,_callback){
 	my_repo.getContents(branch_name,'data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
 		if (!res) {
-			console.log('Error getting content of ' + branch_name);
-      			return;
+			console.log('Error getting content of ' + tool_name + ' in ' + branch_name + "\n" + req);
 		}
-		else{
-			_callback(res);
-		}
+		_callback(res);
 	});
 }
 
@@ -280,7 +322,7 @@ function print_tool(entry){
 		$tool_content.append(new_line);
 	    }
 	}
-	$tool_content.append("<tr><td class=new_line id="+key+" colspan=2>➕ New Line </td></tr>" ); //WIPP
+	//$tool_content.append("<tr><td class=new_line id="+key+" colspan=2>➕ New Line </td></tr>" ); //TODO WIP
 
 	// Change the title with the tool name
 	var $title = $('p#title');
@@ -293,20 +335,18 @@ function print_tool(entry){
 	//var $modifcell = $('p.value');
 	var $modifcell = $('td.edit');
         $modifcell.on('click', function(event) {
-	    modif_value(this.id.replace('_status', ''));
+	    edit_value(this.id.replace('_status', ''));
         });
-	// Table cell that could have a new entry are selected thanks to the id "new"
-	/*var $newcell = $('p.new');
-        $newcell.on('click', function(event) {
-	    // WIP
-        });*/
-	//WIP WIP WIP WIP
+
+	//TODO WIP WIP WIP WIP 
+	/*
 	var $new_line = $('td.new_line');
 	$new_line.on('click', function(event) {
 	    // WIP
 	    this.innerText="➕ WIP⚠️";
         });
-	//WIP WIP WIP WIP
+	*/
+	//TODO WIP WIP WIP WIP
 
 }
 
@@ -329,10 +369,7 @@ function val_to_table(entry,id=""){
 		else if (Array.isArray(entry)){
 		  val="[]"
 		}
-		else {
-		  val="empty"
-		}
-	        value_to_print += "<td class=edit id=\""+id+"_status\">✍️</td>";
+	        value_to_print += "<td class=edit id=\""+id+"_status\"><p>✍️</p></td>";
 		value_to_print += "<td class=none><p id=\""+id+"\" class=new>"+val+"</p></td>"
 	}
 	// If the entry is an array, create a new inner table and recall the function for every sub-entry
@@ -343,7 +380,7 @@ function val_to_table(entry,id=""){
 			 value_to_print += val_to_table(entry[key],id+"___"+key)
 			 value_to_print += "</tr>"
 		}
-		value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //WIPP
+		//value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //TODO WIP
 		value_to_print += "</table></td>";
 	}
 	// If the entry is a string:
@@ -351,16 +388,16 @@ function val_to_table(entry,id=""){
 	//   ELSE create a cell with the 'value' class and pencill (meaning 'unmodified')
 	else if (typeof entry == "string"){
 		if (id == ""){
-		    value_to_print += "<td class=label>";
+		    value_to_print += "<td class=label><p>";
                     value_to_print += entry;
-		    value_to_print += "</td>";
+		    value_to_print += "</p></td>";
 		}
 		else {
-	            value_to_print += "<td class=edit id=\""+id+"_status\">✏️</td>";
+	            value_to_print += "<td class=edit id=\""+id+"_status\"><p>✏️</p></td>";
 		    value_to_print += "<td class=content id=\""+id+"_td\">"
 		    value_to_print += "<p id=\""+id+"\" class=value>";
 
-			//TODO En faire une fonction :
+			//TODO Redundant : Create function 
 	        	var regex_website=/^http[s]?:\/\/\S*$/;
                 	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
 			if (regex_website.test(entry)){
@@ -380,13 +417,12 @@ function val_to_table(entry,id=""){
 			value_to_print += val_to_table(entry[key],id+"___"+key)
 			value_to_print += "</tr>"
 		}
-		value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //WIPP
+		//value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //TODO WIP
 		value_to_print += "</table></td>"
 
 	}
 	return value_to_print;
 }
-
 
 // -----------------------------------------------------
 // GET_DIFF
@@ -394,15 +430,17 @@ function val_to_table(entry,id=""){
 // Return difference between two dict
 
 function get_diff(entry){
-	var orig_entry=get_stored_entry();
+	var orig_entry=get_stored_entry(tool_metadata["name"]);
 	return diff(entry, orig_entry);
 }
 
 // -----------------------------------------------------
 // SHOW_DIFF
 // ---------
-//
-// TODO  TODO DOOOOOOOOOC 
+// Color differences in the tool table
+// 1) Get the differences with master entry
+// 2) Search the path of the html element that display the different data
+// 3) Add the class 'different' to this element to color it (Cf. CSS)
 
 function show_diff(entry){
 	// Get diff
@@ -416,7 +454,7 @@ function show_diff(entry){
 			if (path) path += "___"; // Separator of deepness of the json (Cf. print_tool())
 			path += table_path[j];
 		}
-		////path += "_td"; // To change bg of <td> instead of <p>
+		////path += "_td"; // To change backgrounf color of <td> tag instead of <p>
 		//Add the "different" class that will color corresponding background <p> tag
 		$('#'+path).toggleClass('different');
 	}
@@ -455,8 +493,8 @@ function get_diff_message(entry){
 
 
 // -----------------------------------------------------
-// MODIF_DICT 
-// ----------
+// EDIT_DICT 
+// ---------
 // Recursive function to add modif made by the user 
 // to the dict loaded from the github json.
 // In input its take the dict (entry), the current position on the dict (pos),
@@ -464,13 +502,13 @@ function get_diff_message(entry){
 // the value to add to the dict (value).
 //
 
-function modif_dict(entry,pos,tab_pos,value){
+function edit_dict(entry,pos,tab_pos,value){
 	var new_tab_pos=tab_pos;
 	new_tab_pos.shift();
 	var new_entry=entry;
 	// While we don't arrived to the end of the table we relaunch the function with next pos entry (deeper in the dict) 
 	if (new_tab_pos.length != 0) {
-		new_entry[pos]=modif_dict(new_entry[pos],tab_pos[0],new_tab_pos,value);
+		new_entry[pos]=edit_dict(new_entry[pos],tab_pos[0],new_tab_pos,value);
 	}
 	// Here we arrived to the position to insert the value
 	// We insert it and return then the entry modified
@@ -481,24 +519,23 @@ function modif_dict(entry,pos,tab_pos,value){
 }
 
 // -----------------------------------------------------
-// MODIF_VALUE 
-// -----------
+// EDIT_VALUE 
+// ----------
 // 
 // TODO : If we change a value two time keep the signal that it is new
-// TODO : Finish the doc 
 
-function modif_value(id){
+function edit_value(id){
     var motif =  /___/;
     // Get the position liste of the value from the id (Cf. "val_to_table")
     var liste = id.split(motif);
     // Select the tag with this id
     var $value = $('#'+id);
     // Get the original value on this tag
-    var orig_v = $value.text();    // TODO MV $v v
+    var orig_v = $value.text();
 
     //Change mode to "modif"
     edit_mode(function(){
-      // Transform the tag to an input with the original value
+    // Then, transform the tag to an input with the original value
       var new_html = ""
       new_html += "<input style='width:100%' type=\"text\" id=\""+id+"\" class=value_edit value=\""+orig_v+"\">";//</td>";
       // Re-select the tag with this id
@@ -506,7 +543,7 @@ function modif_value(id){
       $value.replaceWith(new_html);
       // Change the indicator status to have a clickable symbol to validate the modification
       var $value_status = $('#'+id+'_status');
-      var new_html = "<td id=\""+id+"_status\" class=valid >✔️</td>";
+      var new_html = "<td id=\""+id+"_status\" class=valid ><p>✔️</p></td>";
       $value_status.replaceWith(new_html);
       var $value_status = $('#'+id+'_status');
       // Function to manage modification of the value
@@ -518,32 +555,19 @@ function modif_value(id){
 	// we store it and change the status to "new"
 	if (orig_v != new_v ){
 	    // Retrieve stored entry
-            var entry_id = $('li.active').attr('id');
+            var entry_id = tool_metadata["tab_active"];
 	    var entry=get_stored_entry(entry_id);
-	    //var liste_modif=Array.from(liste); // WIP
-            entry = modif_dict(entry,liste[0],liste,new_v)
+	    // Edit it
+            entry = edit_dict(entry,liste[0],liste,new_v)
+	    // Store it
     	    store_entry(entry,entry_id);
             // Changes have been made, we record the status to true and show the btn to send changes into PR
 	    store_entry(true,"changes");
-            var $btn_send=$('input.btn_send');
-            var $btn_cancel=$('input.btn_cancel');
-            $btn_send.show();
-            $btn_cancel.show();
-
-	    // WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
-	    //var modif_entry=get_stored_modif();
-	    //var modif_object = [];
-	    //modif_object[liste_modif[0]]=entry[liste_modif[0]];
-	    //modif_object=modif_dict(modif_object,liste_modif[0],liste_modif,$v);
-            //modif_entry.push(modif_object);
-	    //store_modif(modif_entry);
-	    // WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
-            var new_status = "✏️🆕";
+	    $('input.edit_mode').show();//buttons
 	    var new_class = "modified_cell";
 	}
 	// Else we keep original status
 	else {
-	    var new_status = "✏️";
 	    var new_class = "value";
 	}
 
@@ -555,13 +579,13 @@ function modif_value(id){
 
         var $value_status = $('#'+id+"_status");
         var new_html = "";
-        new_html += "<td class=edit id=\""+id+"_status\">"+new_status+"</td>";
+        new_html += "<td class=edit id=\""+id+"_status\"><p>✏️</p></td>";
         $value_status.replaceWith(new_html);
 
 	// Rebind the modif function to the tag
         var $modifcell = $('td.edit');
 	$modifcell.unbind('click').on('click', function(event) {
-	    modif_value(this.id.replace('_status', ''));
+	    edit_value(this.id.replace('_status', ''));
         });
       });
     });
@@ -571,14 +595,13 @@ function modif_value(id){
 // -----------------------------------------------------
 // EDIT_MODE 
 // ---------
-// 
-//
-// TODO : Finish the doc 
+// Change to edit mode if it is not already setted
 
 function edit_mode(_cb){
+    // If we are not currently on 'edit' mode : create new tab to edit
     if (get_stored_entry("mode") != "edit"){
 	store_entry("edit","mode");
-        var current_tool = $('li.active').attr('id');
+        var current_tool = tool_metadata["tab_active"];
         console.log(current_tool +" : edit mode")
         var edit_tool = "edit_"+current_tool;
     	store_entry(get_stored_entry(current_tool),edit_tool);
@@ -588,8 +611,18 @@ function edit_mode(_cb){
     _cb();
 }
 
+// -----------------------------------------------------
+// EXIT_EDIT_MODE
+// --------------
+// - Change to 'display mode'
+// - Hide the edit btns
+// - Remove the tab on the menu 
 
-
+function exit_edit_mode(){
+	store_entry("display","mode");
+	$('input.edit_mode').hide();//buttons
+	$('#menu li.active').remove();//active tab
+}
 
 // -----------------------------------------------------
 // SEND_MODIF
@@ -604,21 +637,21 @@ function edit_mode(_cb){
 //
 
 function send_modif(){
-	var repo_name=gh_bt_repo // TODO Global variable?
+	var repo_name=gh_bt_repo
 
 	// If we are here but no changes have been made don't create a pull request
 	if (!get_stored_entry("changes")){
 		return;
 	}
-	var confirm_fork=confirm("If you don't have the repo '"+repo_name+"' forked on your account the app will do it for you. Do you allow it?"); //TODO checker si le repo existe déja
+	// Ask if the user allow the app to fork the repo in his Github account
+	var confirm_fork=confirm("If you don't have the repo '"+repo_name+"' forked on your account the app will do it for you. Do you allow it?"); 
 	if (!confirm_fork){
 		return;
 	}
 	show_loader();	
 	// 1)
-	// Find the id of the current tool edited
-        var current_tool = $('li.active').attr('id');
-	var entry=get_stored_entry(current_tool);
+	// Find the entry of the current tool edited
+	var entry=get_stored_entry(tool_metadata["tab_active"]);
 	console.log(entry+" changes will be recorded");
 	// Lower Case id of the tool
 	var tool_name = tool_metadata["name"].toLowerCase();
@@ -686,7 +719,7 @@ function send_modif(){
 								else {
 									alert("File writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
 									hide_loader();	
-									exit_modif();
+									exit_edit_mode();
 									var pr_number=res["number"];
 									var new_name="NEW_PR_"+pr_number+"_"+tool_name;
 									tool_metadata[new_name]={}
@@ -705,129 +738,11 @@ function send_modif(){
 }
 
 // -----------------------------------------------------
-// MODIF_MODE 
-// ----------
-// - Hide the search table
-// - Show the modif table
-//
-
-function modif_mode(){
-	var $search_table = $('.search_table');
-	$search_table.hide();
-	var $modif_table = $('.modif_table');
-	$modif_table.show();
-	var $tab_menu = $('#menu');
-	$tab_menu.show();
-
-}
-
-// -----------------------------------------------------
-// EXIT_MODIF
-// ----------
-// - Hide the search table
-// - Show the modif table
-//  TODO Doc RENAME?
-
-function exit_modif(){
-	store_entry("display","mode");
-        var $btn_send = $('.btn_send');
-	$btn_send.hide();
-	var $btn_cancel = $('.btn_cancel');
-	$btn_cancel.hide();
-	remove_tab();
-}
-
-
-// -----------------------------------------------------
-// SEARCH_MODE 
-// -----------
-// - Show the search table
-// - Hide the modif table
-// - Empty the tool content tag
-// - Delete the tabs
-// - Change to "display" mode
-// - Change to no (false) changes
-// - Hide "send modif" button
-//
-
-function search_mode(){
-	var $tool_content = $('#tool_content');
-	$tool_content.html("");
-	var $title = $('p#title');
-	$title.text("SEARCH A TOOL");
-	var $search_table = $('.search_table');
-	$search_table.show();
-	var $modif_table = $('.modif_table');
-	$modif_table.hide();
-	var $tab = $('#tab');
-	$tab.html("");
-	var $tab_menu = $('#menu');
-	$tab_menu.hide();
-	store_entry("display","mode");
-        var $btn_send = $('.btn_send');
-        var $btn_cancel = $('.btn_cancel');
-	$btn_send.hide();
-        $btn_cancel.hide();
-	hide_loader();
-}
-
-
-// -----------------------------------------------------
-// GET_STORED_ENTRY 
-// ----------------
-// Recover the stored "biotools_entry" 
-// If no name is specified it will return the "default" entry stored
-
-function get_stored_entry(name="default"){
-	var stored=sessionStorage.getItem(name);
-	if (stored) return(JSON.parse(stored));
-	else return false; // TODO manage this false return for callers
-}
-
-// -----------------------------------------------------
-// STORE_ENTRY 
-// -----------
-// Save an entry in session storage
-// If no name is specified the entry will be stored in "default"
-
-function store_entry(entry,name="default"){
-	sessionStorage.setItem(name,JSON.stringify(entry));
-	if ((name == "mode") && (entry == "display")){
-		// If we change the mode to display we inform the app that there is no changes.
-		store_entry(false,"changes");
-	}
-
-}
-
-// -----------------------------------------------------
-// FILL_TOOL_LIST 
-// --------------
-// Get the list of tool from the index file 
-// Append the tools name as options of the select section "tool_list"
-//
-// TODO : Finish the doc & manage requestsuccessornot
-
-function fill_tool_list(){
-	var $tool_list_obj = $('#tool_list');
-	repo.getContents('master','index.txt',true, function(req, res) {
-		var tools = res.split("\n");
-		tools.pop();
-		for (var tool in tools) {
-		    $tool_list_obj.append("<OPTION>"+tools[tool]);
-		}
-		var $btn_select = $('.btn_select');
-		$btn_select.show();
-		var $option_not_found = $("#tool_list option[id='not_found']");
-		$option_not_found.remove();
-	});
-}
-
-
-// -----------------------------------------------------
 // ADD_TAB
 // -------
-//
-// TODO: Finish the doc
+// Create a new tab on the menu according to the 'id' provided
+// 'value' is printed on the tab and by default is the id 
+
 function add_tab(id,value=id){
 	var $tab = $('#tab');
         var regex = new RegExp("^(PR|edit|NEW)_[a-zA-Z0-9_-]*$");
@@ -840,32 +755,57 @@ function add_tab(id,value=id){
 		if (tool_metadata[id]["pr_user"] == login) classs="OWN_PR ";
 	}
 	$tab.append("<li id="+id+" class="+classs+">"+value+"</li>");
+	// Re-add events onclick on the tabs of the menu
 	add_tab_event();
 }
 
 // -----------------------------------------------------
 // SELECT_TAB
 // ----------
-//
-// TODO: Finish the doc
-function visual_select_tab(id){
+// Select a tab according to the 'id' provided
+
+function select_tab(id){
 	var $tab = $('#'+id);
-	var $tab_active = $('li.active');
+	// Unset 'active' the current active tab 
+	var $tab_active = $('#menu li.active');
 	$tab_active.removeClass('active');
+	// Set this new selected tab 'active'
 	$tab.toggleClass('active');
-        add_tab_event();
+	// Re-add events onclick on the tabs of the menu
+	add_tab_event();
+	// Display tool metadata according to selected tab
+	update_header(id);
+	// Update id of tab selected
+	tool_metadata["tab_active"]=id;
+}
+
+// -----------------------------------------------------
+// UPDATE_HEADER
+// -------------
+// Display tool metadatas in header according to selected tab
+
+function update_header(id){
+
+	// JQUERY select elements
 	var $title = $('p#title');
 	var $bt_link = $('a#bt_link');
 	var $subtitle = $('p#subtitle');
 	var $subtitle_link = $('a#pr_link');
 	var $subtitle_date = $('p#pr_date');
 	var $subtitle_author = $('p#pr_author');
+
+	// Change Title
 	$title.text(tool_metadata["name"]);
+	// Change Bio.tools link (behind title)
 	$bt_link.attr("href", "https://bio.tools/"+tool_metadata["name"]);
+
+	// Empty Metadatas
 	$subtitle.text("");
 	$subtitle_link.text("");
 	$subtitle_date.text("");
 	$subtitle_author.text("");
+
+	// Search the status of the entry (Master,Pull request,New or Edit)
 	var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
 	var status = id.replace(regex, '$1');
 	var status_converter={"PR":"Existing Pull Request","NEW":"New Pull Request","edit":"Edit mode"};
@@ -876,11 +816,14 @@ function visual_select_tab(id){
 		$subtitle_link.attr("href", "https://github.com/"+gh_bt_user+"/"+gh_bt_repo);
 	}
 	$subtitle.text(status_long);
+
+	// Display metadatas
 	if (tool_metadata[id]){
 		var pr_user=tool_metadata[id]['pr_user'];
 		var pr_link=tool_metadata[id]['pr_link'];
 		var pr_date=tool_metadata[id]['pr_date'];
 		var pr_number=tool_metadata[id]['pr_number'];
+		// USER that made the Pull Request
 		if (pr_user) {
 			var you="";
 			if (pr_user === login) {
@@ -889,79 +832,70 @@ function visual_select_tab(id){
 			$subtitle_author.text("By '"+pr_user+"' "+you);
 
 		}
+		// LINK and NUMBER of the Pull Request
 		if (pr_link) {
 			if (pr_number) $subtitle_link.text(" Pull Request #"+pr_number);
 			else $subtitle_link.text(" Pull Request");
 			$subtitle_link.attr("href", pr_link);
 		}
-
+		// DATE of the Pull Request
 		if (pr_date) $subtitle_date.text("Created on "+pr_date.split("T")[0]);
-
 	}
-	
 }
 
 // -----------------------------------------------------
 // ADD_TAB_EVENT
-// -------------
+// ------------
+// Add event 'change_tab()' to all the not active tab
 
 function add_tab_event(){
-    var $tab_not_active = $("li:not('.active')");
+    var $tab_not_active = $("#menu li:not('.active')");
     $tab_not_active.unbind('click').on('click', function(event){
         change_tab(this.id);
     });
 }
 
+
+
 // -----------------------------------------------------
-// REMOVE_TAB
+// CHANGE_TAB
 // ----------
-//
-// TODO: Finish the doc
-
-function remove_tab(){
-	var $tab_active = $('li.active');
-    	$tab_active.remove();
-}
-
-// -----------------------------------------------------
-// TAB_SELECTED
-// ------------
-//
-//TODO doc
-//TODO MERGE functions with btnsendhide btncancelhide and displaymode and changefalse (see exit_modif)
+// - Check if the user can leave the active tab
+// - Print the entry of the selected tab
+// - Visual change tab with select_tab() on the selected tab id
 
 function change_tab(id_tab_selected){
 	console.log(id_tab_selected+" : selected");
+
+	// Check if its possible to change tab
         if ((get_stored_entry("mode")=="edit") && (get_stored_entry("changes"))){
 		var quit=confirm("If you change tab all modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
 		if (quit) {
-			remove_tab();
-			store_entry("display","mode");
-			var $btn_send = $('.btn_send');
-		        var $btn_cancel = $('.btn_cancel');
-			$btn_send.hide();
-		        $btn_cancel.hide();
+			exit_edit_mode();
 		}
 		else {
 			return;
 		}
 	}
 	else if ((get_stored_entry("mode")=="edit") && (!id_tab_selected.includes('edit'))) {
-		remove_tab();
-		store_entry("display","mode");
+		exit_edit_mode();
 	}
+
+	// If entry exist for this tab : 
+	// - Retrieve entry
 	var $tab_selected = $('#'+id_tab_selected);
      	var entry=get_stored_entry(id_tab_selected);
- 	if (entry != false){
+	// - Print entry and Visual select the tab on menu
+ 	if (entry){
 		print_tool(entry);
+		select_tab(id_tab_selected);
 	}
-	else {
-		// Get the default entry (=Master), store it into the new id and print it
-		entry=get_stored_entry("default");
-     	        store_entry(entry,id_tab_selected);
-		print_tool(entry);
+	// (Theorical impossible case)
+	else { 
+		console.log("Entry" + id_tab_selected + "does not exist")
 	}
-	visual_select_tab(id_tab_selected);
+
+
 }
 
 // -----------------------------------------------------
