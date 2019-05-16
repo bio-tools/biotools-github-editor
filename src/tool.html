@@ -7,6 +7,7 @@
 	</head>
 
 	<body>
+		<div id="header">
 		</br><hr>
 
 		<table id="head">
@@ -14,13 +15,6 @@
 				<td>
 					<div class="loader" id="search_loader" hidden></div>
 				</td>
-				<!--td>
-					<div>
-					<a id="bt_link" target="_blank" href="https://bio.tools/">
-						<img src="https://bio.tools/img/elixir_biotools_transparent.png" alt="bio.tools link" class="biotools" id="biotools" title="See on bio.tools">
-					</a>
-					</div>
-				</td-->
 				<td class="tool_meta">
 					<table style="width: 100%;">
 					<tr>
@@ -87,34 +81,36 @@
 		</table>
 		<hr>
 
+		<div>
+			<table class="modif_table">
+				<tr>
+					<td>
+						<input type="button" class="btn_search_other" value="Search an other tool">
+					</td>
+					<td>
+						<input type="button" class="btn_cancel edit_mode" value="Cancel modif" hidden>
+					</td>
+					<td>
+						<input type="button" class="btn_send edit_mode" value="Send modif" hidden>
+					</td>
+				</tr>
+			</table>
+		</div>
+
 		<div id="menu">
 			<ul id="tab">
 			</ul>
 		</div>
-		<br>
 
-		<div>
-			<table class="modif_table">
-				<tr>
-					<td>
-						<input type="button" class="btn_search_other" value="Search an other tool">
-					</td>
-					<td>
-						<input type="button" class="btn_cancel edit_mode" value="Cancel modif" hidden>
-					</td>
-					<td>
-						<input type="button" class="btn_send edit_mode" value="Send modif" hidden>
-					</td>
-				</tr>
-			</table>
+
 		</div>
 
-		<div>
+		<div id="content">
 			<table id="tool_content">
 			</table>
 		</div>
 
-		<div>
+		<!--div>
 			<table class="modif_table">
 				<tr>
 					<td>
@@ -128,7 +124,7 @@
 					</td>
 				</tr>
 			</table>
-		</div>
+		</div-->
 	
 		</br></br><hr></br>
 

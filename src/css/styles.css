@@ -2,9 +2,27 @@ input[type=button]{
   cursor:pointer;
 }
 
+
 /* ------------ */
-/* HEADER Title */
+/* HEADER       */
 /* ------------ */
+
+div#header{
+  position:fixed;
+  width: 100%;
+  height: 250px;
+  top: 0;
+  background-color: #ffffff;
+  border-bottom : 1px solid #a6a6a6;
+}
+
+div#content{
+  padding-top: 250px;
+}
+
+/* ----- */
+/* Title */
+/* ----- */
 
 table#head{
   width:100%;
@@ -58,9 +76,9 @@ table#head{
 }
 
 
-/* ------------ */
-/* HEADER user */
-/* ------------ */
+/* ---- */
+/* user */
+/* ---- */
 
 #head img.avatar{
   width:40px;
@@ -141,16 +159,26 @@ table#head{
 }
 
 #tool_content td.edit {
-  background-color: #f2f2f2;
-  border-left : 1px solid #b3b3b3;
-  border-bottom : 1px solid #b3b3b3;
+  border-left : 1px solid #808080;
+  border-bottom : 1px solid #808080;
   border-top : 1px solid #e6e6e6;
   border-right : 1px solid #e6e6e6;
   cursor:pointer;
+  background-color: #e6ecff;
+  background-color: #e6e6e6;
 }
 
 #tool_content td.valid {
-  background-color: #ecf9ec;
+  border-left : 1px solid #333333;
+  border-bottom : 1px solid #333333;
+  border-top : 1px solid #a6a6a6;
+  border-right : 1px solid #a6a6a6;
+  cursor:pointer;
+  background-color: #ace600;
+}
+
+#tool_content textarea.value_edit {
+  background-color: #ffebe6;
 }
 
 #tool_content table {

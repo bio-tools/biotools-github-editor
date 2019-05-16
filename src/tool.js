@@ -436,6 +436,67 @@ function get_diff(entry){
 }
 
 // -----------------------------------------------------
+// IS_DIFF
+// TODO DOC
+/*
+function is_diff(entry,pos,val){
+
+	["function"][0][uri]
+
+	"otherID": [], 
+    	"function": [
+             {
+            "operation": [
+                {
+                    "uri": "http://edamontology.org/operation_0337", 
+                    "term": "Visualisation"
+                },
+		{
+                    "uri": "http://edamontology.org/operation_0337", 
+                    "term": "Visualisation"
+                }
+	    ]
+            },
+
+	]
+
+
+	if(entry[pos[0]]){
+		if (entry[pos[0]] == val){
+			return true;
+		}
+		else{
+			return is_diff(entry[pos[0]],pos.shift(),val);
+		}
+	}
+	else {
+		return false;
+	}
+
+
+	else if (key === pos[0]) {
+			found = is_diff(entry[key],pos.shift(),val);
+		}
+		else found = false;
+
+
+
+	var found = false
+	for (var key in entry){
+
+	        if (entry[key] == val){
+			found = true;
+		}
+		else if (key === pos[0]) {
+			found = is_diff(entry[key],pos.shift(),val);
+		}
+		else found = false;
+	}
+	return found;
+}
+*/
+
+// -----------------------------------------------------
 // SHOW_DIFF
 // ---------
 // Color differences in the tool table
@@ -446,6 +507,9 @@ function get_diff(entry){
 function show_diff(entry){
 	// Get diff
 	var differences=get_diff(entry);
+
+	console.log(differences); // TODO WIP
+
 	// For each differences
 	for (var i in differences) {
 		var table_path = differences[i]["path"];
