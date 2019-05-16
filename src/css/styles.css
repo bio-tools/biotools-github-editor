@@ -104,6 +104,8 @@ table#head{
   border-collapse: collapse; 
   border: 2px solid #a6a6a6;
   width:100%;
+  font-size: 12pt;
+  font-family: Verdana;
 }
 
 #tool_content table {
@@ -112,7 +114,7 @@ table#head{
 }
 
 #tool_content table, tr, td{
-    padding:0 !important;
+    padding:0; /* !important;*/
     margin:0 !important;
 }
 
@@ -166,6 +168,17 @@ table#head{
 #tool_content .modified_cell {
   background-color: #ffeb99;
 }
+
+#tool_content textarea {
+  font-size: 12pt;
+  font-family: Verdana;
+  border-style: none;
+  resize: vertical;
+  padding: 3px
+}
+
+
+
 
 /*#tool_content .new_line {
   font-size: 60%;

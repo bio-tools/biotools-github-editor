@@ -335,8 +335,9 @@ function print_tool(entry){
 	//var $modifcell = $('p.value');
 	var $modifcell = $('td.edit');
         $modifcell.on('click', function(event) {
-	    edit_value(this.id.replace('_status', ''));
+	    edit_value(this.id.replace('_btn', ''));
         });
+
 
 	//TODO WIP WIP WIP WIP 
 	/*
@@ -361,7 +362,7 @@ function print_tool(entry){
 function val_to_table(entry,id=""){
 	var value_to_print="";
 	// If there is an empty entry, create a cell with the 'new' class and a cell with a blank indicator
-	if ((entry == "") || (entry == null)){
+	if (((entry == "") || (entry == null)) && entry !==0){
 		var val=""
 		if (entry == null){
 		  val="null"
@@ -369,7 +370,7 @@ function val_to_table(entry,id=""){
 		else if (Array.isArray(entry)){
 		  val="[]"
 		}
-	        value_to_print += "<td class=edit id=\""+id+"_status\"><p>✍️</p></td>";
+	        value_to_print += "<td class=edit id=\""+id+"_btn\"><p>✍️</p></td>";
 		value_to_print += "<td class=none><p id=\""+id+"\" class=new>"+val+"</p></td>"
 	}
 	// If the entry is an array, create a new inner table and recall the function for every sub-entry
@@ -383,17 +384,17 @@ function val_to_table(entry,id=""){
 		//value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //TODO WIP
 		value_to_print += "</table></td>";
 	}
-	// If the entry is a string:
+	// If the entry is a string or a number:
+	else if (typeof entry == "string" || typeof entry == "number"){
 	//   IF "id" is empty it mean that this is the key ('label' class) 
 	//   ELSE create a cell with the 'value' class and pencill (meaning 'unmodified')
-	else if (typeof entry == "string"){
 		if (id == ""){
 		    value_to_print += "<td class=label><p>";
                     value_to_print += entry;
 		    value_to_print += "</p></td>";
 		}
 		else {
-	            value_to_print += "<td class=edit id=\""+id+"_status\"><p>✏️</p></td>";
+	            value_to_print += "<td class=edit id=\""+id+"_btn\"><p>✏️</p></td>";
 		    value_to_print += "<td class=content id=\""+id+"_td\">"
 		    value_to_print += "<p id=\""+id+"\" class=value>";
 
@@ -525,68 +526,38 @@ function edit_dict(entry,pos,tab_pos,value){
 // TODO : If we change a value two time keep the signal that it is new
 
 function edit_value(id){
-    var motif =  /___/;
-    // Get the position liste of the value from the id (Cf. "val_to_table")
-    var liste = id.split(motif);
     // Select the tag with this id
     var $value = $('#'+id);
     // Get the original value on this tag
     var orig_v = $value.text();
 
-    //Change mode to "modif"
-    edit_mode(function(){
-    // Then, transform the tag to an input with the original value
-      var new_html = ""
-      new_html += "<input style='width:100%' type=\"text\" id=\""+id+"\" class=value_edit value=\""+orig_v+"\">";//</td>";
+    edit_mode(//Callback
+    function(){ 
       // Re-select the tag with this id
       var $value = $('#'+id);
+      var new_html = ""
+ 
+      // Then, transform the tag to a textarea with the original value
+      var h = $value.height();
+      new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit >"+orig_v+"</textarea>";
       $value.replaceWith(new_html);
+
       // Change the indicator status to have a clickable symbol to validate the modification
-      var $value_status = $('#'+id+'_status');
-      var new_html = "<td id=\""+id+"_status\" class=valid ><p>✔️</p></td>";
-      $value_status.replaceWith(new_html);
-      var $value_status = $('#'+id+'_status');
+      var $value_btn = $('#'+id+'_btn');
+      var new_html = "<td id=\""+id+"_btn\" class=valid ><p>✔️</p></td>";
+      $value_btn.replaceWith(new_html);
+
+      $('#'+id).keypress(function(event){
+        var keycode = (event.keyCode ? event.keyCode : event.which);
+        if(keycode == '13'){
+	  valid_edit(id,orig_v);
+        }
+      });
+
+      var $value_btn = $('#'+id+'_btn');
       // Function to manage modification of the value
-      $value_status.on('click', function(event) {
-        var $value_new = $('#'+id);
-        var new_v = $value_new.val();
-
-	// If the value is different from the original
-	// we store it and change the status to "new"
-	if (orig_v != new_v ){
-	    // Retrieve stored entry
-            var entry_id = tool_metadata["tab_active"];
-	    var entry=get_stored_entry(entry_id);
-	    // Edit it
-            entry = edit_dict(entry,liste[0],liste,new_v)
-	    // Store it
-    	    store_entry(entry,entry_id);
-            // Changes have been made, we record the status to true and show the btn to send changes into PR
-	    store_entry(true,"changes");
-	    $('input.edit_mode').show();//buttons
-	    var new_class = "modified_cell";
-	}
-	// Else we keep original status
-	else {
-	    var new_class = "value";
-	}
-
-	var new_html = "";
-        new_html += "<p id=\""+id+"\" class=\""+new_class+"\" >";
-        new_html += new_v;
-        new_html += "</p>";//</td>";
-        $value_new.replaceWith(new_html);
-
-        var $value_status = $('#'+id+"_status");
-        var new_html = "";
-        new_html += "<td class=edit id=\""+id+"_status\"><p>✏️</p></td>";
-        $value_status.replaceWith(new_html);
-
-	// Rebind the modif function to the tag
-        var $modifcell = $('td.edit');
-	$modifcell.unbind('click').on('click', function(event) {
-	    edit_value(this.id.replace('_status', ''));
-        });
+      $('#'+id+'_btn').on('click', function(event) {
+	valid_edit(id,orig_v);
       });
     });
 }
@@ -625,6 +596,55 @@ function exit_edit_mode(){
 }
 
 // -----------------------------------------------------
+// VALID_EDIT
+// ----------
+
+function valid_edit(id,orig_v){
+	var motif =  /___/;
+	// Get the position liste of the value from the id (Cf. "val_to_table")
+	var liste = id.split(motif);
+        var $value_new = $('#'+id);
+        var new_v = $value_new.val();
+
+	// If the value is different from the original
+	// we store it and change the status to "new"
+	if (orig_v != new_v ){
+	    // Retrieve stored entry
+            var entry_id = tool_metadata["tab_active"];
+	    var entry=get_stored_entry(entry_id);
+	    // Edit it
+            entry = edit_dict(entry,liste[0],liste,new_v)
+	    // Store it
+    	    store_entry(entry,entry_id);
+            // Changes have been made, we record the status to true and show the btn to send changes into PR
+	    store_entry(true,"changes");
+	    $('input.edit_mode').show();//buttons
+	    var new_class = "modified_cell";
+	}
+	// Else we keep original status
+	else {
+	    var new_class = "value";
+	}
+
+	var new_html = "";
+        new_html += "<p id=\""+id+"\" class=\""+new_class+"\" >";
+        new_html += new_v;
+        new_html += "</p>";//</td>";
+        $value_new.replaceWith(new_html);
+
+        var $value_btn = $('#'+id+"_btn");
+        var new_html = "";
+        new_html += "<td class=edit id=\""+id+"_btn\"><p>✏️</p></td>";
+        $value_btn.replaceWith(new_html);
+
+	// Rebind the modif function to the tag
+        var $modifcell = $('td.edit');
+	$modifcell.unbind('click').on('click', function(event) {
+	    edit_value(this.id.replace('_btn', ''));
+        });
+}
+
+// -----------------------------------------------------
 // SEND_MODIF
 // ----------
 // 1) Get the stored entry (modified by the user)
@@ -637,7 +657,13 @@ function exit_edit_mode(){
 //
 
 function send_modif(){
-	var repo_name=gh_bt_repo
+	var repo_name=gh_bt_repo;
+
+	// If some changes are not validated don't send
+	if ($('.valid').length !== 0) {
+		alert("Some changes have not been validated");
+		return;
+	}
 
 	// If we are here but no changes have been made don't create a pull request
 	if (!get_stored_entry("changes")){
@@ -839,7 +865,12 @@ function update_header(id){
 			$subtitle_link.attr("href", pr_link);
 		}
 		// DATE of the Pull Request
-		if (pr_date) $subtitle_date.text("Created on "+pr_date.split("T")[0]);
+		if (pr_date) {
+			var day=pr_date.split("T")[0];
+			var hour=pr_date.split("T")[1];
+			var print_date=day+" at "+hour.split(":")[0]+":"+hour.split(":")[1];
+			$subtitle_date.text("Created on "+print_date);
+		}
 	}
 }
 
