@@ -10,14 +10,14 @@ input[type=button]{
 div#header{
   position:fixed;
   width: 100%;
-  height: 210px;
+  height: 200px;
   top: 0;
   background-color: #ffffff;
   border-bottom : 1px solid #a6a6a6;
 }
 
 div#content{
-  padding-top: 210px;
+  padding-top: 200px;
 }
 
 /* ----- */

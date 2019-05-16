@@ -257,6 +257,7 @@ function display_entry_pull_requests(tool_name){
 			var repo_name=pullrequest['head']['repo']['name'];
 			var pr_link=pullrequest['html_url'];
 			var pr_date=pullrequest['created_at'];
+			var pr_branch=pullrequest['head']['ref'];
 
 			// ID of the new entry on the app
 			var new_name = "PR_"+pr_number+"_"+tool_name;
@@ -267,6 +268,7 @@ function display_entry_pull_requests(tool_name){
 			tool_metadata[new_name]['pr_user']=repo_user;
 			tool_metadata[new_name]['pr_link']=pr_link;
 			tool_metadata[new_name]['pr_date']=pr_date;
+			tool_metadata[new_name]['pr_branch']=pr_branch;
 	
 			// Search entry corresponding to the Pull Request
 			var my_repo = gh.getRepo(repo_user,repo_name);
@@ -602,6 +604,7 @@ function edit_mode(_cb){
         console.log(current_tool +" : edit mode")
         var edit_tool = "edit_"+current_tool;
     	store_entry(get_stored_entry(current_tool),edit_tool);
+	tool_metadata[edit_tool]=tool_metadata[current_tool];
         add_tab(edit_tool,"✏️"+current_tool);
         change_tab(edit_tool);
     }
@@ -727,6 +730,7 @@ function send_modif(){
 	var file_name=tool_name+".json";
 	// Path of the file in github
 	var file_path="data/"+tool_name+"/"+file_name;
+
 	// Current date
 	var d = new Date();
         var now=d.getFullYear()  + "-" + (d.getMonth()+1) + "-" +  d.getDate() + "-" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + "-" + d.getMilliseconds();
@@ -786,6 +790,7 @@ function send_modif(){
 								}
 								else {
 									console.log("New file writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
+									alert("Pull Request Done!");
 									hide_loader();	
 									exit_edit_mode();
 									var pr_number=res["number"];
@@ -884,11 +889,6 @@ function update_header(id){
 		$subtitle_link.attr("href", "https://github.com/"+gh_bt_user+"/"+gh_bt_repo);
 	}
 	$subtitle.text(status_long);
-
-	if (status === "NEW"){
-		$('td.tool_meta').css("background-color", "fcd8b6");
-		$('td.tool_meta').css("border", "2px solid #404040");
-	}
 
 	// Display metadatas
 	if (tool_metadata[id]){
