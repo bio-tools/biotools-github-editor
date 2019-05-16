@@ -436,65 +436,26 @@ function get_diff(entry){
 }
 
 // -----------------------------------------------------
-// IS_DIFF
+// SEARCH_ON_DICT
 // TODO DOC
-/*
-function is_diff(entry,pos,val){
 
-	["function"][0][uri]
-
-	"otherID": [], 
-    	"function": [
-             {
-            "operation": [
-                {
-                    "uri": "http://edamontology.org/operation_0337", 
-                    "term": "Visualisation"
-                },
-		{
-                    "uri": "http://edamontology.org/operation_0337", 
-                    "term": "Visualisation"
-                }
-	    ]
-            },
-
-	]
-
-
-	if(entry[pos[0]]){
-		if (entry[pos[0]] == val){
-			return true;
+function search_on_dict(entry,tab_pos){
+	if (!entry){
+		return "value_not_found";
+	}
+	if(entry[tab_pos[0]]){
+		var new_tab_pos=[...tab_pos];
+		new_tab_pos.shift();
+		if (new_tab_pos.length !== 0){
+			return search_on_dict(entry[tab_pos[0]],new_tab_pos);
 		}
-		else{
-			return is_diff(entry[pos[0]],pos.shift(),val);
+		else {
+			return entry[tab_pos[0]];
 		}
 	}
-	else {
-		return false;
-	}
 
-
-	else if (key === pos[0]) {
-			found = is_diff(entry[key],pos.shift(),val);
-		}
-		else found = false;
-
-
-
-	var found = false
-	for (var key in entry){
-
-	        if (entry[key] == val){
-			found = true;
-		}
-		else if (key === pos[0]) {
-			found = is_diff(entry[key],pos.shift(),val);
-		}
-		else found = false;
-	}
-	return found;
 }
-*/
+
 
 // -----------------------------------------------------
 // SHOW_DIFF
@@ -522,6 +483,7 @@ function show_diff(entry){
 		////path += "_td"; // To change backgrounf color of <td> tag instead of <p>
 		//Add the "different" class that will color corresponding background <p> tag
 		$('#'+path).toggleClass('different');
+		$('#'+path).attr('title', differences[i]["rhs"]);
 	}
 }
 
@@ -664,34 +626,50 @@ function exit_edit_mode(){
 // ----------
 
 function valid_edit(id,orig_v){
+        var entry_id = tool_metadata["tab_active"];
+	var entry=get_stored_entry(entry_id);
+
+        var $value_new = $('#'+id);
+        var new_v = $value_new.val();
 	var motif =  /___/;
 	// Get the position liste of the value from the id (Cf. "val_to_table")
 	var liste = id.split(motif);
-        var $value_new = $('#'+id);
-        var new_v = $value_new.val();
+        var orig_val=search_on_dict(entry,liste);
+	var title =""
 
-	// If the value is different from the original
+	// If the value is the same from the original
+	// We keep original status
+	if (orig_val === new_v ){
+	    var new_class = "value";
+	}
+	// Else, if the value is found and different
 	// we store it and change the status to "new"
-	if (orig_v != new_v ){
+	else if (orig_val != "value_not_found") {
+	    
+	    title = orig_val;
 	    // Retrieve stored entry
             var entry_id = tool_metadata["tab_active"];
-	    var entry=get_stored_entry(entry_id);
+            var new_entry_id = entry_id+"_new";
+
+	    // If it is the first time we edit the entry we take the original one
+	    if (!get_stored_entry("changes")){
+	    	var entry=get_stored_entry(entry_id);
+	    }
+	    else {
+            	var entry=get_stored_entry(new_entry_id);
+	    }
 	    // Edit it
             entry = edit_dict(entry,liste[0],liste,new_v)
 	    // Store it
-    	    store_entry(entry,entry_id);
+    	    store_entry(entry,new_entry_id);
             // Changes have been made, we record the status to true and show the btn to send changes into PR
 	    store_entry(true,"changes");
 	    $('input.edit_mode').show();//buttons
 	    var new_class = "modified_cell";
 	}
-	// Else we keep original status
-	else {
-	    var new_class = "value";
-	}
 
 	var new_html = "";
-        new_html += "<p id=\""+id+"\" class=\""+new_class+"\" >";
+        new_html += "<p id=\""+id+"\" class=\""+new_class+"\" title='"+title+"' >";
         new_html += new_v;
         new_html += "</p>";//</td>";
         $value_new.replaceWith(new_html);
@@ -741,7 +719,7 @@ function send_modif(){
 	show_loader();	
 	// 1)
 	// Find the entry of the current tool edited
-	var entry=get_stored_entry(tool_metadata["tab_active"]);
+	var entry=get_stored_entry(tool_metadata["tab_active"]+"_new");
 	console.log(entry+" changes will be recorded");
 	// Lower Case id of the tool
 	var tool_name = tool_metadata["name"].toLowerCase();
@@ -807,7 +785,7 @@ function send_modif(){
 									console.log(req);
 								}
 								else {
-									alert("File writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
+									console.log("New file writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
 									hide_loader();	
 									exit_edit_mode();
 									var pr_number=res["number"];
@@ -906,6 +884,11 @@ function update_header(id){
 		$subtitle_link.attr("href", "https://github.com/"+gh_bt_user+"/"+gh_bt_repo);
 	}
 	$subtitle.text(status_long);
+
+	if (status === "NEW"){
+		$('td.tool_meta').css("background-color", "fcd8b6");
+		$('td.tool_meta').css("border", "2px solid #404040");
+	}
 
 	// Display metadatas
 	if (tool_metadata[id]){

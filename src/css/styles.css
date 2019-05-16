@@ -10,14 +10,14 @@ input[type=button]{
 div#header{
   position:fixed;
   width: 100%;
-  height: 250px;
+  height: 210px;
   top: 0;
   background-color: #ffffff;
   border-bottom : 1px solid #a6a6a6;
 }
 
 div#content{
-  padding-top: 250px;
+  padding-top: 210px;
 }
 
 /* ----- */
@@ -26,6 +26,7 @@ div#content{
 
 table#head{
   width:100%;
+  height: 95px;
 }
 
 #head td.title{
@@ -50,7 +51,7 @@ table#head{
 
 #head #title {
   text-shadow: 2px 2px grey;
-  font-size: 300%;
+  font-size: 250%;
   line-height: 0px;
 }
 
@@ -89,6 +90,7 @@ table#head{
 
 #head .user{
   height: 100%;
+  margin-right: 10px;
 }
 
 #head div.user table{
@@ -218,8 +220,16 @@ table#head{
 /* -------- */
 
 #menu {
-    overflow : auto;
+    /*overflow : auto;   /*TEMP */
 }
+
+div#menu {
+height: 35px;
+position: absolute;
+width: 100%;
+bottom: 0;
+}
+
 
 #menu #tab{
     font : normal 11px Batang, arial, serif;
@@ -297,4 +307,8 @@ table#head{
 
 .little {
   font-size: 80%;
+}
+
+a.no_text_decoration {
+  text-decoration: none;
 }
