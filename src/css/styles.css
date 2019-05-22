@@ -170,13 +170,23 @@ table#head{
   background-color: #e6e6e6;
 }
 
-#tool_content td.valid {
+
+
+	
+#tool_content td.valid,td.cancel {
   border-left : 1px solid #333333;
   border-bottom : 1px solid #333333;
   border-top : 1px solid #a6a6a6;
   border-right : 1px solid #a6a6a6;
   cursor:pointer;
+}
+
+#tool_content td.valid {
   background-color: #ace600;
+}
+
+#tool_content td.cancel {
+  background-color: #ff0000;
 }
 
 #tool_content textarea.value_edit {

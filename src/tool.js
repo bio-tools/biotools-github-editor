@@ -207,23 +207,23 @@ function search_tool(tool_name){
 			// 2) Store the json entry in memory 
 			store_entry(res,tool_name);
 			// 3) Display the master entry into the page
-			display_new_entry(res,tool_name);
+			display_entry(res,tool_name);
 			// 4) Search the Pull requests on the entry, store them and print corresponding tabs
-       			display_entry_pull_requests(tool_name);
+       			get_pull_requests(tool_name);
 			hide_loader();
 		}
        });
 }
 
 // -----------------------------------------------------
-// DISPLAY_NEW_ENTRY
+// DISPLAY_ENTRY
 // -----------------
 // - Display mode 
 // - Print the tool
 // - Add the tab of the tool on the menu
 // - Select this tab
 
-function display_new_entry(entry,name){
+function display_entry(entry,name){
 	  store_entry("display","mode");
 	  print_tool(entry);
           add_tab(name);
@@ -231,8 +231,25 @@ function display_new_entry(entry,name){
 }
 
 // -----------------------------------------------------
-// DISPLAY_ENTRY_PULL_REQUESTS
-// ---------------------------
+// DISPLAY_NEW_ENTRY
+// -----------------
+// TODO DOC
+// - Display mode 
+// - Print the tool
+// - Add the tab of the tool on the menu
+// - Select this tab
+
+function display_new_entry(diff_tab,name){
+	  store_entry("display","mode");
+	  print_diff(diff_tab);
+          add_tab(name);
+          select_tab(name);
+}
+
+
+// -----------------------------------------------------
+// GET_PULL_REQUESTS
+// -----------------
 // Search the Pull requests on the entry
 // For each:
 // 1) Store metadata
@@ -241,7 +258,7 @@ function display_new_entry(entry,name){
 //
 // TODO manage get_tool_entry error
 
-function display_entry_pull_requests(tool_name){
+function get_pull_requests(tool_name){
         repo.listPullRequests({},function(req, res) {
            res.forEach(function(pullrequest){
 
@@ -274,8 +291,8 @@ function display_entry_pull_requests(tool_name){
 			var my_repo = gh.getRepo(repo_user,repo_name);
 		        get_tool_entry(branch_name,tool_name,my_repo,function(entry) {
 				if(entry){
-					// Store the json entry in memory to manipulate the entry later
-					store_entry(entry,new_name);
+					// Store the diff between master and the PullRequest in memory to manipulate the entry later
+					store_entry(get_diff(entry),new_name);
 					add_tab(new_name);
 				}
 			});
@@ -352,6 +369,7 @@ function print_tool(entry){
 	//TODO WIP WIP WIP WIP
 
 }
+
 
 // -----------------------------------------------------
 // VAL_TO_TABLE 
@@ -471,8 +489,6 @@ function show_diff(entry){
 	// Get diff
 	var differences=get_diff(entry);
 
-	console.log(differences); // TODO WIP
-
 	// For each differences
 	for (var i in differences) {
 		var table_path = differences[i]["path"];
@@ -521,8 +537,47 @@ function get_diff_message(entry){
 }
 
 
+
 // -----------------------------------------------------
-// EDIT_DICT 
+//TODO DOC
+function print_diff(tab_diff){
+
+	// For each differences
+	for (var i in tab_diff) {
+		var table_path = tab_diff[i]["path"];
+		var difference = tab_diff[i]["lhs"]; 
+		var orig = tab_diff[i]["rhs"]; 
+		//Search path of changed element in html
+		var path=""
+		for (var j in table_path){
+			if (path) path += "___"; // Separator of deepness of the json (Cf. print_tool())
+			path += table_path[j];
+		}
+		////path += "_td"; // To change backgrounf color of <td> tag instead of <p>
+		//Add the "different" class that will color corresponding background <p> tag
+		$('#'+path).text(difference);
+		$('#'+path).toggleClass('different');
+		$('#'+path).attr('title', String(orig));
+	}
+}
+
+// -----------------------------------------------------
+//TODO DOC
+//TODO WIP Reset diff
+//TODO callback ?:
+function remove_diff(){
+	$('.different,.modified_cell').each(function(){
+		$(this).text($(this).attr('title'));
+		$(this).removeAttr('title');
+		$(this).removeClass('different');
+		$(this).removeClass('modified_cell');
+	});
+}
+
+
+
+// -----------------------------------------------------
+// EDIT_DICT TODO REMOVE USELESS CAUSE OF STORING JUST DIFF 
 // ---------
 // Recursive function to add modif made by the user 
 // to the dict loaded from the github json.
@@ -554,10 +609,15 @@ function edit_dict(entry,pos,tab_pos,value){
 // TODO : If we change a value two time keep the signal that it is new
 
 function edit_value(id){
+
     // Select the tag with this id
     var $value = $('#'+id);
     // Get the original value on this tag
     var orig_v = $value.text();
+    var default_v = $value.attr('title'); //TODO WIP
+    // If there is no title it's mean that the value is the same as the master
+    if (!default_v) default_v=orig_v;
+    console.log(default_v);
 
     edit_mode(//Callback
     function(){ 
@@ -567,12 +627,14 @@ function edit_value(id){
  
       // Then, transform the tag to a textarea with the original value
       var h = $value.height();
-      new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit >"+orig_v+"</textarea>";
+      new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit title=\""+default_v+"\" >"+orig_v+"</textarea>";
       $value.replaceWith(new_html);
 
       // Change the indicator status to have a clickable symbol to validate the modification
-      var $value_btn = $('#'+id+'_btn');
-      var new_html = "<td id=\""+id+"_btn\" class=valid ><p>✔️</p></td>";
+      var $value_btn = $("#"+id+"_btn");
+      var new_html = "<td id="+id+"_btn><table><tr><td id=\""+id+"_valid\" class=valid ><p>✔️</p></td>";
+      	  new_html += "<td id=\""+id+"_cancel\" class=cancel ><p>✖️</p></td></tr></table></td>";
+
       $value_btn.replaceWith(new_html);
 
       $('#'+id).keypress(function(event){
@@ -582,11 +644,15 @@ function edit_value(id){
         }
       });
 
-      var $value_btn = $('#'+id+'_btn');
       // Function to manage modification of the value
-      $('#'+id+'_btn').on('click', function(event) {
+      $('#'+id+'_valid').on('click', function(event) {
 	valid_edit(id,orig_v);
       });
+      // Exit modif
+      $('#'+id+'_cancel').on('click', function(event) {
+	cancel_edit(id);
+      });
+
     });
 }
 
@@ -603,7 +669,11 @@ function edit_mode(_cb){
         var current_tool = tool_metadata["tab_active"];
         console.log(current_tool +" : edit mode")
         var edit_tool = "edit_"+current_tool;
-    	store_entry(get_stored_entry(current_tool),edit_tool);
+
+	// If we edit the master class we store a table of diff empty
+	if (current_tool===tool_metadata["name"]) store_entry([],edit_tool);
+	// Else we store the same as the origin PR we want to change
+	else store_entry(get_stored_entry(current_tool),edit_tool);
 	tool_metadata[edit_tool]=tool_metadata[current_tool];
         add_tab(edit_tool,"✏️"+current_tool);
         change_tab(edit_tool);
@@ -622,11 +692,19 @@ function exit_edit_mode(){
 	store_entry("display","mode");
 	$('input.edit_mode').hide();//buttons
 	$('#menu li.active').remove();//active tab
+
+	//$('.value_edit').foreach:
+	//cancel_edit(this.id)//TODO WIP
+	$('.value_edit').each(function(){
+		cancel_edit($(this).attr('id'));
+	});
+
 }
 
 // -----------------------------------------------------
 // VALID_EDIT
 // ----------
+// TODO DOC
 
 function valid_edit(id,orig_v){
         var entry_id = tool_metadata["tab_active"];
@@ -637,8 +715,10 @@ function valid_edit(id,orig_v){
 	var motif =  /___/;
 	// Get the position liste of the value from the id (Cf. "val_to_table")
 	var liste = id.split(motif);
-        var orig_val=search_on_dict(entry,liste);
-	var title =""
+	//TODO WIP 
+	//var orig_val=search_on_dict(entry,liste);
+	var orig_val=$('#'+id).attr("title");
+	var title = orig_val;
 
 	// If the value is the same from the original
 	// We keep original status
@@ -647,9 +727,10 @@ function valid_edit(id,orig_v){
 	}
 	// Else, if the value is found and different
 	// we store it and change the status to "new"
-	else if (orig_val != "value_not_found") {
-	    
-	    title = orig_val;
+	else if (orig_val) {
+		//TODO //TODO !!!!! WIP store modif and not entry //TODO //TODO
+
+	    //title = orig_val; TODO REMOVE
 	    // Retrieve stored entry
             var entry_id = tool_metadata["tab_active"];
             var new_entry_id = entry_id+"_new";
@@ -661,10 +742,17 @@ function valid_edit(id,orig_v){
 	    else {
             	var entry=get_stored_entry(new_entry_id);
 	    }
-	    // Edit it
-            entry = edit_dict(entry,liste[0],liste,new_v)
+	
+	    var new_diff={}
+	    new_diff["kind"]="E";
+	    new_diff["lhs"]= new_v;
+	    new_diff["path"]= liste;
+	    new_diff["rhs"]= orig_val;
+	    entry.push(new_diff);
+		
 	    // Store it
     	    store_entry(entry,new_entry_id);
+		
             // Changes have been made, we record the status to true and show the btn to send changes into PR
 	    store_entry(true,"changes");
 	    $('input.edit_mode').show();//buttons
@@ -676,6 +764,31 @@ function valid_edit(id,orig_v){
         new_html += new_v;
         new_html += "</p>";//</td>";
         $value_new.replaceWith(new_html);
+
+        var $value_btn = $('#'+id+"_btn");
+        var new_html = "";
+        new_html += "<td class=edit id=\""+id+"_btn\"><p>✏️</p></td>";
+        $value_btn.replaceWith(new_html);
+
+	// Rebind the modif function to the tag
+        var $modifcell = $('td.edit');
+	$modifcell.unbind('click').on('click', function(event) {
+	    edit_value(this.id.replace('_btn', ''));
+        });
+}
+
+
+// -----------------------------------------------------
+// CANCEL_EDIT
+// ----------
+// TODO DOC
+
+function cancel_edit(id){
+	var new_html = "";
+        new_html += "<p id='"+id+"' class='value' >";
+        new_html += $('#'+id).attr("title");
+        new_html += "</p>";
+        $('#'+id).replaceWith(new_html);
 
         var $value_btn = $('#'+id+"_btn");
         var new_html = "";
@@ -714,22 +827,125 @@ function send_modif(){
 	if (!get_stored_entry("changes")){
 		return;
 	}
+
 	// Ask if the user allow the app to fork the repo in his Github account
 	var confirm_fork=confirm("If you don't have the repo '"+repo_name+"' forked on your account the app will do it for you. Do you allow it?"); 
 	if (!confirm_fork){
 		return;
 	}
+
 	show_loader();	
 	// 1)
-	// Find the entry of the current tool edited
-	var entry=get_stored_entry(tool_metadata["tab_active"]+"_new");
-	console.log(entry+" changes will be recorded");
+		// Get the original Entry
+	var entry=get_stored_entry(tool_metadata["name"]);
+	// Edit this entry with modifs
+	var tab_modif_temp=get_stored_entry(tool_metadata["tab_active"]+"_new"); //TODO WIP REMOVE
+	for (var m in tab_modif_temp){
+		var modif=tab_modif_temp[m];
+            	entry = edit_dict(entry,modif["path"][0],modif["path"],modif["lhs"])
+	}
+	console.log(tool_metadata["tab_active"]+" changes will be recorded");
 	// Lower Case id of the tool
 	var tool_name = tool_metadata["name"].toLowerCase();
 	// File name in which changes will be saved
 	var file_name=tool_name+".json";
 	// Path of the file in github
 	var file_path="data/"+tool_name+"/"+file_name;
+
+
+/*
+	//-----------------------  //TODO attention redondane //TODO MOCHE
+
+
+
+	var id = tool_metadata["tab_active"]  //TODO top doublon
+
+
+	// si pr a sois on remodifie fichier et commit
+	console.log("----------------");
+	console.log(id);
+
+	if ((tool_metadata[id]) && (tool_metadata[id]['pr_user'] === login)){
+
+
+		//var branch_name=tool_metadata[id]['pr_branch'];	
+		var pr_number=tool_metadata[id]['pr_number'];	
+		var my_bt_entry=JSON.stringify(entry, null, " ");
+		var body=get_diff_message(entry);
+
+
+		var branch_origin=tool_metadata[id]['pr_branch'];	
+		var branch_name=branch_origin+"_up";
+
+		console.log(tool_metadata[id]['pr_branch']);
+		console.log("------====--------");
+		console.log(login);
+		console.log(repo_name);
+		console.log(branch_origin);
+		console.log(branch_name);
+		console.log(file_path);
+
+		var repo_forked = gh.getRepo(login,repo_name);
+		console.log(repo_forked);
+
+		repo_forked.createBranch(branch_origin,branch_name,function(req,res){
+				if (!res) {
+					alert("Error creating branch '"+branch_name+"' from '"+branch_origin+"'");
+					hide_loader();	
+					console.log(req);
+				}
+				else {
+					console.log("branch created");
+
+
+				repo_forked.writeFile(branch_name,file_path,my_bt_entry,'Edit '+file_name,{},function(req,res){
+						if (!res) {
+							alert("Error creating file '"+file_name+"' in '"+branch_name+"'");
+							hide_loader();	
+							console.log(req);
+						}
+						else {
+							var result=repo.updatePullRequest(pr_number,{
+								"title": "Update "+file_name,
+						  		"body": "Please pull this in!\n--------------------\n"+body,
+						  		"head": login+":"+branch_name,
+						  		"base": "dev"
+							},function(req,res){
+								if (!res) {
+									alert("Error creating Pull Request from "+login+":"+file_name+" to origin:"+branch_origin);
+									hide_loader();
+									console.log(req);
+								}
+								else {
+									console.log("New file writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
+									alert("Pull Request Done!");
+									hide_loader();	
+									exit_edit_mode();
+									var pr_number=res["number"];
+									var new_name="NEW_PR_"+pr_number+"_"+tool_name;
+									tool_metadata[new_name]={}
+									tool_metadata[new_name]['pr_link']=res["html_url"];
+									// Store the json entry in memory to manipulate the entry later
+									store_entry(entry,id);
+									display_new_entry(entry,id);
+
+								}
+							});
+
+									
+						}
+					});
+
+
+				}
+		});
+							return;
+	}
+		////////////////////////////////////
+			
+	*/
+
+
 
 	// Current date
 	var d = new Date();
@@ -797,9 +1013,11 @@ function send_modif(){
 									var new_name="NEW_PR_"+pr_number+"_"+tool_name;
 									tool_metadata[new_name]={}
 									tool_metadata[new_name]['pr_link']=res["html_url"];
+									// Find the diff table of the current tool edited
+									var tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new"); //TODO WIP ENTRY_==> tab modif
 									// Store the json entry in memory to manipulate the entry later
-									store_entry(entry,new_name);
-									display_new_entry(entry,new_name);
+									store_entry(tab_modif,new_name);
+									display_new_entry(tab_modif,new_name);
 								}
 							});
 						}
@@ -947,6 +1165,7 @@ function change_tab(id_tab_selected){
 
 	// Check if its possible to change tab
         if ((get_stored_entry("mode")=="edit") && (get_stored_entry("changes"))){
+//        if ((get_stored_entry("mode")=="edit") && ($('.modified_cell'))){ //TODO WIP
 		var quit=confirm("If you change tab all modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
 		if (quit) {
 			exit_edit_mode();
@@ -959,20 +1178,35 @@ function change_tab(id_tab_selected){
 		exit_edit_mode();
 	}
 
-	// If entry exist for this tab : 
-	// - Retrieve entry
-	var $tab_selected = $('#'+id_tab_selected);
-     	var entry=get_stored_entry(id_tab_selected);
-	// - Print entry and Visual select the tab on menu
- 	if (entry){
-		print_tool(entry);
+
+	// If the user choose the master tab
+	if (id_tab_selected == tool_metadata['name']) {
+		remove_diff();
 		select_tab(id_tab_selected);
 	}
-	// (Theorical impossible case)
-	else { 
-		console.log("Entry" + id_tab_selected + "does not exist")
-	}
+	// Else,show diff
+	else {
 
+		// - Retrieve entry
+		var $tab_selected = $('#'+id_tab_selected);
+	     	var entry=get_stored_entry(id_tab_selected);
+
+		if (entry){
+		// - Print diff and Visual select the tab on menu
+			//TODO WIP
+			//print_tool(entry);
+			remove_diff();
+			print_diff(entry);
+			select_tab(id_tab_selected);
+		}
+		// (Theorical impossible case) 
+		else { 
+			console.log("Entry" + id_tab_selected + "does not exist"); 
+			//TODO WIP REMOVE
+			print_diff(entry);
+			select_tab(id_tab_selected);
+		}
+	}
 
 }
 
