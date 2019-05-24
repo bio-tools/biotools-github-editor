@@ -1,0 +1,220 @@
+<html><head>
+		<title>bio.tools editor</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"> 
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="description" content="bio.tools editor mokup">
+        <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+        <link href="css/styles.css" rel="stylesheet">
+		<link href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css" type="text/css" rel="stylesheet" media="all">
+        <!--[if lt IE 9]>
+          <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+
+        <!-- CSS code from Bootply.com editor -->
+                <style type="text/css">
+            body {
+  padding-top: 60px;
+}
+@media (max-width: 979px) {
+  body {
+    padding-top: 0px;
+  }
+}
+
+/* uncomment this section to make the sidebar un-pin
+.affix-top {
+	top:60px;
+    position:fixed;
+}
+
+.affix {
+    position:static;
+}
+*/
+
+.affix-top {
+	top:60px;
+    position:fixed;
+}
+
+/* custom theme */
+    
+#midCol.affix-top {
+    position:fixed;
+  	margin-left:-18px;
+  	margin-right:10px;
+}
+
+#midCol.affix-bottom {
+	position:static;
+}
+
+#midCol.affix {
+    position:static;
+}
+
+@media (max-width:1190px) {
+  .affix,.affix-top,#midCol.affix,#midCol.affix-top {
+      position:static;
+  }
+}
+
+.caption {
+	background-color:#eee;
+  	padding:10px;
+    margin:0;
+	color:#555;
+}
+
+
+
+	
+        </style>
+    </head>
+    
+    <!-- HTML code from Bootply.com editor -->
+    
+    <body>
+        
+    <div class="navbar navbar-inverse navbar-fixed-top">
+  	<div class="navbar-inner">
+
+      <!--a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a-->
+      <div class="container-fluid">
+      <!--a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a-->
+      <div class="nav">
+
+      <a  href="https://bio.tools/" target="_blank" ><img src="https://bio.tools/img/elixir_biotools_transparent.png" style="height: 50px"></a>
+                   </div>   
+
+      <a class="brand" href="https://bio.tools/" target="_blank"  id="title">Tool Name</a>
+
+      <div class="nav-collapse collapse">
+
+        
+        <ul class="nav nav-pills pull-right">
+          <li><form class="input-append hidden-tablet" method="GET" action="/search" style="margin-top:4px;margin-bottom:5px;"><input type="text" title="Enter keyword(s) to find" id="kw" name="kw" class="span2" maxlength="40"><button type="submit" class="btn"><i class="icon-search" title="Search"></i></button></form>&nbsp;&nbsp;</li>
+
+          <li class="dropdown hide" id="menuLogin">
+            <a class="dropdown-toggle" href="#" data-toggle="dropdown" id="navLogin">Login</a>
+            <div class="dropdown-menu" style="padding:17px;">
+              <form id="formLogin" class="form"> 
+                <label>Login</label> 
+                <input name="_csrf" id="token0" type="hidden" value="LcXuzgPJ-ykpwgrAR2VPhs5TNv93u1n3ZfoU">
+                <input name="username" id="username" type="text" placeholder="Username" pattern="^[a-z,A-Z,0-9,_]{6,15}$" data-valid-min="6" title="Enter your username" required="">
+                <input name="password" id="password" type="password" placeholder="Password" title="Enter your password" required=""><br>
+                <button type="button" id="btnLogin" class="btn">Login</button>
+              </form>
+              <form><a href="#" title="Fast and free sign up!" id="btnNewUser" data-toggle="collapse" data-target="#formRegister">New User? Sign-up..</a></form>
+              <form id="formRegister" class="form collapse">
+                <input name="_csrf" id="token1" type="hidden" value="LcXuzgPJ-ykpwgrAR2VPhs5TNv93u1n3ZfoU">
+                <input name="email" id="inputEmail1" type="email" placeholder="Email" required="">
+                <input name="username" id="inputUsername1" type="text" placeholder="Username" pattern="^[a-z,A-Z,0-9,_]{6,15}$" data-valid-min="6" title="Choose a username" required=""><br>
+                <input name="password" id="inputpassword1" type="password" placeholder="Password" required=""> 
+                <input name="verify" id="inputVerify1" type="password" placeholder="Password (again)" required=""><br>                                  
+                <button type="button" id="btnRegister" class="btn">Sign Up</button>
+              </form>
+              <a data-toggle="modal" role="button" href="#forgotPasswordModal">Forgot username or password?</a>
+              <a data-toggle="modal" role="button" href="#contactModal"><small>Need help? Contact us</small></a>
+            </div>
+          </li>
+          <li class="dropdown" id="menuUser">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" title="See your Bootply collection and profile">
+              <i class="icon-user icon-xxlarge"> </i> <span id="lblUsername">vmarcon</span>
+              <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="/user">Dashboard</a></li>
+              <li><a href="/new">Create New Bootply</a></li>
+              <li><a href="/upgrade"><strong>Upgrade</strong></a></li>
+              <li><a href="/logout">Logout</a></li>
+              <li class="divider"> </li>
+              <li><a href="/bootstrap-community">Community</a></li>
+              <li><a href="/about">About</a></li>
+            </ul>
+          </li>
+        </ul>
+        
+      </div>
+    </div>
+    </div>
+  </div>
+
+
+<div class="container-fluid">
+	<div class="row-fluid">
+     	<div class="span2" >
+	      
+	 		<div id="menu">
+				<ul class="nav nav-list" id="tab">
+				</ul>
+			</div>
+          
+			<hr>
+
+			<div id="tool_meta">
+
+				<table class="table tool_meta">
+				<thead>
+				  <tr>
+				    <th>
+				      <p class="subtitle" id="subtitle">Branch</p>
+				    </th>
+				  </tr>
+				</thead>
+				<tbody>
+				  <tr>
+					<td>
+						<p class="subsubtitle" id="pr_date">Date</p>
+					</td>
+				  </tr>
+				  <tr>
+				    <td>
+				      <p class="subsubtitle" id="pr_author">Author</p>
+					</td>
+				  </tr>
+				  <tr>
+				    <td>
+				      <a class="subsubtitle" id="pr_link" target="_blank" href="https://github.com/404">Link on Github</a>
+				    </td>
+				  </tr>
+				</tbody>
+				</table>
+
+			</div>
+	          
+	 
+	            
+	    </div><!--/span2-->
+	      
+      
+      
+      	<div class="span10">
+          
+		<div class="well">			
+         
+          
+          <table class="table table-striped" id="tool_content">
+		  </table>
+          
+          
+          
+        </div>
+
+
+      	</div>
+	</div>
+</div>
+        <script src="./tool.js"></script>
+
+
+</body></html>

@@ -344,7 +344,7 @@ function print_tool(entry){
 	//$tool_content.append("<tr><td class=new_line id="+key+" colspan=2>➕ New Line </td></tr>" ); //TODO WIP
 
 	// Change the title with the tool name
-	var $title = $('#title');
+	var $title = $('p#title');
 	$title.text(tool_metadata["name"]);
 	
 	// Show cells that are differennt from master
@@ -844,7 +844,7 @@ function send_modif(){
 	var file_path="data/"+tool_name+"/"+file_name;
 
 
-
+/*
 	//-----------------------  //TODO attention redondane //TODO MOCHE
 
 
@@ -866,9 +866,6 @@ function send_modif(){
 
 
 		var branch_origin=tool_metadata[id]['pr_branch'];	
-		console.log(id);
-		console.log(tool_metadata[id]);
-		var branch_name=branch_origin;
 		var branch_name=branch_origin+"_up";
 
 		console.log(tool_metadata[id]['pr_branch']);
@@ -878,105 +875,53 @@ function send_modif(){
 		console.log(branch_origin);
 		console.log(branch_name);
 		console.log(file_path);
-		//console.log(my_bt_entry);
 
 		var repo_forked = gh.getRepo(login,repo_name);
 		console.log(repo_forked);
-		console.log("-----2-------");
 
 		repo_forked.createBranch(branch_origin,branch_name,function(req,res){
-		//repo_forked.getBranch(branch_name,function(req,res){
 				if (!res) {
-					alert("Error getting branch '"+branch_name);
+					alert("Error creating branch '"+branch_name+"' from '"+branch_origin+"'");
 					hide_loader();	
 					console.log(req);
 				}
 				else {
-					console.log("branch founded");
-					console.log(res);
-					console.log("----3------");
+					console.log("branch created");
 
-					//repo_forked.getPullRequest(pr_number,function(req,res){
-					//repo_forked.writeFile(branch_name,file_path,my_bt_entry,'Edit '+file_name,{login},function(req,res){
-					repo_forked.writeFile(branch_name,file_path,my_bt_entry,'new commit',{},function(req,res){
+
+				repo_forked.writeFile(branch_name,file_path,my_bt_entry,'Edit '+file_name,{},function(req,res){
 						if (!res) {
 							alert("Error creating file '"+file_name+"' in '"+branch_name+"'");
 							hide_loader();	
 							console.log(req);
 						}
 						else {
+							var result=repo.updatePullRequest(pr_number,{
+								"title": "Update "+file_name,
+						  		"body": "Please pull this in!\n--------------------\n"+body,
+						  		"head": login+":"+branch_name,
+						  		"base": "dev"
+							},function(req,res){
+								if (!res) {
+									alert("Error creating Pull Request from "+login+":"+file_name+" to origin:"+branch_origin);
+									hide_loader();
+									console.log(req);
+								}
+								else {
+									console.log("New file writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
+									alert("Pull Request Done!");
+									hide_loader();	
+									exit_edit_mode();
+									var pr_number=res["number"];
+									var new_name="NEW_PR_"+pr_number+"_"+tool_name;
+									tool_metadata[new_name]={}
+									tool_metadata[new_name]['pr_link']=res["html_url"];
+									// Store the json entry in memory to manipulate the entry later
+									store_entry(entry,id);
+									display_new_entry(entry,id);
 
-							console.log(res);
-							console.log("###############");
-
-							//repo_forked.getSha(branch_origin, file_path, function(req,resu){
-							repo_forked.getSha(branch_name, file_path, function(req,resu){
-									var sha_orig=resu['sha'];
-									console.log("sha 1");
-									console.log(resu);
-									repo_forked.getSha(branch_name, file_path, function(req,res){
-											var sha_new=res['sha'];
-											console.log("sha 2");
-											console.log(res);
-											repo_forked.commit(sha_orig, sha_new, "commiiit", function(req,res){
-
-												if (!res) {
-													alert("Error creating file '"+file_name+"' in '"+branch_name+"'");
-													hide_loader();	
-													console.log(req);
-												}
-												else {
-
-
-													console.log(res);
-													console.log("###############");
-
-													console.log("New file writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
-													alert("Pull Request Done!");
-													hide_loader();	
-													exit_edit_mode();
-													var pr_number=res["number"];
-													var new_name="NEW_PR_"+pr_number+"_"+tool_name;
-													tool_metadata[new_name]={}
-													tool_metadata[new_name]['pr_link']=res["html_url"];
-													// Store the json entry in memory to manipulate the entry later
-													store_entry(entry,id);
-													display_new_entry(entry,id);
-												}
-
-											});	
-									});
+								}
 							});
-
-
-
-
-							// repo_forked.updatePullRequest(pr_number,{
-							// 	 //"title": "Update "+file_name,
-						 //  		 //"body": "Please pull this in! [new modif]\n--------------------\n"+body,
-						 //  		 "head": login+":"+branch_name,
-						 //  		 //"base": "dev"
-							// },function(req,res){
-							// 	if (!res) {
-							// 		alert("Error creating Pull Request from "+login+":"+file_name+" to origin:"+branch_origin);
-							// 		hide_loader();
-							// 		console.log(req);
-							// 	}
-							// 	else {
-							// 		console.log("New file writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
-							// 		alert("Pull Request Done!");
-							// 		hide_loader();	
-							// 		exit_edit_mode();
-							// 		var pr_number=res["number"];
-							// 		var new_name="NEW_PR_"+pr_number+"_"+tool_name;
-							// 		tool_metadata[new_name]={}
-							// 		tool_metadata[new_name]['pr_link']=res["html_url"];
-							// 		// Store the json entry in memory to manipulate the entry later
-							// 		store_entry(entry,id);
-							// 		display_new_entry(entry,id);
-
-							// 	}
-							// });
 
 									
 						}
@@ -989,7 +934,7 @@ function send_modif(){
 	}
 		////////////////////////////////////
 			
-
+	*/
 
 
 
@@ -1080,25 +1025,18 @@ function send_modif(){
 // Create a new tab on the menu according to the 'id' provided
 // 'value' is printed on the tab and by default is the id 
 
-function add_tab(id){
+function add_tab(id,value=id){
 	var $tab = $('#tab');
-    var regex = new RegExp("^(PR|edit|NEW)_[a-zA-Z0-9_-]*$");
+        var regex = new RegExp("^(PR|edit|NEW)_[a-zA-Z0-9_-]*$");
 	var classs="master";
-	var value="Master branch";
-	// If it is not the master branch
-    if (regex.test(id)){
+        if (regex.test(id)){
 		classs=id.replace(regex,'$1');
-		value="Pull Request n°"+tool_metadata[id]["pr_number"]
 	}
-
-	/*
-	// If the tool has a Pull Request done by the user add the class 'OWN_PR' to color it differently  // TODO REMOVE?
+	// If the tool has a Pull Request of the user add the class 'OWN_PR' to color it differently
 	if (tool_metadata[id]){
 		if (tool_metadata[id]["pr_user"] == login) classs="OWN_PR ";
 	}
-	*/
-
-	$tab.append("<li id="+id+" class="+classs+"><a>"+value+"</a></li>");
+	$tab.append("<li id="+id+" class="+classs+">"+value+"</li>");
 	// Re-add events onclick on the tabs of the menu
 	add_tab_event();
 }
@@ -1131,8 +1069,8 @@ function select_tab(id){
 function update_header(id){
 
 	// JQUERY select elements
-	var $title = $('#title');
-	//var $bt_link = $('a#bt_link');
+	var $title = $('p#title');
+	var $bt_link = $('a#bt_link');
 	var $subtitle = $('p#subtitle');
 	var $subtitle_link = $('a#pr_link');
 	var $subtitle_date = $('p#pr_date');
@@ -1141,20 +1079,25 @@ function update_header(id){
 	// Change Title
 	$title.text(tool_metadata["name"]);
 	// Change Bio.tools link (behind title)
-	$title.attr("href", "https://bio.tools/"+tool_metadata["name"]);
+	$bt_link.attr("href", "https://bio.tools/"+tool_metadata["name"]);
 
 	// Empty Metadatas
-	$subtitle.text("-");
-	$subtitle_link.text("-");
-	$subtitle_date.text("-");
-	$subtitle_author.text("-");
-
+	$subtitle.text("");
+	$subtitle_link.text("");
+	$subtitle_date.text("");
+	$subtitle_author.text("");
 
 	// Search the status of the entry (Master,Pull request,New or Edit)
 	var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
 	var status = id.replace(regex, '$1');
-	var status_converter={"PR":"Pull Request n°","NEW":"New Pull Request","edit":"Edit mode"};
+	var status_converter={"PR":"Existing Pull Request","NEW":"New Pull Request","edit":"Edit mode"};
 	var status_long=status_converter[status];
+	if (!status_long) {
+		status_long="Origin";
+		$subtitle_link.text("Master");
+		$subtitle_link.attr("href", "https://github.com/"+gh_bt_user+"/"+gh_bt_repo);
+	}
+	$subtitle.text(status_long);
 
 	// Display metadatas
 	if (tool_metadata[id]){
@@ -1185,20 +1128,6 @@ function update_header(id){
 			$subtitle_date.text("Created on "+print_date);
 		}
 	}
-
-	// Edit status
-	if (!status_long) {
-		status_long="Origin";
-		$subtitle_link.text("Master");
-		$subtitle_link.attr("href", "https://github.com/"+gh_bt_user+"/"+gh_bt_repo);
-	}
-	else if (status="PR") {
-		status_long += pr_number;
-
-	}
-	$subtitle.text(status_long);
-
-	
 }
 
 // -----------------------------------------------------
