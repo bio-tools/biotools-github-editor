@@ -3,6 +3,24 @@ input[type=button]{
 }
 
 
+/* ELIXIR ORANGE
+.navbar { 
+    background-color: orange;
+    box-shadow: 0 2px 4px 0 rgba(74,74,74,.25);
+}
+
+.navbar-inner {
+    border-bottom: 2px solid #F6A623;
+}
+
+.navbar .container-fluid {
+    background-color: orange;
+}
+*/
+
+/* ------------ */
+/* TOOL CONTENT */
+/* ------------ */
 
 
 #tool_content {
@@ -14,13 +32,94 @@ input[type=button]{
     margin:0 !important;
 }*/
 
+#tool_content table {
+  width:100%;
+  height: 100%
+}
+
+#tool_content td{
+  padding: 2px 0px;
+  border-top: 1px solid #dddddd;
+  border-right: 1px solid #dddddd;
+}
+
+#tool_content p{
+  margin: 5px;
+}
+
 #tool_content td.content,.none{
   width:100%;
+  height: 0px;
+  padding-left: 1px;
+}
+
+#tool_content td.label {
+  display: table-cell;
+  margin: 0px;
+}
+
+#tool_content td.btn {
+  vertical-align: middle;
+  padding: 0px 2px;
+  cursor:pointer;
+}
+
+#tool_content td.edit table td{
+  border: none;
+  border-bottom: 1px solid #dddddd;
+  height: 50%;
+  vertical-align: middle;
+  cursor:pointer;
+}
+
+#tool_content td.valid {
+  background-color: #eafbb7;
+}
+
+#tool_content td.cancel {
+  background-color: #ffd4d4;
 }
 
 #tool_content .different{
   background-color: #ccd9ff;
 }
+
+#tool_content .modified_cell {
+  background-color: #ffeb99;
+}
+
+/*
+#tool_content [class^="icon-"], [class*=" icon-"]{
+  cursor:pointer;
+}
+*/
+
+
+
+#tool_content textarea {
+  width: 100%;
+  height: 100%;
+  margin-bottom: 0px;
+  font-size: 16px;
+  color: black
+  border-style: none;
+  resize: vertical;
+  padding: 3px
+}
+
+
+
+
+
+/* -------- */
+/* TAB MENU */
+/* -------- */
+
+
+#menu #tab li:not(.active){
+  cursor:pointer;
+}
+
 
 /* ---------------- */
 /* NEEEEEWWWWWWWWW  */
@@ -28,4 +127,17 @@ input[type=button]{
 
 .tool_meta {
   border: 1px solid #999999;
+}
+
+/* ----- */
+/* font  */
+/* ----- */
+
+
+.red {
+  color: #8B0000;
+}
+
+.green {
+  color: #ace600;
 }

@@ -159,7 +159,7 @@ function hide_loader(){
 // Save an entry in session storage
 // If no name is specified the entry will be stored in "default"
 
-function store_entry(entry,name="default"){
+function store_entry(entry,name="default_master_entry"){
 	sessionStorage.setItem(name,JSON.stringify(entry));
 	if ((name == "mode") && (entry == "display")){
 		// If we change the mode to display we inform the app that there is no changes.
@@ -174,7 +174,7 @@ function store_entry(entry,name="default"){
 // Recover the stored "biotools_entry" 
 // If no name is specified it will return the "default" entry stored
 
-function get_stored_entry(name="default"){
+function get_stored_entry(name="default_master_entry"){
 	var stored=sessionStorage.getItem(name);
 	if (stored) return(JSON.parse(stored));
 	else return false; // TODO manage this false return for callers
@@ -204,8 +204,10 @@ function search_tool(tool_name){
 		else {
 			// 1) Store the name of the tool
 			tool_metadata["name"]=tool_name;
-			// 2) Store the json entry in memory 
-			store_entry(res,tool_name);
+			// 2.1) Store the json entry in memory 
+			store_entry(res);
+			// 2.2)Store a empty 'diff' table in memory to manipulate the entry later
+			store_entry([],tool_name);
 			// 3) Display the master entry into the page
 			display_entry(res,tool_name);
 			// 4) Search the Pull requests on the entry, store them and print corresponding tabs
@@ -351,11 +353,9 @@ function print_tool(entry){
 	show_diff(entry);
 
 	// Table cell that could be modified are selected thanks to the id "value"
-	//var $modifcell = $('p.value');
-	var $modifcell = $('td.edit');
-        $modifcell.on('click', function(event) {
-	    edit_value(this.id.replace('_btn', ''));
-        });
+    $('td.edit').on('click', function(event) {
+    	edit_value(this.id.replace('_edit', ''));
+    });
 
 
 	//TODO WIP WIP WIP WIP 
@@ -390,7 +390,7 @@ function val_to_table(entry,id=""){
 		else if (Array.isArray(entry)){
 		  val="[]"
 		}
-	        value_to_print += "<td class=edit id=\""+id+"_btn\"><p>✍️</p></td>";
+	    value_to_print += "<td><table id=\""+id+"_tab\"><tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr></table></td>";
 		value_to_print += "<td class=none><p id=\""+id+"\" class=new>"+val+"</p></td>"
 	}
 	// If the entry is an array, create a new inner table and recall the function for every sub-entry
@@ -414,7 +414,7 @@ function val_to_table(entry,id=""){
 		    value_to_print += "</p></td>";
 		}
 		else {
-	            value_to_print += "<td class=edit id=\""+id+"_btn\"><p>✏️</p></td>";
+	        value_to_print += "<td><table id=\""+id+"_tab\"><tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr></table></td>";
 		    value_to_print += "<td class=content id=\""+id+"_td\">"
 		    value_to_print += "<p id=\""+id+"\" class=value>";
 
@@ -451,7 +451,7 @@ function val_to_table(entry,id=""){
 // Return difference between two dict
 
 function get_diff(entry){
-	var orig_entry=get_stored_entry(tool_metadata["name"]);
+	var orig_entry=get_stored_entry();
 	return diff(entry, orig_entry);
 }
 
@@ -500,7 +500,8 @@ function show_diff(entry){
 		}
 		////path += "_td"; // To change backgrounf color of <td> tag instead of <p>
 		//Add the "different" class that will color corresponding background <p> tag
-		$('#'+path).toggleClass('different');
+		$('#'+path+"_td").toggleClass('different');
+		//$('#'+path).attr('pr_value', differences[i]["lhs"]);
 		$('#'+path).attr('title', differences[i]["rhs"]);
 	}
 }
@@ -540,6 +541,7 @@ function get_diff_message(entry){
 
 // -----------------------------------------------------
 //TODO DOC
+// SHOW DIFF ET PRINT DIFF???? TODO
 function print_diff(tab_diff){
 
 	// For each differences
@@ -556,8 +558,9 @@ function print_diff(tab_diff){
 		////path += "_td"; // To change backgrounf color of <td> tag instead of <p>
 		//Add the "different" class that will color corresponding background <p> tag
 		$('#'+path).text(difference);
-		$('#'+path).toggleClass('different');
+		$('#'+path+'_td').toggleClass('different');
 		$('#'+path).attr('title', String(orig));
+		$('#'+path).attr('pr_value', difference);
 	}
 }
 
@@ -571,6 +574,12 @@ function remove_diff(){
 		$(this).removeAttr('title');
 		$(this).removeClass('different');
 		$(this).removeClass('modified_cell');
+		//TODO WORK?
+		console.log("-----------");
+		console.log($(this));
+		console.log($(this+'_td'));
+		$(this+'_td').removeClass('modified_cell');
+
 	});
 }
 
@@ -615,6 +624,8 @@ function edit_value(id){
     // Get the original value on this tag
     var orig_v = $value.text();
     var default_v = $value.attr('title');
+    var editted_v = $value.attr('new_value') || "" 
+
     // If there is no title it's mean that the value is the same as the master
     if (!default_v) default_v=orig_v;
 
@@ -625,16 +636,29 @@ function edit_value(id){
       var new_html = ""
  
       // Then, transform the tag to a textarea with the original value
-      var h = $value.height();
-      new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit title=\""+default_v+"\" >"+orig_v+"</textarea>";
+      var $td_value = $('#'+id+"_td");
+      var h = $td_value.height();
+      new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit title=\""+default_v+"\" new_value='"+editted_v+"'>"+orig_v+"</textarea>";
       $value.replaceWith(new_html);
 
       // Change the indicator status to have a clickable symbol to validate the modification
-      var $value_btn = $("#"+id+"_btn");
-      var new_html = "<td id="+id+"_btn><table><tr><td id=\""+id+"_valid\" class=valid ><p>✔️</p></td>";
-      	  new_html += "<td id=\""+id+"_cancel\" class=cancel ><p>✖️</p></td></tr></table></td>";
+      // TODO WIP DONT CHANGE HTML BUT CHANGE BTTN
 
-      $value_btn.replaceWith(new_html);
+      // var $value_btn = $("#"+id+"_btn");
+      // var new_html = "<td class=edit id="+id+"_btn><table><tr><td id=\""+id+"_valid\" class=valid ><i class=\"icon-ok\"></td></tr>";
+      // 	  new_html += "<tr><td id=\""+id+"_cancel\" class=cancel ><i class=\"icon-remove\"></i></td></tr></table></td>";
+      // $value_btn.replaceWith(new_html);
+
+		$('tr#'+id+'_tr.edit').remove();
+		$('tr#'+id+'_tr.reset').remove();
+        var markup = "<tr class=valid id=\""+id+"_tr\"><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td><tr>";
+        $('table#'+id+'_tab').append(markup);
+        var markup = "<tr class=cancel id=\""+id+"_tr\"><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td><tr>";
+        $('table#'+id+'_tab').append(markup);
+
+
+
+
 
       $('#'+id).keypress(function(event){
         var keycode = (event.keyCode ? event.keyCode : event.which);
@@ -645,14 +669,76 @@ function edit_value(id){
 
       // Function to manage modification of the value
       $('#'+id+'_valid').on('click', function(event) {
-	valid_edit(id,orig_v);
+		valid_edit(id,orig_v);
       });
       // Exit modif
       $('#'+id+'_cancel').on('click', function(event) {
-	cancel_edit(id);
+		cancel_edit(id);
       });
 
     });
+}
+
+
+
+// -----------------------------------------------------
+// RESET_VALUE 
+// -----------
+// 
+// TODO : Doc
+
+function reset_value(id){
+
+    // Select the tag with this id
+    var $value = $('#'+id);
+    // Get the original value on this tag
+    var pr_v = $value.attr('pr_value') || "";
+    var default_v = $value.attr('title') || "";
+    var reset_v= pr_v || default_v;
+
+	$value.text(reset_v);
+	$('tr#'+id+'_tr.reset').remove();
+	$('td#'+id+'_td').removeClass('modified_cell');
+	$('#'+id).removeAttr('new_value');
+		// TODO COLOR ETC........
+
+
+ //    edit_mode(//Callback
+ //    function(){ 
+ //      // Re-select the tag with this id
+ //      var $value = $('#'+id);
+ //      var new_html = ""
+ 
+ //      // Then, transform the tag to a textarea with the original value
+ //      var $td_value = $('#'+id+"_td");
+
+
+
+
+ //      // Change the indicator status to have a clickable symbol to validate the modification
+ //      var $value_btn = $("#"+id+"_btn");
+ //      var new_html = "<td class=edit id="+id+"_btn><table><tr><td id=\""+id+"_valid\" class=valid ><i class=\"icon-ok\"></td></tr>";
+ //      	  new_html += "<tr><td id=\""+id+"_cancel\" class=cancel ><i class=\"icon-remove\"></i></td></tr></table></td>";
+
+ //      $value_btn.replaceWith(new_html);
+
+ //      $('#'+id).keypress(function(event){
+ //        var keycode = (event.keyCode ? event.keyCode : event.which);
+ //        if(keycode == '13'){
+	//   valid_edit(id,orig_v);
+ //        }
+ //      });
+
+ //      // Function to manage modification of the value
+ //      $('#'+id+'_valid').on('click', function(event) {
+	// valid_edit(id,orig_v);
+ //      });
+ //      // Exit modif
+ //      $('#'+id+'_cancel').on('click', function(event) {
+	// cancel_edit(id);
+ //      });
+
+ //    });
 }
 
 
@@ -664,18 +750,20 @@ function edit_value(id){
 function edit_mode(_cb){
     // If we are not currently on 'edit' mode : create new tab to edit
     if (get_stored_entry("mode") != "edit"){
-	store_entry("edit","mode");
+		store_entry("edit","mode");
         var current_tool = tool_metadata["tab_active"];
         console.log(current_tool +" : edit mode")
-        var edit_tool = "edit_"+current_tool;
+        //var edit_tool = "edit_"+current_tool;
 
 	// If we edit the master class we store a table of diff empty
-	if (current_tool===tool_metadata["name"]) store_entry([],edit_tool);
+	/* if (current_tool===tool_metadata["name"]) store_entry([],edit_tool); */ //TODO REMOVE
+	
 	// Else we store the same as the origin PR we want to change
-	else store_entry(get_stored_entry(current_tool),edit_tool);
-	tool_metadata[edit_tool]=tool_metadata[current_tool];
-        add_tab(edit_tool,"✏️"+current_tool); //TODO DNT
-        change_tab(edit_tool); //TODO DNT
+	//else 
+		//store_entry(get_stored_entry(current_tool),edit_tool);
+		//tool_metadata[edit_tool]=tool_metadata[current_tool];
+        //add_tab(edit_tool,"<i class=\"icon-edit\"></i>"+current_tool); //TODO DNT
+        //change_tab(edit_tool); //TODO DNT
     }
     _cb();
 }
@@ -703,11 +791,11 @@ function exit_edit_mode(){
 // TODO DOC
 
 function valid_edit(id,orig_v){
-        var entry_id = tool_metadata["tab_active"];
+    var entry_id = tool_metadata["tab_active"];
 	var entry=get_stored_entry(entry_id);
 
-        var $value_new = $('#'+id);
-        var new_v = $value_new.val();
+    var $value_new = $('#'+id);
+    var new_v = $value_new.val();
 	var motif =  /___/;
 	// Get the position liste of the value from the id (Cf. "val_to_table")
 	var liste = id.split(motif);
@@ -717,7 +805,7 @@ function valid_edit(id,orig_v){
 	// If the value is the same from the original
 	// We keep original status
 	if (orig_val === new_v ){
-	    var new_class = "value";
+	    $('#'+id+'_td').removeClass("modified_cell");
 	}
 	// Else, if the value is found and different
 	// we store it and change the status to "new"
@@ -747,24 +835,46 @@ function valid_edit(id,orig_v){
             // Changes have been made, we record the status to true and show the btn to send changes into PR
 	    store_entry(true,"changes");
 	    $('input.edit_mode').show();//buttons
-	    var new_class = "modified_cell";
+	    $('#'+id+'_td').addClass("modified_cell");
+
 	}
 
 	var new_html = "";
-        new_html += "<p id=\""+id+"\" class=\""+new_class+"\" title='"+title+"' >";
+        new_html += "<p id=\""+id+"\" class=\"value\" title='"+title+"'' new_value='"+new_v+"' >";
         new_html += new_v;
         new_html += "</p>";//</td>";
         $value_new.replaceWith(new_html);
 
-        var $value_btn = $('#'+id+"_btn");
-        var new_html = "";
-        new_html += "<td class=edit id=\""+id+"_btn\"><p>✏️</p></td>";
-        $value_btn.replaceWith(new_html);
 
-	// Rebind the modif function to the tag
-        var $modifcell = $('td.edit');
-	$modifcell.unbind('click').on('click', function(event) {
-	    edit_value(this.id.replace('_btn', ''));
+
+ // TODO WIP NE PAS CHANGER LE HTML, juste ajouter et supprimer des boutons..
+
+        //var $value_btn = $('#'+id+"_btn");
+        // var new_html = "";
+        // new_html += "<td class=edit id=\""+id+"_btn\"><table id=\""+id+"_tab\"><tr id=\""+id+"_tr\" ><td><i class=\"icon-edit\"></i></td></tr></table></td>";
+        // $value_btn.replaceWith(new_html);
+        console.log($('tr#'+id+'_tr.valid'))
+		$('tr#'+id+'_tr.valid').remove();
+		$('tr#'+id+'_tr.cancel').remove();
+        var markup = "<tr class=edit id=\""+id+"_tr\"><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td><tr>";
+        $('table#'+id+'_tab').append(markup);
+
+        if ((orig_val) && (orig_val !== new_v )){
+			var markup = "<tr class=reset id=\""+id+"_tr\"><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td><tr>";
+        	$('table#'+id+'_tab').append(markup);
+        }
+
+
+        	//USELESS???
+
+
+		// Rebind the modif function to the tag
+		$('#'+id+'_edit').unbind('click').on('click', function(event) {
+	    edit_value(this.id.replace('_edit', ''));
+        });
+		// Rebind the modif function to the tag
+		$('#'+id+'_reset').unbind('click').on('click', function(event) {
+	    reset_value(this.id.replace('_reset', ''));
         });
 }
 
@@ -774,22 +884,42 @@ function valid_edit(id,orig_v){
 // ----------
 // TODO DOC
 
+// TODO HIDE SHOW p and text area...
+
 function cancel_edit(id){
+		var value="";
+		if ($('#'+id).attr("new_value")) value = $('#'+id).attr("new_value");
+        else value = $('#'+id).attr("title");
+
+		//var value=$('#'+id).attr("new_value") || $('#'+id).attr("title");
+
 	var new_html = "";
-        new_html += "<p id='"+id+"' class='value' >";
-        new_html += $('#'+id).attr("title");
-        new_html += "</p>";
+        new_html += "<p id='"+id+"' class='"+$('#'+id).attr("class")+"'";
+        if ($('#'+id).attr("new_value")) new_html += "new_value='"+ $('#'+id).attr("new_value") + "'";
+        if ($('#'+id).attr("title")) new_html += "title='"+ $('#'+id).attr("title") + "'";
+        new_html += ">"+value + "</p>";
+
+
+		/*if ($('#'+id).attr("new_value")) $('#'+id).text($('#'+id).attr("new_value"));
+		else $('#'+id).text($('#'+id).attr("title"));*/
+
         $('#'+id).replaceWith(new_html);
 
-        var $value_btn = $('#'+id+"_btn");
-        var new_html = "";
-        new_html += "<td class=edit id=\""+id+"_btn\"><p>✏️</p></td>";
-        $value_btn.replaceWith(new_html);
+         // TODO WIP NE PAS CHANGER LE HTML, juste ajouter et supprimer des boutons..
+        // Re write a edit button
+        // var $value_btn = $('#'+id+"_btn");
+        // var new_html = "";
+        // new_html += "<td class=edit id=\""+id+"_btn\"><table id=\""+id+"_tab\"><tr id=\""+id+"_tr\"><td><i class=\"icon-edit\"></i></td></tr></table></td>";
+        // $value_btn.replaceWith(new_html);
+        $('tr#'+id+'_tr.valid').remove();
+		$('tr#'+id+'_tr.cancel').remove();
+        var markup = "<tr class=edit id=\""+id+"_tr\"><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td><tr>";
+        $('table#'+id+'_tab').append(markup);
 
-	// Rebind the modif function to the tag
-        var $modifcell = $('td.edit');
-	$modifcell.unbind('click').on('click', function(event) {
-	    edit_value(this.id.replace('_btn', ''));
+
+		// Rebind the modif function to the tag
+		$('#'+id+'_edit').unbind('click').on('click', function(event) {
+	    edit_value(this.id.replace('_edit', ''));
         });
 }
 
@@ -1088,6 +1218,8 @@ function add_tab(id){
 	// If it is not the master branch
     if (regex.test(id)){
 		classs=id.replace(regex,'$1');
+		console.log(tool_metadata)
+		console.log(id)
 		value="Pull Request n°"+tool_metadata[id]["pr_number"]
 	}
 
