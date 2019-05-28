@@ -502,7 +502,7 @@ function show_diff(entry){
 		//Add the "different" class that will color corresponding background <p> tag
 		$('#'+path+"_td").toggleClass('different');
 		//$('#'+path).attr('pr_value', differences[i]["lhs"]);
-		$('#'+path).attr('title', differences[i]["rhs"]);
+		$('#'+path+"_td").attr('title', differences[i]["rhs"]);
 	}
 }
 
@@ -559,8 +559,8 @@ function print_diff(tab_diff){
 		//Add the "different" class that will color corresponding background <p> tag
 		$('#'+path).text(difference);
 		$('#'+path+'_td').toggleClass('different');
-		$('#'+path).attr('title', String(orig));
-		$('#'+path).attr('pr_value', difference);
+		$('#'+path+'_td').attr('title', String(orig));
+		$('#'+path+'_td').attr('pr_value', difference);
 	}
 }
 
@@ -570,14 +570,13 @@ function print_diff(tab_diff){
 //TODO callback ?:
 function remove_diff(){
 	$('.different,.modified_cell').each(function(){
-		$(this).text($(this).attr('title'));
-		$(this).removeAttr('title');
-		$(this).removeClass('different');
-		$(this).removeClass('modified_cell');
-		//TODO WORK?
+		$(this).text($(this+'_td').attr('title'));
+		//$(this).removeAttr('title');
+				//TODO this+'_td' WORK?
 		console.log("-----------");
 		console.log($(this));
 		console.log($(this+'_td'));
+		$(this+'_td').removeClass('different');
 		$(this+'_td').removeClass('modified_cell');
 
 	});
@@ -621,10 +620,11 @@ function edit_value(id){
 
     // Select the tag with this id
     var $value = $('#'+id);
+    var $value_td = $('#'+id+'_td');
     // Get the original value on this tag
     var orig_v = $value.text();
-    var default_v = $value.attr('title');
-    var editted_v = $value.attr('new_value') || "" 
+    var default_v = $value_td.attr('title');
+    var editted_v = $value_td.attr('new_value') || "" 
 
     // If there is no title it's mean that the value is the same as the master
     if (!default_v) default_v=orig_v;
@@ -636,10 +636,13 @@ function edit_value(id){
       var new_html = ""
  
       // Then, transform the tag to a textarea with the original value
-      var $td_value = $('#'+id+"_td");
-      var h = $td_value.height();
-      new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit title=\""+default_v+"\" new_value='"+editted_v+"'>"+orig_v+"</textarea>";
+      var $value_td = $('#'+id+"_td");
+      var h = $value_td.height();
+      //new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit title=\""+default_v+"\" new_value='"+editted_v+"'>"+orig_v+"</textarea>";
+      new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit>"+orig_v+"</textarea>";
       $value.replaceWith(new_html);
+
+      $value_td.attr('title',default_v);
 
       // Change the indicator status to have a clickable symbol to validate the modification
       // TODO WIP DONT CHANGE HTML BUT CHANGE BTTN
@@ -691,15 +694,16 @@ function reset_value(id){
 
     // Select the tag with this id
     var $value = $('#'+id);
+    var $value_td = $('#'+id+'_td');
     // Get the original value on this tag
-    var pr_v = $value.attr('pr_value') || "";
-    var default_v = $value.attr('title') || "";
+    var pr_v = $value_td.attr('pr_value') || "";
+    var default_v = $value_td.attr('title') || "";
     var reset_v= pr_v || default_v;
 
 	$value.text(reset_v);
 	$('tr#'+id+'_tr.reset').remove();
-	$('td#'+id+'_td').removeClass('modified_cell');
-	$('#'+id).removeAttr('new_value');
+	$value_td.removeClass('modified_cell');
+	$value_td.removeAttr('new_value');
 		// TODO COLOR ETC........
 
 
@@ -795,17 +799,18 @@ function valid_edit(id,orig_v){
 	var entry=get_stored_entry(entry_id);
 
     var $value_new = $('#'+id);
+    var $value_td = $('#'+id+"_td");
     var new_v = $value_new.val();
 	var motif =  /___/;
 	// Get the position liste of the value from the id (Cf. "val_to_table")
 	var liste = id.split(motif);
-	var title=$('#'+id).attr("title");
-	var orig_val=title;
+	//var title=$value_td.attr("title");
+	var orig_val=$value_td.attr("pr_value") || $value_td.attr("title");
 
 	// If the value is the same from the original
 	// We keep original status
 	if (orig_val === new_v ){
-	    $('#'+id+'_td').removeClass("modified_cell");
+	    $value_td.removeClass("modified_cell");
 	}
 	// Else, if the value is found and different
 	// we store it and change the status to "new"
@@ -835,15 +840,17 @@ function valid_edit(id,orig_v){
             // Changes have been made, we record the status to true and show the btn to send changes into PR
 	    store_entry(true,"changes");
 	    $('input.edit_mode').show();//buttons
-	    $('#'+id+'_td').addClass("modified_cell");
+	    
+	    $value_td.addClass("modified_cell");
 
 	}
 
 	var new_html = "";
-        new_html += "<p id=\""+id+"\" class=\"value\" title='"+title+"'' new_value='"+new_v+"' >";
+        new_html += "<p id=\""+id+"\" class=\"value\"  >";
         new_html += new_v;
         new_html += "</p>";//</td>";
         $value_new.replaceWith(new_html);
+		//$value_td.attr( "title", title);
 
 
 
@@ -862,6 +869,7 @@ function valid_edit(id,orig_v){
         if ((orig_val) && (orig_val !== new_v )){
 			var markup = "<tr class=reset id=\""+id+"_tr\"><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td><tr>";
         	$('table#'+id+'_tab').append(markup);
+        	$value_td.attr( "new_value", new_v);
         }
 
 
@@ -888,22 +896,24 @@ function valid_edit(id,orig_v){
 
 function cancel_edit(id){
 		var value="";
-		if ($('#'+id).attr("new_value")) value = $('#'+id).attr("new_value");
-        else value = $('#'+id).attr("title");
+		if ($('#'+id+'_td').attr("pr_value"))  value = $('#'+id+'_td').attr("pr_value");
+        else if ($('#'+id+'_td').attr("new_value")) value = $('#'+id+'_td').attr("new_value");
+        else value = $('#'+id+'_td').attr("title");
 
-		//var value=$('#'+id).attr("new_value") || $('#'+id).attr("title");
+		//var value=$('#'+id).attr("new_value") || ($('#'+id).attr("new_value") || $('#'+id).attr("title")); //TODO REPLACE THE IF WITH THAT
 
 	var new_html = "";
-        new_html += "<p id='"+id+"' class='"+$('#'+id).attr("class")+"'";
-        if ($('#'+id).attr("new_value")) new_html += "new_value='"+ $('#'+id).attr("new_value") + "'";
-        if ($('#'+id).attr("title")) new_html += "title='"+ $('#'+id).attr("title") + "'";
-        new_html += ">"+value + "</p>";
+        new_html += "<p id='"+id+"' class='"+$('#'+id).attr("class")+"'>"+value+"</p>";
 
+        $('#'+id).replaceWith(new_html);
+
+        //if ($('#'+id+'_td').attr("new_value")) $value_td.attr( "new_value", $('#'+id).attr("new_value"));
+        //if ($('#'+id+'_td').attr("title")) $value_td.attr( "title", $('#'+id).attr("title"));
 
 		/*if ($('#'+id).attr("new_value")) $('#'+id).text($('#'+id).attr("new_value"));
 		else $('#'+id).text($('#'+id).attr("title"));*/
 
-        $('#'+id).replaceWith(new_html);
+
 
          // TODO WIP NE PAS CHANGER LE HTML, juste ajouter et supprimer des boutons..
         // Re write a edit button

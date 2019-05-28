@@ -47,7 +47,7 @@ input[type=button]{
   margin: 5px;
 }
 
-#tool_content td.content,.none{
+#tool_content td.content,td.none{
   width:100%;
   height: 0px;
   padding-left: 1px;
@@ -76,15 +76,19 @@ input[type=button]{
   background-color: #eafbb7;
 }
 
-#tool_content td.cancel {
+#tool_content td.cancel,td.reset {
   background-color: #ffd4d4;
 }
 
-#tool_content .different{
+#tool_content td.edit {
+  background-color: #fff0b3;
+}
+
+#tool_content td.different{
   background-color: #ccd9ff;
 }
 
-#tool_content .modified_cell {
+#tool_content td.modified_cell {
   background-color: #ffeb99;
 }
 
