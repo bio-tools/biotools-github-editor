@@ -118,17 +118,17 @@ var $btn_send = $('.btn_send');
 var $btn_cancel = $('.btn_cancel');
 
 // Redirect to search tool page
-$btn_search_other.on('click', function(event) {
+$btn_search_other.unbind('click').on('click', function(event) {
 	window.location.href = page_search;
 });
 
 // Send modif made in the form
-$btn_send.on('click', function(event) {
+$btn_send.unbind('click').on('click', function(event) {
 	send_modif();
 });
 
 // Cancel modif mode and come back to the "master" tab
-$btn_cancel.on('click', function(event) {
+$btn_cancel.unbind('click').on('click', function(event) {
 	exit_edit_mode();
 	change_tab(tool_metadata["name"].toLowerCase());
 });
@@ -353,7 +353,7 @@ function print_tool(entry){
 	show_diff(entry);
 
 	// Table cell that could be modified are selected thanks to the id "value"
-    $('td.edit').on('click', function(event) {
+    $('td.edit').unbind('click').on('click', function(event) {
     	edit_value(this.id.replace('_edit', ''));
     });
 
@@ -390,7 +390,13 @@ function val_to_table(entry,id=""){
 		else if (Array.isArray(entry)){
 		  val="[]"
 		}
-	    value_to_print += "<td><table id=\""+id+"_tab\"><tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr></table></td>";
+		// REDUNDANT WITH String Entry
+        value_to_print += "<td><table id=\""+id+"_tab\">"
+        value_to_print += "<tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr>"  // EDIT
+        value_to_print += "<tr class=reset id=\""+id+"_tr\" hidden><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td></tr>"  // RESET
+        value_to_print += "<tr class=valid id=\""+id+"_tr\" hidden><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td></tr>"  // VALID
+        value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>"  // CANCEL
+        value_to_print += "</table></td>";
 		value_to_print += "<td class=none><p id=\""+id+"\" class=new>"+val+"</p></td>"
 	}
 	// If the entry is an array, create a new inner table and recall the function for every sub-entry
@@ -408,25 +414,40 @@ function val_to_table(entry,id=""){
 	else if (typeof entry == "string" || typeof entry == "number"){
 	//   IF "id" is empty it mean that this is the key ('label' class) 
 	//   ELSE create a cell with the 'value' class and pencill (meaning 'unmodified')
-		if (id == ""){
-		    value_to_print += "<td class=label><p>";
-                    value_to_print += entry;
-		    value_to_print += "</p></td>";
+
+		if (id === "biotoolsID"){
+			value_to_print += "<td class=\"bt_id\" style=\"text-align:center;vertical-align:middle;\" title=\"You can not edit the bio.tools ID\"><i class=\"icon-minus-sign\"></i></td>";
+			value_to_print += "<td class=\"bt_id\" id=\""+id+"_td\" title=\"You can not edit the bio.tools ID\">"
+			value_to_print += "<p id=\""+id+"\">";
+			value_to_print += entry;
+			value_to_print += "</p></td>";
 		}
-		else {
-	        value_to_print += "<td><table id=\""+id+"_tab\"><tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr></table></td>";
-		    value_to_print += "<td class=content id=\""+id+"_td\">"
-		    value_to_print += "<p id=\""+id+"\" class=value>";
-
-			//TODO Redundant : Create function 
-	        	var regex_website=/^http[s]?:\/\/\S*$/;
-                	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
-			if (regex_website.test(entry)){
-		    		entry="<a href=\"" + entry + "\" target=\"_blank\">" + entry + "</a>";
+		else{
+			if (id == ""){
+			    value_to_print += "<td class=label><p>";
+	                    value_to_print += entry;
+			    value_to_print += "</p></td>";
 			}
+			else {
+		        value_to_print += "<td><table id=\""+id+"_tab\">"
+		        value_to_print += "<tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr>"  // EDIT
+		        value_to_print += "<tr class=reset id=\""+id+"_tr\" hidden><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td></tr>"  // RESET
+		        value_to_print += "<tr class=valid id=\""+id+"_tr\" hidden><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td></tr>"  // VALID
+		        value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>"  // CANCEL
+		        value_to_print += "</table></td>";
+			    value_to_print += "<td class=content id=\""+id+"_td\">"
+			    value_to_print += "<p id=\""+id+"\" class=value>";
 
-		    value_to_print += entry;
-		    value_to_print += "</p></td>";
+				//TODO Redundant : Create function 
+		        	var regex_website=/^http[s]?:\/\/\S*$/;
+	                	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
+				if (regex_website.test(entry)){
+			    		entry="<a href=\"" + entry + "\" target=\"_blank\">" + entry + "</a>";
+				}
+
+			    value_to_print += entry;
+			    value_to_print += "</p></td>";
+			}
 		}
 	}
 	// Else, entry is (probably) a dict, recall the function
@@ -570,15 +591,11 @@ function print_diff(tab_diff){
 //TODO callback ?:
 function remove_diff(){
 	$('.different,.modified_cell').each(function(){
-		$(this).text($(this+'_td').attr('title'));
-		//$(this).removeAttr('title');
-				//TODO this+'_td' WORK?
-		console.log("-----------");
-		console.log($(this));
-		console.log($(this+'_td'));
-		$(this+'_td').removeClass('different');
-		$(this+'_td').removeClass('modified_cell');
-
+		$(this.firstChild).text($(this).attr('title'));
+		$(this).removeClass('different');
+		$(this).removeClass('modified_cell');
+		$(this).removeAttr('new_value');
+		$("#"+this.firstChild.id+"_tr.reset").hide();
 	});
 }
 
@@ -644,38 +661,28 @@ function edit_value(id){
 
       $value_td.attr('title',default_v);
 
-      // Change the indicator status to have a clickable symbol to validate the modification
-      // TODO WIP DONT CHANGE HTML BUT CHANGE BTTN
-
-      // var $value_btn = $("#"+id+"_btn");
-      // var new_html = "<td class=edit id="+id+"_btn><table><tr><td id=\""+id+"_valid\" class=valid ><i class=\"icon-ok\"></td></tr>";
-      // 	  new_html += "<tr><td id=\""+id+"_cancel\" class=cancel ><i class=\"icon-remove\"></i></td></tr></table></td>";
-      // $value_btn.replaceWith(new_html);
-
-		$('tr#'+id+'_tr.edit').remove();
-		$('tr#'+id+'_tr.reset').remove();
-        var markup = "<tr class=valid id=\""+id+"_tr\"><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td><tr>";
-        $('table#'+id+'_tab').append(markup);
-        var markup = "<tr class=cancel id=\""+id+"_tr\"><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td><tr>";
-        $('table#'+id+'_tab').append(markup);
-
-
-
-
+      // Change edit (and reset) buttons by valid and cancel (modifications).
+		$('tr#'+id+'_tr.edit').hide();
+		$('tr#'+id+'_tr.reset').hide();
+		$('tr#'+id+'_tr.valid').show();
+		$('tr#'+id+'_tr.cancel').show();
+	    //var markup = "<tr class=valid id=\""+id+"_tr\"><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td><tr>";
+	    //$('table#'+id+'_tab').append(markup);
+	    //var markup = "<tr class=cancel id=\""+id+"_tr\"><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td><tr>";
+	    //$('table#'+id+'_tab').append(markup);
 
       $('#'+id).keypress(function(event){
         var keycode = (event.keyCode ? event.keyCode : event.which);
         if(keycode == '13'){
-	  valid_edit(id,orig_v);
+	  		valid_edit(id,orig_v);
         }
       });
 
-      // Function to manage modification of the value
-      $('#'+id+'_valid').on('click', function(event) {
+      $('#'+id+'_valid').unbind('click').on('click', function(event) {
 		valid_edit(id,orig_v);
       });
       // Exit modif
-      $('#'+id+'_cancel').on('click', function(event) {
+      $('#'+id+'_cancel').unbind('click').on('click', function(event) {
 		cancel_edit(id);
       });
 
@@ -693,56 +700,16 @@ function edit_value(id){
 function reset_value(id){
 
     // Select the tag with this id
-    var $value = $('#'+id);
     var $value_td = $('#'+id+'_td');
     // Get the original value on this tag
     var pr_v = $value_td.attr('pr_value') || "";
     var default_v = $value_td.attr('title') || "";
     var reset_v= pr_v || default_v;
 
-	$value.text(reset_v);
-	$('tr#'+id+'_tr.reset').remove();
+	$('#'+id).text(reset_v);
+	$('tr#'+id+'_tr.reset').hide();
 	$value_td.removeClass('modified_cell');
 	$value_td.removeAttr('new_value');
-		// TODO COLOR ETC........
-
-
- //    edit_mode(//Callback
- //    function(){ 
- //      // Re-select the tag with this id
- //      var $value = $('#'+id);
- //      var new_html = ""
- 
- //      // Then, transform the tag to a textarea with the original value
- //      var $td_value = $('#'+id+"_td");
-
-
-
-
- //      // Change the indicator status to have a clickable symbol to validate the modification
- //      var $value_btn = $("#"+id+"_btn");
- //      var new_html = "<td class=edit id="+id+"_btn><table><tr><td id=\""+id+"_valid\" class=valid ><i class=\"icon-ok\"></td></tr>";
- //      	  new_html += "<tr><td id=\""+id+"_cancel\" class=cancel ><i class=\"icon-remove\"></i></td></tr></table></td>";
-
- //      $value_btn.replaceWith(new_html);
-
- //      $('#'+id).keypress(function(event){
- //        var keycode = (event.keyCode ? event.keyCode : event.which);
- //        if(keycode == '13'){
-	//   valid_edit(id,orig_v);
- //        }
- //      });
-
- //      // Function to manage modification of the value
- //      $('#'+id+'_valid').on('click', function(event) {
-	// valid_edit(id,orig_v);
- //      });
- //      // Exit modif
- //      $('#'+id+'_cancel').on('click', function(event) {
-	// cancel_edit(id);
- //      });
-
- //    });
 }
 
 
@@ -782,7 +749,7 @@ function edit_mode(_cb){
 function exit_edit_mode(){
 	store_entry("display","mode");
 	$('input.edit_mode').hide();//buttons
-	$('#menu li.active').remove();//active tab
+	//$('#menu li.active').remove();//active tab
 	$('.value_edit').each(function(){
 		cancel_edit($(this).attr('id'));
 	});
@@ -795,6 +762,7 @@ function exit_edit_mode(){
 // TODO DOC
 
 function valid_edit(id,orig_v){
+
     var entry_id = tool_metadata["tab_active"];
 	var entry=get_stored_entry(entry_id);
 
@@ -804,13 +772,13 @@ function valid_edit(id,orig_v){
 	var motif =  /___/;
 	// Get the position liste of the value from the id (Cf. "val_to_table")
 	var liste = id.split(motif);
-	//var title=$value_td.attr("title");
 	var orig_val=$value_td.attr("pr_value") || $value_td.attr("title");
 
 	// If the value is the same from the original
 	// We keep original status
 	if (orig_val === new_v ){
 	    $value_td.removeClass("modified_cell");
+	    $value_td.removeAttr('new_value');
 	}
 	// Else, if the value is found and different
 	// we store it and change the status to "new"
@@ -846,44 +814,25 @@ function valid_edit(id,orig_v){
 	}
 
 	var new_html = "";
-        new_html += "<p id=\""+id+"\" class=\"value\"  >";
-        new_html += new_v;
-        new_html += "</p>";//</td>";
-        $value_new.replaceWith(new_html);
-		//$value_td.attr( "title", title);
+    new_html += "<p id=\""+id+"\" class=\"value\"  >"+new_v+"</p>";
+    $value_new.replaceWith(new_html);
 
+	$('tr#'+id+'_tr.valid').hide();
+	$('tr#'+id+'_tr.cancel').hide();
+	$('tr#'+id+'_tr.edit').show();
+    if ((orig_val) && (orig_val !== new_v )){
+    	$('tr#'+id+'_tr.reset').show();
+    	$value_td.attr( "new_value", new_v);
+    }
 
-
- // TODO WIP NE PAS CHANGER LE HTML, juste ajouter et supprimer des boutons..
-
-        //var $value_btn = $('#'+id+"_btn");
-        // var new_html = "";
-        // new_html += "<td class=edit id=\""+id+"_btn\"><table id=\""+id+"_tab\"><tr id=\""+id+"_tr\" ><td><i class=\"icon-edit\"></i></td></tr></table></td>";
-        // $value_btn.replaceWith(new_html);
-        console.log($('tr#'+id+'_tr.valid'))
-		$('tr#'+id+'_tr.valid').remove();
-		$('tr#'+id+'_tr.cancel').remove();
-        var markup = "<tr class=edit id=\""+id+"_tr\"><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td><tr>";
-        $('table#'+id+'_tab').append(markup);
-
-        if ((orig_val) && (orig_val !== new_v )){
-			var markup = "<tr class=reset id=\""+id+"_tr\"><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td><tr>";
-        	$('table#'+id+'_tab').append(markup);
-        	$value_td.attr( "new_value", new_v);
-        }
-
-
-        	//USELESS???
-
-
-		// Rebind the modif function to the tag
-		$('#'+id+'_edit').unbind('click').on('click', function(event) {
-	    edit_value(this.id.replace('_edit', ''));
-        });
-		// Rebind the modif function to the tag
-		$('#'+id+'_reset').unbind('click').on('click', function(event) {
-	    reset_value(this.id.replace('_reset', ''));
-        });
+	// Rebind the modif function to the tag
+	$('#'+id+'_edit').unbind('click').on('click', function(event) {
+    edit_value(this.id.replace('_edit', ''));
+    });
+	// Rebind the modif function to the tag
+	$('#'+id+'_reset').unbind('click').on('click', function(event) {
+    reset_value(this.id.replace('_reset', ''));
+    });
 }
 
 
@@ -895,42 +844,22 @@ function valid_edit(id,orig_v){
 // TODO HIDE SHOW p and text area...
 
 function cancel_edit(id){
-		var value="";
-		if ($('#'+id+'_td').attr("pr_value"))  value = $('#'+id+'_td').attr("pr_value");
-        else if ($('#'+id+'_td').attr("new_value")) value = $('#'+id+'_td').attr("new_value");
-        else value = $('#'+id+'_td').attr("title");
 
-		//var value=$('#'+id).attr("new_value") || ($('#'+id).attr("new_value") || $('#'+id).attr("title")); //TODO REPLACE THE IF WITH THAT
+	var value=$('#'+id+'_td').attr("new_value") || ($('#'+id+'_td').attr("pr_value") || $('#'+id+'_td').attr("title")); //TODO REPLACE THE IF WITH THAT
+
 
 	var new_html = "";
-        new_html += "<p id='"+id+"' class='"+$('#'+id).attr("class")+"'>"+value+"</p>";
+    new_html += "<p id='"+id+"' class='"+$('#'+id).attr("class")+"'>"+value+"</p>";
+    $('#'+id).replaceWith(new_html);
 
-        $('#'+id).replaceWith(new_html);
+    $('tr#'+id+'_tr.valid').hide();
+	$('tr#'+id+'_tr.cancel').hide();
+	$('tr#'+id+'_tr.edit').show();
 
-        //if ($('#'+id+'_td').attr("new_value")) $value_td.attr( "new_value", $('#'+id).attr("new_value"));
-        //if ($('#'+id+'_td').attr("title")) $value_td.attr( "title", $('#'+id).attr("title"));
-
-		/*if ($('#'+id).attr("new_value")) $('#'+id).text($('#'+id).attr("new_value"));
-		else $('#'+id).text($('#'+id).attr("title"));*/
-
-
-
-         // TODO WIP NE PAS CHANGER LE HTML, juste ajouter et supprimer des boutons..
-        // Re write a edit button
-        // var $value_btn = $('#'+id+"_btn");
-        // var new_html = "";
-        // new_html += "<td class=edit id=\""+id+"_btn\"><table id=\""+id+"_tab\"><tr id=\""+id+"_tr\"><td><i class=\"icon-edit\"></i></td></tr></table></td>";
-        // $value_btn.replaceWith(new_html);
-        $('tr#'+id+'_tr.valid').remove();
-		$('tr#'+id+'_tr.cancel').remove();
-        var markup = "<tr class=edit id=\""+id+"_tr\"><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td><tr>";
-        $('table#'+id+'_tab').append(markup);
-
-
-		// Rebind the modif function to the tag
-		$('#'+id+'_edit').unbind('click').on('click', function(event) {
-	    edit_value(this.id.replace('_edit', ''));
-        });
+	// Rebind the modif function to the tag
+	$('#'+id+'_edit').unbind('click').on('click', function(event) {
+    edit_value(this.id.replace('_edit', ''));
+    });
 }
 
 // -----------------------------------------------------
@@ -1258,6 +1187,7 @@ function select_tab(id){
 	// Set this new selected tab 'active'
 	$tab.toggleClass('active');
 	// Re-add events onclick on the tabs of the menu
+	console.log("toto")
 	add_tab_event();
 	// Display tool metadata according to selected tab
 	update_header(id);
@@ -1349,8 +1279,8 @@ function update_header(id){
 // Add event 'change_tab()' to all the not active tab
 
 function add_tab_event(){
-    var $tab_not_active = $("#menu li:not('.active')");
-    $tab_not_active.unbind('click').on('click', function(event){
+    $("#menu li").unbind('click');
+   	$("#menu li:not('.active')").on('click', function(event){
         change_tab(this.id);
     });
 }
@@ -1366,10 +1296,10 @@ function add_tab_event(){
 
 function change_tab(id_tab_selected){
 	console.log(id_tab_selected+" : selected");
-
 	// Check if its possible to change tab
-        if ((get_stored_entry("mode")=="edit") && (get_stored_entry("changes"))){
-//        if ((get_stored_entry("mode")=="edit") && ($('.modified_cell'))){ //TODO WIP
+    //if ((get_stored_entry("mode")=="edit") && (get_stored_entry("changes"))){
+//  if ((get_stored_entry("mode")=="edit") && ($('.modified_cell'))){ //TODO WIP
+	if ($('.modified_cell').length !== 0){
 		var quit=confirm("If you change tab all modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
 		if (quit) {
 			exit_edit_mode();
@@ -1378,7 +1308,8 @@ function change_tab(id_tab_selected){
 			return;
 		}
 	}
-	else if ((get_stored_entry("mode")=="edit") && (!id_tab_selected.includes('edit'))) {
+	//else if ((get_stored_entry("mode")=="edit") && (!id_tab_selected.includes('edit'))) {
+	else if (get_stored_entry("mode")=="edit") {
 		exit_edit_mode();
 	}
 
@@ -1390,7 +1321,6 @@ function change_tab(id_tab_selected){
 	}
 	// Else,show diff
 	else {
-
 		// - Retrieve entry
 		var $tab_selected = $('#'+id_tab_selected);
 	     	var entry=get_stored_entry(id_tab_selected);

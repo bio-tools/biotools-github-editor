@@ -76,20 +76,26 @@ input[type=button]{
   background-color: #eafbb7;
 }
 
-#tool_content td.cancel,td.reset {
+#tool_content td.cancel,#tool_content td.reset {
   background-color: #ffd4d4;
 }
 
 #tool_content td.edit {
-  background-color: #fff0b3;
+  background-color: #fff5cc;
 }
 
 #tool_content td.different{
-  background-color: #ccd9ff;
+  background-color: #e6ecff;
 }
 
 #tool_content td.modified_cell {
-  background-color: #ffeb99;
+  background-color: #fff5cc;
+}
+
+#tool_content td.bt_id {
+  background: linear-gradient(45deg, #e6e6e6 12.5%, #fff 12.5%, #fff 37.5%, #e6e6e6 37.5%, #e6e6e6 62.5%, #fff 62.5%, #fff 87.5%, #e6e6e6 87.5%);
+  background-size: 8px 8px;
+  background-position: 50px 50px;
 }
 
 /*
