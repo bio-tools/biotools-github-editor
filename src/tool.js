@@ -129,8 +129,7 @@ $btn_send.unbind('click').on('click', function(event) {
 
 // Cancel modif mode and come back to the "master" tab
 $btn_cancel.unbind('click').on('click', function(event) {
-	exit_edit_mode();
-	change_tab(tool_metadata["name"].toLowerCase());
+	change_tab(tool_metadata["tab_active"]);
 });
 
 
@@ -197,7 +196,7 @@ function search_tool(tool_name){
 	get_tool_entry("master",tool_name,repo,function(res){
 		if (!res) {
 			alert("'"+tool_name+"' does not exist on bio.tools. \n You can pick a tool in the list");
-				hide_loader();
+			hide_loader();
 			window.location.href = page_search;
 			return;
 		}
@@ -416,8 +415,8 @@ function val_to_table(entry,id=""){
 	//   ELSE create a cell with the 'value' class and pencill (meaning 'unmodified')
 
 		if (id === "biotoolsID"){
-			value_to_print += "<td class=\"bt_id\" style=\"text-align:center;vertical-align:middle;\" title=\"You can not edit the bio.tools ID\"><i class=\"icon-minus-sign\"></i></td>";
-			value_to_print += "<td class=\"bt_id\" id=\""+id+"_td\" title=\"You can not edit the bio.tools ID\">"
+			value_to_print += "<td class=\"bt_id\" style=\"text-align:center;vertical-align:middle;\" title=\"You can not edit bio.tools ID\"><i class=\"icon-minus-sign\"></i></td>";
+			value_to_print += "<td class=\"bt_id\" id=\""+id+"_td\" title=\"You can not edit bio.tools ID\">"
 			value_to_print += "<p id=\""+id+"\">";
 			value_to_print += entry;
 			value_to_print += "</p></td>";
@@ -710,6 +709,9 @@ function reset_value(id){
 	$('tr#'+id+'_tr.reset').hide();
 	$value_td.removeClass('modified_cell');
 	$value_td.removeAttr('new_value');
+	if ($('.modified_cell').length === 0){
+			exit_edit_mode();
+	}
 }
 
 
@@ -748,7 +750,7 @@ function edit_mode(_cb){
 
 function exit_edit_mode(){
 	store_entry("display","mode");
-	$('input.edit_mode').hide();//buttons
+	$('button.edit_mode').hide();//buttons
 	//$('#menu li.active').remove();//active tab
 	$('.value_edit').each(function(){
 		cancel_edit($(this).attr('id'));
@@ -807,7 +809,7 @@ function valid_edit(id,orig_v){
 		
             // Changes have been made, we record the status to true and show the btn to send changes into PR
 	    store_entry(true,"changes");
-	    $('input.edit_mode').show();//buttons
+	    $('button.edit_mode').show();//buttons
 	    
 	    $value_td.addClass("modified_cell");
 
@@ -849,12 +851,16 @@ function cancel_edit(id){
 
 
 	var new_html = "";
-    new_html += "<p id='"+id+"' class='"+$('#'+id).attr("class")+"'>"+value+"</p>";
+    //new_html += "<p id='"+id+"' class='"+$('#'+id).attr("class")+"'>"+value+"</p>";
+    new_html += "<p id='"+id+"'>"+value+"</p>";
     $('#'+id).replaceWith(new_html);
 
     $('tr#'+id+'_tr.valid').hide();
 	$('tr#'+id+'_tr.cancel').hide();
 	$('tr#'+id+'_tr.edit').show();
+	if ($('#'+id+'_td').attr("new_value")){
+    	$('tr#'+id+'_tr.reset').show();
+    }
 
 	// Rebind the modif function to the tag
 	$('#'+id+'_edit').unbind('click').on('click', function(event) {
@@ -878,8 +884,12 @@ function send_modif(){
 	var repo_name=gh_bt_repo;
 
 	// If some changes are not validated don't send
-	if ($('.valid').length !== 0) {
+	if ($('.value_edit').length !== 0) {
 		alert("Some changes have not been validated");
+		var pos = $('.value_edit').offset();
+		var top = pos.top - 100;
+		var left = pos.left - 20;
+		window.scrollTo((left < 0 ? 0 : left), (top < 0 ? 0 : top));
 		return;
 	}
 
@@ -1300,11 +1310,15 @@ function change_tab(id_tab_selected){
     //if ((get_stored_entry("mode")=="edit") && (get_stored_entry("changes"))){
 //  if ((get_stored_entry("mode")=="edit") && ($('.modified_cell'))){ //TODO WIP
 	if ($('.modified_cell').length !== 0){
-		var quit=confirm("If you change tab all modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
+		var quit=confirm("All modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
 		if (quit) {
 			exit_edit_mode();
 		}
 		else {
+			var pos = $('.modified_cell').offset();
+			var top = pos.top - 100;
+			var left = pos.left - 20;
+			window.scrollTo((left < 0 ? 0 : left), (top < 0 ? 0 : top));
 			return;
 		}
 	}
