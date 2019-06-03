@@ -2,6 +2,10 @@ input[type=button]{
   cursor:pointer;
 }
 
+/* ------ */
+/* HEADER */
+/* ------ */
+
 
 /* ELIXIR ORANGE
 .navbar { 
@@ -17,6 +21,17 @@ input[type=button]{
     background-color: orange;
 }
 */
+
+
+.title {
+   font-size: 200% !important;
+}
+
+
+#edited{
+  pointer-events: none;
+  color: #fff5cc;
+}
 
 /* ------------ */
 /* TOOL CONTENT */
@@ -141,6 +156,25 @@ input[type=button]{
   border: 1px solid #999999;
 }
 
+img.avatar{
+  width:40px;
+  height:40px;
+  /*border: 1px solid #999999;*/
+  padding: 2px;
+}
+
+.username{
+  color: white;
+}
+
+.navbar-inner{
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+#menuUser p{
+  margin: 0px !important;
+}
 /* ----- */
 /* font  */
 /* ----- */

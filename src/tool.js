@@ -590,7 +590,9 @@ function print_diff(tab_diff){
 //TODO callback ?:
 function remove_diff(){
 	$('.different,.modified_cell').each(function(){
-		$(this.firstChild).text($(this).attr('title'));
+		//$(this.firstChild).text($(this).attr('title'));
+    	var new_html = linkit($(this).attr('title'),this.firstChild.id);
+    	$(this.firstChild).replaceWith(new_html);
 		$(this).removeClass('different');
 		$(this).removeClass('modified_cell');
 		$(this).removeAttr('new_value');
@@ -705,13 +707,33 @@ function reset_value(id){
     var default_v = $value_td.attr('title') || "";
     var reset_v= pr_v || default_v;
 
-	$('#'+id).text(reset_v);
+
+    var new_html = linkit(reset_v,id);
+    $('#'+id).replaceWith(new_html);
+	//('#'+id).text(reset_v);
 	$('tr#'+id+'_tr.reset').hide();
 	$value_td.removeClass('modified_cell');
 	$value_td.removeAttr('new_value');
 	if ($('.modified_cell').length === 0){
 			exit_edit_mode();
 	}
+}
+
+// -----------------------------------------------------
+// TODO RENAME linkit ==> encapsule it ou truc comme ça
+function linkit(value,id){
+	console.log(value);
+	console.log(id);
+	//value=$('#'+id).text();
+	var regex_website=/^http[s]?:\/\/\S*$/;
+	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
+	if (regex_website.test(value)){
+		return "<p id=\""+id+"\" class=value><a href=\"" + value + "\" target=\"_blank\">" + value + "</a></p>";
+	}
+	else{
+		return "<p id=\""+id+"\" class=value>" + value + "</p>";
+	}
+ 
 }
 
 
@@ -751,10 +773,13 @@ function edit_mode(_cb){
 function exit_edit_mode(){
 	store_entry("display","mode");
 	$('button.edit_mode').hide();//buttons
+	$('#edited').hide();
 	//$('#menu li.active').remove();//active tab
 	$('.value_edit').each(function(){
 		cancel_edit($(this).attr('id'));
 	});
+
+	// add*
 
 }
 
@@ -781,6 +806,9 @@ function valid_edit(id,orig_v){
 	if (orig_val === new_v ){
 	    $value_td.removeClass("modified_cell");
 	    $value_td.removeAttr('new_value');
+	    if ($('.modified_cell').length === 0){
+			exit_edit_mode();
+		}
 	}
 	// Else, if the value is found and different
 	// we store it and change the status to "new"
@@ -810,14 +838,18 @@ function valid_edit(id,orig_v){
             // Changes have been made, we record the status to true and show the btn to send changes into PR
 	    store_entry(true,"changes");
 	    $('button.edit_mode').show();//buttons
+	    $('#edited').show();
+	    // add*
 	    
 	    $value_td.addClass("modified_cell");
 
 	}
 
 	var new_html = "";
-    new_html += "<p id=\""+id+"\" class=\"value\"  >"+new_v+"</p>";
+    new_html += linkit(new_v,id);
+    
     $value_new.replaceWith(new_html);
+
 
 	$('tr#'+id+'_tr.valid').hide();
 	$('tr#'+id+'_tr.cancel').hide();
@@ -852,7 +884,7 @@ function cancel_edit(id){
 
 	var new_html = "";
     //new_html += "<p id='"+id+"' class='"+$('#'+id).attr("class")+"'>"+value+"</p>";
-    new_html += "<p id='"+id+"'>"+value+"</p>";
+    new_html += linkit(value,id);
     $('#'+id).replaceWith(new_html);
 
     $('tr#'+id+'_tr.valid').hide();
