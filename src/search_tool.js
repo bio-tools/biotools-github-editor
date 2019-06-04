@@ -155,6 +155,14 @@ $('.btn_select').on('click', function(event) {
 });
 
 // -----------------------------------------------------
+$('#search_tool').keypress(function(event){
+var keycode = (event.keyCode ? event.keyCode : event.which);
+if(keycode == '13'){
+		search_tool($('#search_tool'));
+}
+});
+
+// -----------------------------------------------------
 //   WIP ZONE // WIP ZONE // WIP ZONE // WIP ZONE //
 // -----------------------------------------------------
 

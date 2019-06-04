@@ -95,15 +95,18 @@
       </a-->
       <div class="nav">
 
-      <a  href="https://bio.tools/" target="_blank" ><img src="https://bio.tools/img/elixir_biotools_transparent.png" style="height: 50px"></a>
-                   </div>   
+      	<a  href="https://bio.tools/" target="_blank" ><img src="https://bio.tools/img/elixir_biotools_transparent.png" style="height: 50px"></a>
+      </div>   
 
+	<div class="nav">
       <a class="brand title" href="https://bio.tools/" target="_blank"  id="title">Tool Name</a>
       <p class="brand title" id="edited" style="display: none;">(Edited)</p>
+	   </div>  
 
+
+	  <div class="loader nav" id="search_loader" ></div>
       <div class="nav-collapse collapse">
-
-        
+       
         <ul class="nav nav-pills pull-right"> <!--  revoir -->
         	<li><form class="input-append hidden-tablet" method="GET" action="/tool_bstrp.html" style="margin-top:4px;margin-bottom:5px;"><input type="text" title="Enter keyword(s) to find" id="tool" name="tool" class="span2" maxlength="40"><button type="submit" class="btn"><i class="icon-search" title="Search"></i></button></form>&nbsp;&nbsp;</li>
 
@@ -135,7 +138,7 @@
     </div>
   </div> 
 
-
+<br>
 <div class="container-fluid">
 	<div class="row-fluid">
      	<div class="span2 " >
@@ -152,25 +155,28 @@
 				<table class="table tool_meta">
 				<thead>
 				  <tr>
-				    <th>
+				    <th colspan=2>
 				      <p class="subtitle" id="subtitle">Branch</p>
 				    </th>
 				  </tr>
 				</thead>
 				<tbody>
 				  <tr>
-					<td>
-						<p class="subsubtitle" id="pr_date">Date</p>
+					<td colspan=2>
+						<p id="pr_date">Date</p>
 					</td>
 				  </tr>
 				  <tr>
-				    <td>
-				      <p class="subsubtitle" id="pr_author">Author</p>
+				    <td style="white-space: nowrap;">
+				      <p id="pr_author">Author</p>
+					</td>
+					<td style="width:100%;">
+				      <p id="pr_author_you" style="display: none;">(You)</p>
 					</td>
 				  </tr>
 				  <tr>
-				    <td>
-				      <a class="subsubtitle" id="pr_link" target="_blank" href="https://github.com/404">Link on Github</a>
+				    <td colspan=2>
+				      <a id="pr_link" target="_blank" href="https://github.com/404">Link on Github</a>
 				    </td>
 				  </tr>
 				</tbody>

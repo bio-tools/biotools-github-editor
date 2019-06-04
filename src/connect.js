@@ -95,20 +95,28 @@ function github_access(code){
 	  };
 
 	request(options, function (error, response, body) {
-	  console.log(body);
+	  if(!body){
+	  	 hide_loader();
+         //alert("We could not authentify you with the API request.\n\nError message: \n--\t--\t--\t--\t--\t--\t--\t--\n" + error + "\n--\t--\t--\t--\t--\t--\t--\t--\n\n Please enter you gihub access_token in the the form or try to get a new code");
+         ask_token();
+	  }
+	  else{
           var data = JSON.parse(body);
-          if (data['error']){
-	          hide_loader();
-                  alert("We could not authentify you with the API request.\n\nError message: \n--\t--\t--\t--\t--\t--\t--\t--\n" + data['error_description'] + "\n--\t--\t--\t--\t--\t--\t--\t--\n\n Please enter you gihub access_token in the the form or try to get a new code");
-                  ask_token();
+	      if (data['error']){
+		  	hide_loader();
+	        // /alert("We could not authentify you with the API request.\n\nError message: \n--\t--\t--\t--\t--\t--\t--\t--\n" + data['error_description'] + "\n--\t--\t--\t--\t--\t--\t--\t--\n\n Please enter you gihub access_token in the the form or try to get a new code");
+	        ask_token();
+		  }
+	      else{
+	          	console.log(typeof data);
+		    	  const access_token=data['access_token'];
+		          hide_loader();
+		          console.log("connected");
+		          search_page(access_token);
+		  }	  	
 	  }
-          else{
-          	console.log(typeof data);
-	    	  const access_token=data['access_token'];
-	          hide_loader();
-	          console.log("connected");
-	          search_page(access_token);
-	  }
+
+
 	});
 }
 
