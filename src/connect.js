@@ -104,7 +104,7 @@ function github_access(code){
           var data = JSON.parse(body);
 	      if (data['error']){
 		  	hide_loader();
-	        // /alert("We could not authentify you with the API request.\n\nError message: \n--\t--\t--\t--\t--\t--\t--\t--\n" + data['error_description'] + "\n--\t--\t--\t--\t--\t--\t--\t--\n\n Please enter you gihub access_token in the the form or try to get a new code");
+	        // alert("We could not authentify you with the API request.\n\nError message: \n--\t--\t--\t--\t--\t--\t--\t--\n" + data['error_description'] + "\n--\t--\t--\t--\t--\t--\t--\t--\n\n Please enter you gihub access_token in the the form or try to get a new code");
 	        ask_token();
 		  }
 	      else{

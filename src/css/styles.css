@@ -24,7 +24,7 @@ input[type=button]{
 
 
 .title {
-   font-size: 200% !important;
+  font-size: 200% !important;
 }
 
 
@@ -187,6 +187,9 @@ img.avatar{
   color: #0088cc;
 }
 
+.ui-autocomplete{
+  z-index: 2000 !important; 
+}
 
 /* ------ */
 /* LOADER */

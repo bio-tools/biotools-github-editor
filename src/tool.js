@@ -20,7 +20,9 @@ import GitHub from "github-api";
 import Repository from "github-api";
 import $ from "jquery";
 import diff from 'deep-diff'; 
-
+import "./import-jquery";
+import "../node_modules/jquery-ui-dist/jquery-ui.js";
+import request from "request";
 
 // /////////////////////////////////////////////////////
 // VARIABLE
@@ -109,6 +111,26 @@ else {
 
 }
 
+
+// /////////////////////////////////////////////////////
+// Search Bar:
+// /////////////////////////////////////////////////////
+
+function fill_search_bar(repo){
+	var $tool_list_obj = $('#tool_list');
+	repo.getContents('master','index.txt',true, function(req, res) {
+		var tools = res.split("\n");
+		tools.pop();
+		var $search_tool = $('#search_tool');
+		$('#search_tool').autocomplete({
+		     source: tools
+		});
+
+
+	});
+}
+fill_search_bar(repo);
+
 // /////////////////////////////////////////////////////
 // Buttons events:
 // /////////////////////////////////////////////////////
@@ -184,7 +206,6 @@ function get_stored_entry(name="default_master_entry"){
 // -----------
 // Search a tool entry from the github repository
 // -If the tool does not exist redirect to search page
-//  TODO Autocompletion
 
 function search_tool(tool_name){
 	// Value entered/choosed by the user
@@ -324,8 +345,6 @@ function get_tool_entry(branch_name,tool_name,my_repo,_callback){
 // PRINT_TOOL
 // ----------
 // Print all json values into a table (html)
-//
-// TODO : Manage new content 
 
 function print_tool(entry){
 	// Select table to add the tool content
@@ -377,7 +396,6 @@ function print_tool(entry){
 // Recursive function to create table cells 
 // according to the format of the entry
 // (Null/""; Array; String; Dict)
-//
 
 function val_to_table(entry,id=""){
 	var value_to_print="";
@@ -436,17 +454,21 @@ function val_to_table(entry,id=""){
 		        value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>"  // CANCEL
 		        value_to_print += "</table></td>";
 			    value_to_print += "<td class=content id=\""+id+"_td\">"
-			    value_to_print += "<p id=\""+id+"\" class=value>";
 
-				//TODO Redundant : Create function 
-		        	var regex_website=/^http[s]?:\/\/\S*$/;
-	                	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
-				if (regex_website.test(entry)){
-			    		entry="<a href=\"" + entry + "\" target=\"_blank\">" + entry + "</a>";
-				}
+				// Create <p> or <a> tag with value
+				value_to_print += linkit(entry,id)
+				//    value_to_print += "<p id=\""+id+"\" class=value>";
 
-			    value_to_print += entry;
-			    value_to_print += "</p></td>";
+				// //TODO Redundant : Create function 
+				//       	var regex_website=/^http[s]?:\/\/\S*$/;
+				//              	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
+				// if (regex_website.test(entry)){
+				//    		entry="<a href=\"" + entry + "\" target=\"_blank\">" + entry + "</a>";
+				// }
+
+				//    value_to_print += entry;
+				//    value_to_print += "</p>";
+			    value_to_print += "</td>";
 			}
 		}
 	}
@@ -519,7 +541,7 @@ function show_diff(entry){
 			if (path) path += "___"; // Separator of deepness of the json (Cf. print_tool())
 			path += table_path[j];
 		}
-		////path += "_td"; // To change backgrounf color of <td> tag instead of <p>
+
 		//Add the "different" class that will color corresponding background <p> tag
 		$('#'+path+"_td").toggleClass('different');
 		//$('#'+path).attr('pr_value', differences[i]["lhs"]);
@@ -592,11 +614,13 @@ function print_diff(tab_diff){
 function remove_diff(){
 	$('.different,.modified_cell').each(function(){
 		//$(this.firstChild).text($(this).attr('title'));
+		// Create <p> or <a> tag with value
     	var new_html = linkit($(this).attr('title'),this.firstChild.id);
     	$(this.firstChild).replaceWith(new_html);
 		$(this).removeClass('different');
 		$(this).removeClass('modified_cell');
 		$(this).removeAttr('new_value');
+		$(this).removeAttr('pr_value');
 		$("#"+this.firstChild.id+"_tr.reset").hide();
 	});
 }
@@ -604,7 +628,7 @@ function remove_diff(){
 
 
 // -----------------------------------------------------
-// EDIT_DICT TODO REMOVE USELESS CAUSE OF STORING JUST DIFF 
+// EDIT_DICT
 // ---------
 // Recursive function to add modif made by the user 
 // to the dict loaded from the github json.
@@ -708,7 +732,7 @@ function reset_value(id){
     var default_v = $value_td.attr('title') || "";
     var reset_v= pr_v || default_v;
 
-
+	// Create <p> or <a> tag with value
     var new_html = linkit(reset_v,id);
     $('#'+id).replaceWith(new_html);
 	//('#'+id).text(reset_v);
@@ -721,11 +745,9 @@ function reset_value(id){
 }
 
 // -----------------------------------------------------
-// TODO RENAME linkit ==> encapsule it ou truc comme ça
+// TODO DOC
+// RENAME linkit ==> encapsule it ou truc comme ça
 function linkit(value,id){
-	console.log(value);
-	console.log(id);
-	//value=$('#'+id).text();
 	var regex_website=/^http[s]?:\/\/\S*$/;
 	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
 	if (regex_website.test(value)){
@@ -744,7 +766,7 @@ function linkit(value,id){
 // Change to edit mode if it is not already setted
 
 function edit_mode(_cb){
-    // If we are not currently on 'edit' mode : create new tab to edit
+    // If we are not currently on 'edit' mode
     if (get_stored_entry("mode") != "edit"){
 		store_entry("edit","mode");
         var current_tool = tool_metadata["tab_active"];
@@ -769,13 +791,11 @@ function edit_mode(_cb){
 // --------------
 // - Change to 'display mode'
 // - Hide the edit btns
-// - Remove the tab on the menu 
 
 function exit_edit_mode(){
 	store_entry("display","mode");
 	$('button.edit_mode').hide();//buttons
 	$('#edited').hide();
-	//$('#menu li.active').remove();//active tab
 	$('.value_edit').each(function(){
 		cancel_edit($(this).attr('id'));
 	});
@@ -831,8 +851,14 @@ function valid_edit(id,orig_v){
 	    new_diff["lhs"]= new_v;
 	    new_diff["path"]= liste;
 	    new_diff["rhs"]= orig_val;
+	    // Remove old diff if it concern the same element
+	    for (var diff in entry){
+	    	if (entry[diff]["path"].toString() === new_diff["path"].toString()) {
+				entry.splice(diff,1);
+	    	}
+	    }
 	    entry.push(new_diff);
-		
+		console.log(entry);
 	    // Store it
     	store_entry(entry,new_entry_id);
 		
@@ -840,13 +866,13 @@ function valid_edit(id,orig_v){
 	    store_entry(true,"changes");
 	    $('button.edit_mode').show();//buttons
 	    $('#edited').show();
-	    // add*
 	    
 	    $value_td.addClass("modified_cell");
 
 	}
 
 	var new_html = "";
+	// Create <p> or <a> tag with value
     new_html += linkit(new_v,id);
     
     $value_new.replaceWith(new_html);
@@ -885,6 +911,7 @@ function cancel_edit(id){
 
 	var new_html = "";
     //new_html += "<p id='"+id+"' class='"+$('#'+id).attr("class")+"'>"+value+"</p>";
+    // Create <p> or <a> tag with value
     new_html += linkit(value,id);
     $('#'+id).replaceWith(new_html);
 
@@ -913,6 +940,7 @@ function cancel_edit(id){
 // TODO : IMprove user experience and error management (learn to use promise)
 //
 
+
 function send_modif(){
 	var repo_name=gh_bt_repo;
 
@@ -938,11 +966,8 @@ function send_modif(){
 
 	// Ask if the user allow the app to fork the repo in his Github account
 	var repo_forked = gh.getRepo(login,repo_name);
-	if(repo_forked){
-		console.log(repo_forked);	
-	}
-	else {
-		var confirm_fork=confirm("you don't have the repo '"+repo_name+"' forked on your account the app will do it for you. Do you allow it?"); 
+	if(!repo_forked){
+		var confirm_fork=confirm("You don't have the repo '"+repo_name+"' forked on your account the app will do it for you. Do you allow it?"); 
 		if (!confirm_fork){
 			return;
 		}
@@ -950,18 +975,19 @@ function send_modif(){
 
 
 	show_loader();	
+	console.log(tool_metadata["tab_active"]+" changes will be recorded");
+	
 	// 1)
 	// Get the original Entry
 	var entry=get_stored_entry();
 
 	// Edit this entry with modifs
 	var tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
-
 	for (var m in tab_modif){
 		var modif=tab_modif[m];
             	entry = edit_dict(entry,modif["path"][0],modif["path"],modif["lhs"])
 	}
-	console.log(tool_metadata["tab_active"]+" changes will be recorded");
+
 	// Lower Case id of the tool
 	var tool_name = tool_metadata["name"].toLowerCase();
 	// File name in which changes will be saved
@@ -970,8 +996,10 @@ function send_modif(){
 	var file_path="data/"+tool_name+"/"+file_name;
 
 
-
 	//-----------------------  //TODO attention redondane //TODO MOCHE
+
+
+	// JUST CHANGE FILE IN BRANCH?
 
 
 
@@ -979,145 +1007,118 @@ function send_modif(){
 
 	// WIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIP
 	// si pr a sois on remodifie fichier et commit
-	// console.log("----------------");
-	// console.log(id);
-	// if ((tool_metadata[id]) && (tool_metadata[id]['pr_user'] === login)){
+	console.log("----------------");
+	console.log(id);
+	if ((tool_metadata[id]) && (tool_metadata[id]['pr_user'] === login)){
 
+		//var branch_name=tool_metadata[id]['pr_branch'];	
+		var pr_number=tool_metadata[id]['pr_number'];	
+		var my_bt_entry=JSON.stringify(entry, null, " ");
+		var body_message=get_diff_message(entry);
 
-	// 	//var branch_name=tool_metadata[id]['pr_branch'];	
-	// 	var pr_number=tool_metadata[id]['pr_number'];	
-	// 	var my_bt_entry=JSON.stringify(entry, null, " ");
-	// 	var body=get_diff_message(entry);
+		var branch_origin=tool_metadata[id]['pr_branch'];	
+		console.log(id);
+		console.log(tool_metadata[id]);
+		var branch_name=branch_origin;
+		var branch_name=branch_origin+"_up";  // TODO REMOVE?
 
+		var repo_forked = gh.getRepo(login,repo_name);
 
-	// 	var branch_origin=tool_metadata[id]['pr_branch'];	
-	// 	console.log(id);
-	// 	console.log(tool_metadata[id]);
-	// 	var branch_name=branch_origin;
-	// 	var branch_name=branch_origin+"_up";
-
-	// 	console.log(tool_metadata[id]['pr_branch']);
-	// 	console.log("------====--------");
-	// 	console.log(login);
-	// 	console.log(repo_name);
-	// 	console.log(branch_origin);
-	// 	console.log(branch_name);
-	// 	console.log(file_path);
-	// 	//console.log(my_bt_entry);
-
-	// 	var repo_forked = gh.getRepo(login,repo_name);
-	// 	console.log(repo_forked);
-	// 	console.log("-----2-------");
-
-	// 	repo_forked.createBranch(branch_origin,branch_name,function(req,res){
-	// 	//repo_forked.getBranch(branch_name,function(req,res){
-	// 			if (!res) {
-	// 				alert("Error getting branch '"+branch_name);
-	// 				hide_loader();	
-	// 				console.log(req);
-	// 			}
-	// 			else {
-	// 				console.log("branch founded");
-	// 				console.log(res);
-	// 				console.log("----3------");
-
-	// 				//repo_forked.getPullRequest(pr_number,function(req,res){
-	// 				//repo_forked.writeFile(branch_name,file_path,my_bt_entry,'Edit '+file_name,{login},function(req,res){
-	// 				repo_forked.writeFile(branch_name,file_path,my_bt_entry,'new commit',{},function(req,res){
-	// 					if (!res) {
-	// 						alert("Error creating file '"+file_name+"' in '"+branch_name+"'");
-	// 						hide_loader();	
-	// 						console.log(req);
-	// 					}
-	// 					else {
-
-	// 						console.log(res);
-	// 						console.log("###############");
-
-	// 						//repo_forked.getSha(branch_origin, file_path, function(req,resu){
-	// 						repo_forked.getSha(branch_name, file_path, function(req,resu){
-	// 								var sha_orig=resu['sha'];
-	// 								console.log("sha 1");
-	// 								console.log(resu);
-	// 								repo_forked.getSha(branch_name, file_path, function(req,res){
-	// 										var sha_new=res['sha'];
-	// 										console.log("sha 2");
-	// 										console.log(res);
-	// 										repo_forked.commit(sha_orig, sha_new, "commiiit", function(req,res){
-
-	// 											if (!res) {
-	// 												alert("Error creating file '"+file_name+"' in '"+branch_name+"'");
-	// 												hide_loader();	
-	// 												console.log(req);
-	// 											}
-	// 											else {
-
-
-	// 												console.log(res);
-	// 												console.log("###############");
-
-	// 												console.log("New file writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
-	// 												alert("Pull Request Done!");
-	// 												hide_loader();	
-	// 												exit_edit_mode();
-	// 												var pr_number=res["number"];
-	// 												var new_name="NEW_PR_"+pr_number+"_"+tool_name;
-	// 												tool_metadata[new_name]={}
-	// 												tool_metadata[new_name]['pr_link']=res["html_url"];
-	// 												// Store the json entry in memory to manipulate the entry later
-	// 												store_entry(entry,id);
-	// 												display_new_entry(entry,id);
-	// 											}
-
-	// 										});	
-	// 								});
-	// 						});
+		console.log("-l-l-l-l-l-l-l-l-l-l-l-l-l-");
+		console.log(repo_forked);
+		console.log(branch_origin);
+		console.log(file_path);
+		//console.log(my_bt_entry);
 
 
 
+		var options = { method: 'GET',
+		  url: 'https://api.github.com/repos/ValentinMarcon/content/contents/data/'+tool_name+'?ref='+branch_origin
+		};
+		// Can not GET request to the file..
+		// Warning: Can change according to the Github API
+		request(options, function (error, response, body) {
+		  	if (error) {
+		  		hide_loader();	
+				exit_edit_mode();
+				alert("Error updating Pull Request \n\n'"+error+"'");
+		  		throw new Error(error);
+		  	}
+			var data = JSON.parse(body);
+			console.log(data);
+			var my_sha =""
+			for (var res in data){
+				if (data[res]["path"] === file_path){
+					my_sha = data[res]["sha"];
+				}
+			}
+			if (!my_sha){
+				hide_loader();	
+				exit_edit_mode();
+				alert("Error updating Pull Request \n\n'"+data["message"]+"'");
+		  		throw new Error(data["message"]);
+			}
+			options = { method: 'PUT',
+			url: 'https://api.github.com/repos/ValentinMarcon/content/contents/'+file_path,
+			headers: 
+			{ 
+			 authorization: "Basic " + new Buffer(login + ":" + OAUTH).toString("base64"),
+			 'content-type': 'application/json' },
+			body: 
+			{ message: 'Update Pull Request n°'+pr_number,
+			 content: new Buffer(my_bt_entry).toString("base64"),
+			 sha: my_sha,
+			 branch: branch_origin },
+			json: true };
+			request(options, function (error, response, body) {
+			if(!body){
+				hide_loader();	
+				exit_edit_mode();
+				alert("Error updating Pull Request \n\n'"+error+"'");
+				throw new Error(error);
+			}
+			else{
+				console.log("File updated in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_origin+"/"+file_path);
+				alert("Update Pull Request Done!");
+				hide_loader();	
+				exit_edit_mode();
+				tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
+				// Store the diff entry in memory to manipulate the entry later
+				console.log("tttttttttttttttttttttttttttttt");
+				console.log(tab_modif);
+				console.log("tttttttttttttttttttttttttttttt");
+				store_entry(tab_modif,tool_metadata["tab_active"]);
+				$('.different,.modified_cell').each(function(){
+					// Create <p> or <a> tag with value
+					console.log(this.firstChild)
+			    	var new_html = linkit(this.firstChild.innerText,this.firstChild.id);
+			    	$(this.firstChild).replaceWith(new_html);
+					$(this).removeClass('modified_cell');
+					console.log($(this.firstChild).attr('new_value'));
+					$(this).attr('pr_value',$(this).attr('new_value'));
+					$(this).removeAttr('new_value');
+					$("#"+this.firstChild.id+"_tr.reset").hide();
+				});
 
-	// 						// repo_forked.updatePullRequest(pr_number,{
-	// 						// 	 //"title": "Update "+file_name,
-	// 					 //  		 //"body": "Please pull this in! [new modif]\n--------------------\n"+body,
-	// 					 //  		 "head": login+":"+branch_name,
-	// 					 //  		 //"base": "dev"
-	// 						// },function(req,res){
-	// 						// 	if (!res) {
-	// 						// 		alert("Error creating Pull Request from "+login+":"+file_name+" to origin:"+branch_origin);
-	// 						// 		hide_loader();
-	// 						// 		console.log(req);
-	// 						// 	}
-	// 						// 	else {
-	// 						// 		console.log("New file writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
-	// 						// 		alert("Pull Request Done!");
-	// 						// 		hide_loader();	
-	// 						// 		exit_edit_mode();
-	// 						// 		var pr_number=res["number"];
-	// 						// 		var new_name="NEW_PR_"+pr_number+"_"+tool_name;
-	// 						// 		tool_metadata[new_name]={}
-	// 						// 		tool_metadata[new_name]['pr_link']=res["html_url"];
-	// 						// 		// Store the json entry in memory to manipulate the entry later
-	// 						// 		store_entry(entry,id);
-	// 						// 		display_new_entry(entry,id);
+				
+				//TODO REMOVE MODIF MODE
 
-	// 						// 	}
-	// 						// });
+				//remove_diff();
+				//print_diff(entry);
+				//select_tab(id_tab_selected);
+				// Store the json entry in memory to manipulate the entry later
+				// store_entry(entry,id);
+				// display_new_entry(entry,id);
+			}
+			});
 
-									
-	// 					}
-	// 				});
+		});
 
 
-	// 			}
-	// 	});
-	// 						return;
-	// }
+	return;
+	}
 		////////////////////////////////////
-			
-
-
-
-
+		
 	// Current date
 	var d = new Date();
     var now=d.getFullYear()  + "-" + (d.getMonth()+1) + "-" +  d.getDate() + "-" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + "-" + d.getMilliseconds();
@@ -1193,16 +1194,12 @@ function send_modif(){
 									tool_metadata[new_name]['pr_number']=pr_number;	
 									tool_metadata[new_name]['pr_user']=res['head']['repo']['owner']['login'];
 									tool_metadata[new_name]['pr_date']=res['created_at'];
-									tool_metadata[new_name]['pr_branch']=['head']['ref'];
+									tool_metadata[new_name]['pr_branch']=res['head']['ref'];
 
 									// Find the diff table of the current tool edited
 									tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
 									// Store the json entry in memory to manipulate the entry later
 									store_entry(tab_modif,new_name);
-									console.log("TTT---------------------");
-									console.log(new_name);
-									console.log(tab_modif);
-									console.log("TTT---------------------");
 									display_new_entry(tab_modif,new_name);
 								}
 							});
@@ -1228,19 +1225,8 @@ function add_tab(id){
 	// If it is not the master branch
     if (regex.test(id)){
 		classs=id.replace(regex,'$1');
-		console.log("()()()()");
-		console.log(tool_metadata);
-		console.log(id);
-		console.log("()()()()");
 		value="Pull Request n°"+tool_metadata[id]["pr_number"];
 	}
-
-	/*
-	// If the tool has a Pull Request done by the user add the class 'OWN_PR' to color it differently  // TODO REMOVE?
-	if (tool_metadata[id]){
-		if (tool_metadata[id]["pr_user"] == login) classs="OWN_PR ";
-	}
-	*/
 
 	$tab.append("<li id="+id+" class="+classs+"><a>"+value+"</a></li>");
 	// Re-add events onclick on the tabs of the menu
@@ -1368,10 +1354,9 @@ function add_tab_event(){
 
 function change_tab(id_tab_selected){
 	console.log(id_tab_selected+" : selected");
+
 	// Check if its possible to change tab
-    //if ((get_stored_entry("mode")=="edit") && (get_stored_entry("changes"))){
-//  if ((get_stored_entry("mode")=="edit") && ($('.modified_cell'))){ //TODO WIP
-	if ($('.modified_cell').length !== 0){
+    if ($('.modified_cell').length !== 0){
 		var quit=confirm("All modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
 		if (quit) {
 			exit_edit_mode();
@@ -1384,11 +1369,9 @@ function change_tab(id_tab_selected){
 			return;
 		}
 	}
-	//else if ((get_stored_entry("mode")=="edit") && (!id_tab_selected.includes('edit'))) {
 	else if (get_stored_entry("mode")=="edit") {
 		exit_edit_mode();
 	}
-
 
 	// If the user choose the master tab
 	if (id_tab_selected == tool_metadata['name']) {
