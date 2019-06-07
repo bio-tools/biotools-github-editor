@@ -59,23 +59,23 @@ if(!OAUTH){
 
 // Basic auth on Github API with the token
 var gh = new GitHub({
-  token: `${OAUTH}`
+	token: `${OAUTH}`
 });
 
 // Retrieve user informations
 gh.getUser().getProfile(function(err, profile) { 
-		if(!profile){
-			alert("Authentication failure with token ");
-			location.href = page_home;
-		}
-		else {
-			login = profile["login"];
-			var avatar = profile["avatar_url"];
-			var $login = $('#username');
-			var $avatar = $('#avatar');
-			$login.text(login);
-			$avatar.attr('src', avatar);
-		}
+	if(!profile){
+		alert("Authentication failure with token ");
+		location.href = page_home;
+	}
+	else {
+		login = profile["login"];
+		var avatar = profile["avatar_url"];
+		var $login = $('#username');
+		var $avatar = $('#avatar');
+		$login.text(login);
+		$avatar.attr('src', avatar);
+	}
 });
 
 // Get the repo where tools.json are stocked
@@ -87,16 +87,16 @@ var repo = gh.getRepo(gh_bt_user,gh_bt_repo);
 // Get parameter and redirect if necessary
 
 function GetURLParameter(sParam){
-	    var sPageURL = window.location.search.substring(1);
-	    var sURLVariables = sPageURL.split('&');
-	    for (var i = 0; i < sURLVariables.length; i++)
-	    {
-	        var sParameterName = sURLVariables[i].split('=');
-	        if (sParameterName[0] == sParam)
-	        {
-	            return sParameterName[1];
-	        }
-	    }
+	var sPageURL = window.location.search.substring(1);
+	var sURLVariables = sPageURL.split('&');
+	for (var i = 0; i < sURLVariables.length; i++)
+	{
+		var sParameterName = sURLVariables[i].split('=');
+		if (sParameterName[0] == sParam)
+		{
+			return sParameterName[1];
+		}
+	}
 }
 
 // Get "tool" parameter on the url
@@ -123,10 +123,8 @@ function fill_search_bar(repo){
 		tools.pop();
 		var $search_tool = $('#search_tool');
 		$('#search_tool').autocomplete({
-		     source: tools
+			source: tools
 		});
-
-
 	});
 }
 fill_search_bar(repo);
@@ -186,7 +184,6 @@ function store_entry(entry,name="default_master_entry"){
 		// If we change the mode to display we inform the app that there is no changes.
 		store_entry(false,"changes");
 	}
-
 }
 
 // -----------------------------------------------------
@@ -208,12 +205,8 @@ function get_stored_entry(name="default_master_entry"){
 // -If the tool does not exist redirect to search page
 
 function search_tool(tool_name){
-	// Value entered/choosed by the user
 	show_loader();
 	// Get the corresponding json file on the data repository on Github (Cf Github authentifiation above)
-	
-	
-	//repo.getContents('master','data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
 	get_tool_entry("master",tool_name,repo,function(res){
 		if (!res) {
 			alert("'"+tool_name+"' does not exist on bio.tools. \n You can pick a tool in the list");
@@ -231,10 +224,10 @@ function search_tool(tool_name){
 			// 3) Display the master entry into the page
 			display_entry(res,tool_name);
 			// 4) Search the Pull requests on the entry, store them and print corresponding tabs
-       			get_pull_requests(tool_name);
+			get_pull_requests(tool_name);
 			hide_loader();
 		}
-       });
+	});
 }
 
 // -----------------------------------------------------
@@ -246,10 +239,10 @@ function search_tool(tool_name){
 // - Select this tab
 
 function display_entry(entry,name){
-	  store_entry("display","mode");
-	  print_tool(entry);
-          add_tab(name);
-          select_tab(name);
+	store_entry("display","mode");
+	print_tool(entry);
+	add_tab(name);
+	select_tab(name);
 }
 
 // -----------------------------------------------------
@@ -265,8 +258,8 @@ function display_new_entry(diff_tab,name){
 	store_entry("display","mode");
 	remove_diff();
 	print_diff(diff_tab);
-    add_tab(name);
-    select_tab(name);
+	add_tab(name);
+	select_tab(name);
 }
 
 
@@ -282,45 +275,44 @@ function display_new_entry(diff_tab,name){
 // TODO manage get_tool_entry error
 
 function get_pull_requests(tool_name){
-        repo.listPullRequests({},function(req, res) {
-           res.forEach(function(pullrequest){
+	repo.listPullRequests({},function(req, res) {
+		res.forEach(function(pullrequest){
+			// Search with the branch name if the Pull Request is on the query tool name
+			var branch_name=pullrequest['head']['ref'];	
+			var branch_name_lc=branch_name.toLowerCase();
+			var regex = new RegExp("^.*_(" + tool_name + "_.*)$");
+			if (regex.test(branch_name_lc)){
 
-		// Search with the branch name if the Pull Request is on the query tool name
-		var branch_name=pullrequest['head']['ref'];	
-		var branch_name_lc=branch_name.toLowerCase();
-                var regex = new RegExp("^.*_(" + tool_name + "_.*)$");
-		if (regex.test(branch_name_lc)){
+				// Get Metadatas
+				var pr_number=pullrequest['number'];
+				var repo_user=pullrequest['head']['repo']['owner']['login'];
+				var repo_name=pullrequest['head']['repo']['name'];
+				var pr_link=pullrequest['html_url'];
+				var pr_date=pullrequest['created_at'];
+				var pr_branch=pullrequest['head']['ref'];
 
-			// Get Metadatas
-			var pr_number=pullrequest['number'];
-			var repo_user=pullrequest['head']['repo']['owner']['login'];
-			var repo_name=pullrequest['head']['repo']['name'];
-			var pr_link=pullrequest['html_url'];
-			var pr_date=pullrequest['created_at'];
-			var pr_branch=pullrequest['head']['ref'];
+				// ID of the new entry on the app
+				var new_name = "PR_"+pr_number+"_"+tool_name;
 
-			// ID of the new entry on the app
-			var new_name = "PR_"+pr_number+"_"+tool_name;
+				// Store metadata
+				tool_metadata[new_name]={};
+				tool_metadata[new_name]['pr_number']=pr_number;
+				tool_metadata[new_name]['pr_user']=repo_user;
+				tool_metadata[new_name]['pr_link']=pr_link;
+				tool_metadata[new_name]['pr_date']=pr_date;
+				tool_metadata[new_name]['pr_branch']=pr_branch;
 
-			// Store metadata
-			tool_metadata[new_name]={};
-			tool_metadata[new_name]['pr_number']=pr_number;
-			tool_metadata[new_name]['pr_user']=repo_user;
-			tool_metadata[new_name]['pr_link']=pr_link;
-			tool_metadata[new_name]['pr_date']=pr_date;
-			tool_metadata[new_name]['pr_branch']=pr_branch;
-	
-			// Search entry corresponding to the Pull Request
-			var my_repo = gh.getRepo(repo_user,repo_name);
-		        get_tool_entry(branch_name,tool_name,my_repo,function(entry) {
-				if(entry){
-					// Store the diff between master and the PullRequest in memory to manipulate the entry later
-					store_entry(get_diff(entry),new_name);
-					add_tab(new_name);
-				}
-			});
-		}
-           });
+				// Search entry corresponding to the Pull Request
+				var my_repo = gh.getRepo(repo_user,repo_name);
+				get_tool_entry(branch_name,tool_name,my_repo,function(entry) {
+					if(entry){
+						// Store the diff between master and the PullRequest in memory to manipulate the entry later
+						store_entry(get_diff(entry),new_name);
+						add_tab(new_name);
+					}
+				});
+			}
+		});
 	});
 
 }
@@ -353,14 +345,14 @@ function print_tool(entry){
 	$tool_content.html("");
 	// For every data of the tool entry, print it in a line in the table
 	for (var key in entry) {
-	    if (entry.hasOwnProperty(key)) {
-		var new_line = ""
-		new_line += "<tr>"
-		new_line += val_to_table(key)
-		new_line += val_to_table(entry[key],key)
-		new_line += "</tr>"
-		$tool_content.append(new_line);
-	    }
+		if (entry.hasOwnProperty(key)) {
+			var new_line = ""
+			new_line += "<tr>"
+			new_line += val_to_table(key)
+			new_line += val_to_table(entry[key],key)
+			new_line += "</tr>"
+			$tool_content.append(new_line);
+		}
 	}
 	//$tool_content.append("<tr><td class=new_line id="+key+" colspan=2>➕ New Line </td></tr>" ); //TODO WIP
 
@@ -372,9 +364,9 @@ function print_tool(entry){
 	show_diff(entry);
 
 	// Table cell that could be modified are selected thanks to the id "value"
-    $('td.edit').unbind('click').on('click', function(event) {
-    	edit_value(this.id.replace('_edit', ''));
-    });
+	$('td.edit').unbind('click').on('click', function(event) {
+		edit_value(this.id.replace('_edit', ''));
+	});
 
 
 	//TODO WIP WIP WIP WIP 
@@ -384,7 +376,7 @@ function print_tool(entry){
 	    // WIP
 	    this.innerText="➕ WIP⚠️";
         });
-	*/
+        */
 	//TODO WIP WIP WIP WIP
 
 }
@@ -403,28 +395,28 @@ function val_to_table(entry,id=""){
 	if (((entry == "") || (entry == null)) && entry !==0){
 		var val=""
 		if (entry == null){
-		  val="null"
+			val="null"
 		}
 		else if (Array.isArray(entry)){
-		  val="[]"
+			val="[]"
 		}
 		// REDUNDANT WITH String Entry
-        value_to_print += "<td><table id=\""+id+"_tab\">"
+		value_to_print += "<td><table id=\""+id+"_tab\">"
         value_to_print += "<tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr>"  // EDIT
         value_to_print += "<tr class=reset id=\""+id+"_tr\" hidden><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td></tr>"  // RESET
         value_to_print += "<tr class=valid id=\""+id+"_tr\" hidden><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td></tr>"  // VALID
         value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>"  // CANCEL
         value_to_print += "</table></td>";
-		value_to_print += "<td class=none id=\""+id+"_td\">";
-		value_to_print += "<p id=\""+id+"\" class=new>"+val+"</p></td>";
-	}
+        value_to_print += "<td class=none id=\""+id+"_td\">";
+        value_to_print += "<p id=\""+id+"\" class=new>"+val+"</p></td>";
+    }
 	// If the entry is an array, create a new inner table and recall the function for every sub-entry
 	else if (Array.isArray(entry)){
 		value_to_print += "<td class=content colspan=2><table>";
 		for (var key in entry) {
-			 value_to_print += "<tr>"
-			 value_to_print += val_to_table(entry[key],id+"___"+key)
-			 value_to_print += "</tr>"
+			value_to_print += "<tr>"
+			value_to_print += val_to_table(entry[key],id+"___"+key)
+			value_to_print += "</tr>"
 		}
 		//value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //TODO WIP
 		value_to_print += "</table></td>";
@@ -444,21 +436,21 @@ function val_to_table(entry,id=""){
 		}
 		else{
 			if (id == ""){
-			    value_to_print += "<td class=label><p>";
-	                    value_to_print += entry;
-			    value_to_print += "</p></td>";
+				value_to_print += "<td class=label><p>";
+				value_to_print += entry;
+				value_to_print += "</p></td>";
 			}
 			else {
-		        value_to_print += "<td><table id=\""+id+"_tab\">"
+				value_to_print += "<td><table id=\""+id+"_tab\">"
 		        value_to_print += "<tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr>"  // EDIT
 		        value_to_print += "<tr class=reset id=\""+id+"_tr\" hidden><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td></tr>"  // RESET
 		        value_to_print += "<tr class=valid id=\""+id+"_tr\" hidden><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td></tr>"  // VALID
 		        value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>"  // CANCEL
 		        value_to_print += "</table></td>";
-			    value_to_print += "<td class=content id=\""+id+"_td\">"
-				value_to_print += linkit(entry,id)
-			    value_to_print += "</td>";
-			}
+		        value_to_print += "<td class=content id=\""+id+"_td\">"
+		        value_to_print += linkit(entry,id)
+		        value_to_print += "</td>";
+		    }
 		}
 	}
 	// Else, entry is (probably) a dict, recall the function
@@ -472,7 +464,6 @@ function val_to_table(entry,id=""){
 		}
 		//value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //TODO WIP
 		value_to_print += "</table></td>"
-
 	}
 	return value_to_print;
 }
@@ -505,7 +496,6 @@ function search_on_dict(entry,tab_pos){
 			return entry[tab_pos[0]];
 		}
 	}
-
 }
 
 
@@ -520,7 +510,6 @@ function search_on_dict(entry,tab_pos){
 function show_diff(entry){
 	// Get diff
 	var differences=get_diff(entry);
-
 	// For each differences
 	for (var i in differences) {
 		var table_path = differences[i]["path"];
@@ -558,7 +547,7 @@ function get_diff_message(entry){
 		var path=""
 		for (var j in table_path){
 			if (path) path += "}{"
-			path += table_path[j]
+				path += table_path[j]
 		}
 		path += "}**";
 		message += path + "\n"
@@ -575,7 +564,6 @@ function get_diff_message(entry){
 //TODO DOC
 // SHOW DIFF ET PRINT DIFF???? TODO
 function print_diff(tab_diff){
-
 	// For each differences
 	for (var i in tab_diff) {
 		var table_path = tab_diff[i]["path"];
@@ -604,8 +592,8 @@ function remove_diff(){
 	$('.different,.modified_cell').each(function(){
 		//$(this.firstChild).text($(this).attr('title'));
 		// Create <p> or <a> tag with value
-    	var new_html = linkit($(this).attr('title'),this.firstChild.id);
-    	$(this.firstChild).replaceWith(new_html);
+		var new_html = linkit($(this).attr('title'),this.firstChild.id);
+		$(this.firstChild).replaceWith(new_html);
 		$(this).removeClass('different');
 		$(this).removeClass('modified_cell');
 		$(this).removeAttr('new_value');
@@ -661,47 +649,40 @@ function edit_value(id){
     // If there is no title it's mean that the value is the same as the master
     if (!default_v) default_v=orig_v;
 
-    edit_mode(//Callback
-    function(){ 
-      // Re-select the tag with this id
-      var $value = $('#'+id);
-      var new_html = ""
- 
-      // Then, transform the tag to a textarea with the original value
-      var $value_td = $('#'+id+"_td");
-      var h = $value_td.height();
-      //new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit title=\""+default_v+"\" new_value='"+editted_v+"'>"+orig_v+"</textarea>";
-      new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit>"+orig_v+"</textarea>";
-      $value.replaceWith(new_html);
+	edit_mode(function(){ 
+		// Re-select the tag with this id
+		var $value = $('#'+id);
+		var new_html = ""
 
-      $value_td.attr('title',default_v);
+		// Then, transform the tag to a textarea with the original value
+		var $value_td = $('#'+id+"_td");
+		var h = $value_td.height();
+		//new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit title=\""+default_v+"\" new_value='"+editted_v+"'>"+orig_v+"</textarea>";
+		new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit>"+orig_v+"</textarea>";
+		$value.replaceWith(new_html);
+		$value_td.attr('title',default_v);
 
-      // Change edit (and reset) buttons by valid and cancel (modifications).
+		// Change edit (and reset) buttons by valid and cancel (modifications).
 		$('tr#'+id+'_tr.edit').hide();
 		$('tr#'+id+'_tr.reset').hide();
 		$('tr#'+id+'_tr.valid').show();
 		$('tr#'+id+'_tr.cancel').show();
-	    //var markup = "<tr class=valid id=\""+id+"_tr\"><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td><tr>";
-	    //$('table#'+id+'_tab').append(markup);
-	    //var markup = "<tr class=cancel id=\""+id+"_tr\"><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td><tr>";
-	    //$('table#'+id+'_tab').append(markup);
 
-      $('#'+id).keypress(function(event){
-        var keycode = (event.keyCode ? event.keyCode : event.which);
-        if(keycode == '13'){
-	  		valid_edit(id,orig_v);
-        }
-      });
-
-      $('#'+id+'_valid').unbind('click').on('click', function(event) {
-		valid_edit(id,orig_v);
-      });
-      // Exit modif
-      $('#'+id+'_cancel').unbind('click').on('click', function(event) {
-		cancel_edit(id);
-      });
-
-    });
+		// Valid edit event bind
+		$('#'+id).keypress(function(event){
+			var keycode = (event.keyCode ? event.keyCode : event.which);
+			if(keycode == '13'){
+				valid_edit(id,orig_v);
+			}
+		});
+		$('#'+id+'_valid').unbind('click').on('click', function(event) {
+			valid_edit(id,orig_v);
+		});
+		// Exit modif event bind
+		$('#'+id+'_cancel').unbind('click').on('click', function(event) {
+			cancel_edit(id);
+		});
+  	});
 }
 
 
@@ -722,14 +703,14 @@ function reset_value(id){
     var reset_v= pr_v || default_v;
 
 	// Create <p> or <a> tag with value
-    var new_html = linkit(reset_v,id);
-    $('#'+id).replaceWith(new_html);
+	var new_html = linkit(reset_v,id);
+	$('#'+id).replaceWith(new_html);
 	//('#'+id).text(reset_v);
 	$('tr#'+id+'_tr.reset').hide();
 	$value_td.removeClass('modified_cell');
 	$value_td.removeAttr('new_value');
 	if ($('.modified_cell').length === 0){
-			exit_edit_mode();
+		exit_edit_mode();
 	}
 }
 
@@ -745,7 +726,7 @@ function linkit(value,id){
 	else{
 		return "<p id=\""+id+"\" class=value>" + value + "</p>";
 	}
- 
+
 }
 
 
@@ -757,20 +738,9 @@ function linkit(value,id){
 function edit_mode(_cb){
     // If we are not currently on 'edit' mode
     if (get_stored_entry("mode") != "edit"){
-		store_entry("edit","mode");
-        var current_tool = tool_metadata["tab_active"];
-        console.log(current_tool +" : edit mode")
-        //var edit_tool = "edit_"+current_tool;
-
-	// If we edit the master class we store a table of diff empty
-	/* if (current_tool===tool_metadata["name"]) store_entry([],edit_tool); */ //TODO REMOVE
-	
-	// Else we store the same as the origin PR we want to change
-	//else 
-		//store_entry(get_stored_entry(current_tool),edit_tool);
-		//tool_metadata[edit_tool]=tool_metadata[current_tool];
-        //add_tab(edit_tool,"<i class=\"icon-edit\"></i>"+current_tool); //TODO DNT
-        //change_tab(edit_tool); //TODO DNT
+    	store_entry("edit","mode");
+    	var current_tool = tool_metadata["tab_active"];
+    	console.log(current_tool +" : edit mode")
     }
     _cb();
 }
@@ -788,9 +758,6 @@ function exit_edit_mode(){
 	$('.value_edit').each(function(){
 		cancel_edit($(this).attr('id'));
 	});
-
-	// add*
-
 }
 
 // -----------------------------------------------------
@@ -800,12 +767,11 @@ function exit_edit_mode(){
 
 function valid_edit(id,orig_v){
 
-    var entry_id = tool_metadata["tab_active"];
+	var entry_id = tool_metadata["tab_active"];
 	var entry=get_stored_entry(entry_id);
-
-    var $value_new = $('#'+id);
-    var $value_td = $('#'+id+"_td");
-    var new_v = $value_new.val();
+	var $value_new = $('#'+id);
+	var $value_td = $('#'+id+"_td");
+	var new_v = $value_new.val();
 	var motif =  /___/;
 	// Get the position liste of the value from the id (Cf. "val_to_table")
 	var liste = id.split(motif);
@@ -815,29 +781,26 @@ function valid_edit(id,orig_v){
 	// If the value is the same from the original
 	// We keep original status
 	if (orig_val === new_v ){
-	    $value_td.removeClass("modified_cell");
-	    $value_td.removeAttr('new_value');
-	    if ($('.modified_cell').length === 0){
+		$value_td.removeClass("modified_cell");
+		$value_td.removeAttr('new_value');
+		if ($('.modified_cell').length === 0){
 			exit_edit_mode();
 		}
 	}
 	// Else, if the value is found and different
-	// we store it and change the status to "new"
 	else {
-		console.log("log1");
-	//else if (orig_val) {
 	    // Retrieve stored entry
-        var entry_id = tool_metadata["tab_active"];
-        var new_entry_id = entry_id+"_new";
+	    var entry_id = tool_metadata["tab_active"];
+	    var new_entry_id = entry_id+"_new";
 
 	    // If it is the first time we edit the entry we take the original one
 	    if (!get_stored_entry("changes")){
 	    	var entry=get_stored_entry(entry_id);
 	    }
 	    else {
-            	var entry=get_stored_entry(new_entry_id);
+	    	var entry=get_stored_entry(new_entry_id);
 	    }
-	
+
 	    var new_diff={}
 	    new_diff["kind"]="E";
 	    new_diff["lhs"]= new_v;
@@ -846,16 +809,15 @@ function valid_edit(id,orig_v){
 	    // Remove old diff if it concern the same element
 	    for (var diff in entry){
 	    	if (entry[diff]["path"].toString() === new_diff["path"].toString()) {
-				entry.splice(diff,1);
+	    		entry.splice(diff,1);
 	    	}
 	    }
 	    entry.push(new_diff);
-		console.log(entry);
 	    // Store it
-    	store_entry(entry,new_entry_id);
-		
+	    store_entry(entry,new_entry_id);
+
         // Changes have been made, we record the status to true and show the btn to send changes into PR
-	    store_entry(true,"changes");
+        store_entry(true,"changes");
 	    $('button.edit_mode').show();//buttons
 	    $('#edited').show();
 	    
@@ -865,27 +827,25 @@ function valid_edit(id,orig_v){
 
 	var new_html = "";
 	// Create <p> or <a> tag with value
-    new_html += linkit(new_v,id);
-    
-    $value_new.replaceWith(new_html);
-
+	new_html += linkit(new_v,id);
+	$value_new.replaceWith(new_html);
 
 	$('tr#'+id+'_tr.valid').hide();
 	$('tr#'+id+'_tr.cancel').hide();
 	$('tr#'+id+'_tr.edit').show();
-    if ((orig_val) && (orig_val !== new_v )){
-    	$('tr#'+id+'_tr.reset').show();
-    	$value_td.attr( "new_value", new_v);
-    }
+	if ((orig_val) && (orig_val !== new_v )){
+		$('tr#'+id+'_tr.reset').show();
+		$value_td.attr( "new_value", new_v);
+	}
 
-	// Rebind the modif function to the tag
+	// Edit value rebind
 	$('#'+id+'_edit').unbind('click').on('click', function(event) {
-    edit_value(this.id.replace('_edit', ''));
-    });
-	// Rebind the modif function to the tag
+		edit_value(this.id.replace('_edit', ''));
+	});
+	// Reset value rebind
 	$('#'+id+'_reset').unbind('click').on('click', function(event) {
-    reset_value(this.id.replace('_reset', ''));
-    });
+		reset_value(this.id.replace('_reset', ''));
+	});
 }
 
 
@@ -900,24 +860,22 @@ function cancel_edit(id){
 
 	var value=$('#'+id+'_td').attr("new_value") || ($('#'+id+'_td').attr("pr_value") || $('#'+id+'_td').attr("title")); //TODO REPLACE THE IF WITH THAT
 
-
 	var new_html = "";
-    //new_html += "<p id='"+id+"' class='"+$('#'+id).attr("class")+"'>"+value+"</p>";
     // Create <p> or <a> tag with value
     new_html += linkit(value,id);
     $('#'+id).replaceWith(new_html);
 
     $('tr#'+id+'_tr.valid').hide();
-	$('tr#'+id+'_tr.cancel').hide();
-	$('tr#'+id+'_tr.edit').show();
-	if ($('#'+id+'_td').attr("new_value")){
+    $('tr#'+id+'_tr.cancel').hide();
+    $('tr#'+id+'_tr.edit').show();
+    if ($('#'+id+'_td').attr("new_value")){
     	$('tr#'+id+'_tr.reset').show();
     }
 
-	// Rebind the modif function to the tag
+	// Edit value rebind
 	$('#'+id+'_edit').unbind('click').on('click', function(event) {
-    edit_value(this.id.replace('_edit', ''));
-    });
+		edit_value(this.id.replace('_edit', ''));
+	});
 }
 
 // -----------------------------------------------------
@@ -935,8 +893,7 @@ function cancel_edit(id){
 
 function send_modif(){
 	var repo_name=gh_bt_repo;
-
-	// If some changes are not validated don't send
+	// If some changes are not validated don't send and show the user the line
 	if ($('.value_edit').length !== 0) {
 		alert("Some changes have not been validated");
 		var pos = $('.value_edit').offset();
@@ -945,17 +902,14 @@ function send_modif(){
 		window.scrollTo((left < 0 ? 0 : left), (top < 0 ? 0 : top));
 		return;
 	}
-
 	// If we are here but no changes have been made don't create a pull request
 	if (!get_stored_entry("changes")){
 		return;
 	}
-
 	// Ensure the user want to make the PR
 	if (!confirm("Are you sure to make this Pull Request?")){
 		return;
 	}
-
 	// Ask if the user allow the app to fork the repo in his Github account
 	var repo_forked = gh.getRepo(login,repo_name);
 	if(!repo_forked){
@@ -965,21 +919,18 @@ function send_modif(){
 		}
 	}
 
-
 	show_loader();	
 	console.log(tool_metadata["tab_active"]+" changes will be recorded");
 	
 	// 1)
 	// Get the original Entry
 	var entry=get_stored_entry();
-
 	// Edit this entry with modifs
 	var tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
 	for (var m in tab_modif){
 		var modif=tab_modif[m];
-            	entry = edit_dict(entry,modif["path"][0],modif["path"],modif["lhs"])
+		entry = edit_dict(entry,modif["path"][0],modif["path"],modif["lhs"])
 	}
-
 	// Lower Case id of the tool
 	var tool_name = tool_metadata["name"].toLowerCase();
 	// File name in which changes will be saved
@@ -987,54 +938,32 @@ function send_modif(){
 	// Path of the file in github
 	var file_path="data/"+tool_name+"/"+file_name;
 
-
-	//-----------------------  //TODO attention redondane //TODO MOCHE
-
-
-	// JUST CHANGE FILE IN BRANCH?
-
-
-
 	var id = tool_metadata["tab_active"]  //TODO top doublon
 
-	// WIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIP
-	// si pr a sois on remodifie fichier et commit
+	// UPDATE PULL REQUEST
 	if ((tool_metadata[id]) && (tool_metadata[id]['pr_user'] === login)){
 
 		//var branch_name=tool_metadata[id]['pr_branch'];	
 		var pr_number=tool_metadata[id]['pr_number'];	
 		var my_bt_entry=JSON.stringify(entry, null, " ");
 		var body_message=get_diff_message(entry);
-
 		var branch_origin=tool_metadata[id]['pr_branch'];	
-		console.log(id);
-		console.log(tool_metadata[id]);
-		var branch_name=branch_origin;
-		var branch_name=branch_origin+"_up";  // TODO REMOVE?
 
-
-
-		console.log("-l-l-l-l-l-l-l-l-l-l-l-l-l-");
-		console.log(branch_origin);
-		console.log(file_path);
-		//console.log(my_bt_entry);
-
-
+		// 2)
+		// Get the Sha of the file to update
 		// Can not get the Sha with GET request to the file so do it on the repo...
-				// Warning: Can change according to the Github API updates
+		// Warning: Can change according to the Github API updates
 		var options = { method: 'GET',
-		  url: 'https://api.github.com/repos/'+login+'/content/contents/data/'+tool_name+'?ref='+branch_origin   //TODO DONT WORK IF USER CHANGE THE 
+		  url: 'https://api.github.com/repos/'+login+'/content/contents/data/'+tool_name+'?ref='+branch_origin 
 		};
-
-		request(options, function (error, response, body) {
-		  	if (error) {
-		  		hide_loader();	
+		request(options, function (error, res, body) {
+			if (error) {
+				hide_loader();	
 				exit_edit_mode();
 				alert("Error updating Pull Request \n\n'"+error+"'");
-		  		throw new Error(error);
-		  	}
+				throw new Error(error);
+			}
 			var data = JSON.parse(body);
-			console.log(data);
 			var my_sha =""
 			for (var res in data){
 				if (data[res]["path"] === file_path){
@@ -1045,164 +974,151 @@ function send_modif(){
 				hide_loader();	
 				exit_edit_mode();
 				alert("Error updating Pull Request \n\n'"+data["message"]+"'");
-		  		throw new Error(data["message"]);
+				throw new Error(data["message"]);
 			}
+			// 3)
+			// New commit with new content
 			options = { method: 'PUT',
 			url: 'https://api.github.com/repos/'+login+'/content/contents/'+file_path,
 			headers: 
 			{ 
-			 authorization: "Basic " + new Buffer(login + ":" + OAUTH).toString("base64"),
-			 'content-type': 'application/json' },
-			body: 
-			{ message: 'Update Pull Request n°'+pr_number,
-			 content: new Buffer(my_bt_entry).toString("base64"),
-			 sha: my_sha,
-			 branch: branch_origin },
-			json: true };
-			request(options, function (error, response, body) {
-				if(!body){
-					hide_loader();	
-					exit_edit_mode();
-					alert("Error updating Pull Request \n\n'"+error+"'");
-					throw new Error(error);
-				}
-				else{
+				authorization: "Basic " + new Buffer(login + ":" + OAUTH).toString("base64"),
+				'content-type': 'application/json' },
+				body: 
+				{ message: 'Update Pull Request n°'+pr_number,
+				content: new Buffer(my_bt_entry).toString("base64"),
+				sha: my_sha,
+				branch: branch_origin },
+				json: true };
+				request(options, function (error, res, body) {
+					if(!body){
+						hide_loader();	
+						exit_edit_mode();
+						alert("Error updating Pull Request \n\n'"+error+"'");
+						throw new Error(error);
+					}
+					else{
+					// 4)
 					// Update body message of the PR
 					var repo_forked = gh.getRepo(login,repo_name);
 					repo_forked.updatePullRequest(pr_number,{"body": body_message},function(error,res){
-									if (!res) {
-										hide_loader();	
-										exit_edit_mode();
-										alert("Error updating Pull Request \n\n'"+error+"'");
-										throw new Error(error);
-									}
-									else {
-										console.log("File updated in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_origin+"/"+file_path);
-										alert("Update Pull Request Done!");
-										hide_loader();	
-										exit_edit_mode();
-										tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
-										// Store the diff entry in memory to manipulate the entry later
-										console.log("#########")
-										console.log(tab_modif);
-										console.log("#########")
-										store_entry(tab_modif,tool_metadata["tab_active"]);
-										$('.different,.modified_cell').each(function(){
-											// Create <p> or <a> tag with value
-											console.log(this.firstChild)
-									    	var new_html = linkit(this.firstChild.innerText,this.firstChild.id);
-									    	$(this.firstChild).replaceWith(new_html);
-											$(this).removeClass('modified_cell');
-											$(this).addClass('different');
-											$(this).attr('pr_value',$(this).attr('new_value'));
-											$(this).removeAttr('new_value');
-											$("#"+this.firstChild.id+"_tr.reset").hide();
-										});
-									}
-									});
-
-
-
-				}
-			});
-
-		});
-
-
-	return;
-	}
-		////////////////////////////////////
-		
-	// Current date
-	var d = new Date();
-    var now=d.getFullYear()  + "-" + (d.getMonth()+1) + "-" +  d.getDate() + "-" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + "-" + d.getMilliseconds();
-	// Branch name with current date and 'new' tag
-	var branch_name="new_"+tool_name+"_"+now;
-	// Origin branch in which the Fork and Pull Request will be done
-	var branch_origin="dev";
-	// Convert the entry to JSON to record it on the json file
-	var my_bt_entry=JSON.stringify(entry, null, " ");
-
-
-
-
-	// 2)
-	// Fork the repo into registered user github (if it dont exist)
-	repo.fork(function(req,res){
-		if (!res) {
-			alert("Error creating fork of '"+gh_bt_user+"/"+gh_bt_repo+"' in your Github account");
-			hide_loader();	
-			console.log(req);
-		}
-		else {
-			// Retrieve then the forked repo
-			var repo_forked = gh.getRepo(login,repo_name);
-	
-			// 3)
-			// Create the new branch on the forked repo
-			repo_forked.createBranch(branch_origin,branch_name,function(req,res){
-				if (!res) {
-					alert("Error creating branch '"+branch_name+"' from '"+branch_origin+"'");
-					hide_loader();	
-					console.log(req);
-				}
-				else {
-	
-					// 4)
-					// Create the json file on this new branch on the forked repo
-					repo_forked.writeFile(branch_name,file_path,my_bt_entry,'Write in '+file_name,{},function(req,res){
 						if (!res) {
-							alert("Error creating file '"+file_name+"' in '"+branch_name+"'");
 							hide_loader();	
-							console.log(req);
+							exit_edit_mode();
+							alert("Error updating Pull Request \n\n'"+error+"'");
+							throw new Error(error);
 						}
 						else {
-	
-							// 5)
-							// 5.1) Get differences between orig tool entry and new one
-							var body=get_diff_message(entry);
-							// 5.2) Create Pull Request from the new branch on the repo forked to the base repository dev branch
-							var result=repo.createPullRequest({
-						  		"title": "Update/create "+file_name,
-						  		"body": "Please pull this in!\n--------------------\n"+body,
-						  		"head": login+":"+branch_name,
-						  		"base": branch_origin
-							},function(req,res){
-								if (!res) {
-									alert("Error creating Pull Request from '"+login+":"+file_name+"' to origin:'"+branch_origin);
-									hide_loader();
-									console.log(req);
-								}
-								else {
-									console.log("New file writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
-									alert("Pull Request Done!");
-									hide_loader();	
-									exit_edit_mode();
-									console.log(res);
-									var pr_number=res["number"];
-									var new_name="NEW_PR_"+pr_number+"_"+tool_name;
-
-									// Store metadata
-									tool_metadata[new_name]={};
-									tool_metadata[new_name]['pr_link']=res["html_url"];
-									tool_metadata[new_name]['pr_number']=pr_number;	
-									tool_metadata[new_name]['pr_user']=res['head']['repo']['owner']['login'];
-									tool_metadata[new_name]['pr_date']=res['created_at'];
-									tool_metadata[new_name]['pr_branch']=res['head']['ref'];
-
-									// Find the diff table of the current tool edited
-									tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
-									// Store the json entry in memory to manipulate the entry later
-									store_entry(tab_modif,new_name);
-									display_new_entry(tab_modif,new_name);
-								}
+							console.log("File updated in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_origin+"/"+file_path);
+							alert("Update Pull Request Done!");
+							hide_loader();	
+							exit_edit_mode();
+							tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
+							// Store the diff entry in memory to manipulate the entry later
+							store_entry(tab_modif,tool_metadata["tab_active"]);
+							$('.different,.modified_cell').each(function(){
+								// Create <p> or <a> tag with value
+								var new_html = linkit(this.firstChild.innerText,this.firstChild.id);
+								$(this.firstChild).replaceWith(new_html);
+								$(this).removeClass('modified_cell');
+								$(this).addClass('different');
+								$(this).attr('pr_value',$(this).attr('new_value'));
+								$(this).removeAttr('new_value');
+								$("#"+this.firstChild.id+"_tr.reset").hide();
 							});
 						}
 					});
 				}
 			});
-		}
-	});
+		});
+	}
+	// NEW PULL REQUEST
+	else {
+		
+		// Current date
+		var d = new Date();
+		var now=d.getFullYear()  + "-" + (d.getMonth()+1) + "-" +  d.getDate() + "-" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + "-" + d.getMilliseconds();
+		// Branch name with current date and 'new' tag
+		var branch_name="new_"+tool_name+"_"+now;
+		// Origin branch in which the Fork and Pull Request will be done
+		var branch_origin="dev";
+		// Convert the entry to JSON to record it on the json file
+		var my_bt_entry=JSON.stringify(entry, null, " ");
+		// 2)
+		// Fork the repo into registered user github (if it dont exist)
+		repo.fork(function(error,res){
+			if (!res) {
+				hide_loader();	
+				alert("Error creating fork of '"+gh_bt_user+"/"+gh_bt_repo+"' in your Github account");
+				throw new Error(error);
+			}
+			else {
+				// Retrieve then the forked repo
+				var repo_forked = gh.getRepo(login,repo_name);
+				// 3)
+				// Create the new branch on the forked repo
+				repo_forked.createBranch(branch_origin,branch_name,function(error,res){
+					if (!res) {
+						hide_loader();
+						alert("Error creating branch '"+branch_name+"' from '"+branch_origin+"'");
+						throw new Error(error);
+					}
+					else {
+						// 4)
+						// Create the json file on this new branch on the forked repo
+						repo_forked.writeFile(branch_name,file_path,my_bt_entry,'Write in '+file_name,{},function(error,res){
+							if (!res) {
+								hide_loader();
+								alert("Error creating file '"+file_name+"' in '"+branch_name+"'");
+								throw new Error(error);
+							}
+							else {
+								// 5)
+								// 5.1) Get differences between orig tool entry and new one
+								var body=get_diff_message(entry);
+								// 5.2) Create Pull Request from the new branch on the repo forked to the base repository dev branch
+								var result=repo.createPullRequest({
+									"title": "Update/create "+file_name,
+									"body": "Please pull this in!\n--------------------\n"+body,
+									"head": login+":"+branch_name,
+									"base": branch_origin
+								},function(error,res){
+									if (!res) {
+										hide_loader();
+										alert("Error creating Pull Request from '"+login+":"+file_name+"' to origin:'"+branch_origin);
+										throw new Error(error);
+									}
+									else {
+										console.log("New file writed in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_name+"/"+file_path);
+										alert("Pull Request Done!");
+										hide_loader();	
+										exit_edit_mode();
+										console.log(res);
+										var pr_number=res["number"];
+										var new_name="NEW_PR_"+pr_number+"_"+tool_name;
+
+										// Store metadata
+										tool_metadata[new_name]={};
+										tool_metadata[new_name]['pr_link']=res["html_url"];
+										tool_metadata[new_name]['pr_number']=pr_number;	
+										tool_metadata[new_name]['pr_user']=res['head']['repo']['owner']['login'];
+										tool_metadata[new_name]['pr_date']=res['created_at'];
+										tool_metadata[new_name]['pr_branch']=res['head']['ref'];
+
+										// Find the diff table of the current tool edited
+										tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
+										// Store the json entry in memory to manipulate the entry later
+										store_entry(tab_modif,new_name);
+										display_new_entry(tab_modif,new_name);
+									}
+								});
+							}
+						});
+					}
+				});
+			}
+		});	
+	}
 }
 
 // -----------------------------------------------------
@@ -1213,17 +1129,16 @@ function send_modif(){
 
 function add_tab(id){
 	var $tab = $('#tab');
-    var regex = new RegExp("^(PR|edit|NEW)_[a-zA-Z0-9_-]*$");
+	var regex = new RegExp("^(PR|edit|NEW)_[a-zA-Z0-9_-]*$");
 	var classs="master";
 	var value="Master branch";
 	// If it is not the master branch
-    if (regex.test(id)){
+	if (regex.test(id)){
 		classs=id.replace(regex,'$1');
 		value="Pull Request n°"+tool_metadata[id]["pr_number"];
 	}
-
 	$tab.append("<li id="+id+" class="+classs+"><a>"+value+"</a></li>");
-	// Re-add events onclick on the tabs of the menu
+	// Rebind events onclick on the tabs of the menu
 	add_tab_event();
 }
 
@@ -1256,7 +1171,6 @@ function update_header(id){
 
 	// JQUERY select elements
 	var $title = $('#title');
-	//var $bt_link = $('a#bt_link');
 	var $subtitle = $('p#subtitle');
 	var $subtitle_link = $('a#pr_link');
 	var $subtitle_date = $('p#pr_date');
@@ -1274,7 +1188,6 @@ function update_header(id){
 	$subtitle_date.text("-");
 	$subtitle_author.text("-");
 	$subtitle_author_you.hide();
-
 
 	// Search the status of the entry (Master,Pull request or New)
 	var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
@@ -1318,12 +1231,12 @@ function update_header(id){
 	}
 	else if (status="PR") {
 		status_long += pr_number;
-
 	}
 	$subtitle.text(status_long);
 
 	
 }
+
 
 // -----------------------------------------------------
 // ADD_TAB_EVENT
@@ -1331,12 +1244,11 @@ function update_header(id){
 // Add event 'change_tab()' to all the not active tab
 
 function add_tab_event(){
-    $("#menu li").unbind('click');
-   	$("#menu li:not('.active')").on('click', function(event){
-        change_tab(this.id);
-    });
+	$("#menu li").unbind('click');
+	$("#menu li:not('.active')").on('click', function(event){
+		change_tab(this.id);
+	});
 }
-
 
 
 // -----------------------------------------------------
@@ -1350,7 +1262,7 @@ function change_tab(id_tab_selected){
 	console.log(id_tab_selected+" : selected");
 
 	// Check if its possible to change tab
-    if ($('.modified_cell').length !== 0){
+	if ($('.modified_cell').length !== 0){
 		var quit=confirm("All modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
 		if (quit) {
 			exit_edit_mode();
@@ -1376,7 +1288,7 @@ function change_tab(id_tab_selected){
 	else {
 		// - Retrieve entry
 		var $tab_selected = $('#'+id_tab_selected);
-	    var entry=get_stored_entry(id_tab_selected);
+		var entry=get_stored_entry(id_tab_selected);
 
 		if (entry){
 			// - Print diff and Visual select the tab on menu
@@ -1392,7 +1304,4 @@ function change_tab(id_tab_selected){
 			select_tab(tool_metadata["name"].toLowerCase());
 		}
 	}
-
 }
-
-// -----------------------------------------------------

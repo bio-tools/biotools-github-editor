@@ -5,7 +5,6 @@
   "license": "MIT",
   "scripts": {
     "build": "parcel build src/index.js",
-    "dev": "parcel src/index_search_tool.html",
     "all": "parcel src/*.html"
   },
   "dependencies": {
@@ -20,7 +19,6 @@
   },
   "devDependencies": {
     "fs": "^0.0.1-security",
-    "jquery-ui": "^1.12.1",
     "parcel-bundler": "^1.12.3"
   }
 }

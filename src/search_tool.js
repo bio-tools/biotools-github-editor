@@ -52,23 +52,23 @@ if(!OAUTH){
 
 // Basic auth
 var gh = new GitHub({
-  token: `${OAUTH}`
+	token: `${OAUTH}`
 });
 
 // Get user info
 gh.getUser().getProfile(function(err, profile) { 
-		if(!profile){
-			alert("Authentication failure with token ");
-			location.href = page_home;
-		}
-		else {
-			var login = profile["login"];
-			var avatar = profile["avatar_url"];
-			var $login = $('#username');
-			var $avatar = $('#avatar');
-			$login.text(login);
-			$avatar.attr('src', avatar);
-		}
+	if(!profile){
+		alert("Authentication failure with token ");
+		location.href = page_home;
+	}
+	else {
+		var login = profile["login"];
+		var avatar = profile["avatar_url"];
+		var $login = $('#username');
+		var $avatar = $('#avatar');
+		$login.text(login);
+		$avatar.attr('src', avatar);
+	}
 });
 
 // Get the repo where tools.json are stocked
@@ -80,22 +80,22 @@ var repo = gh.getRepo(gh_bt_user,gh_bt_repo);
 // Get parameter and redirect if necessary
 
 function GetURLParameter(sParam){
-	    var sPageURL = window.location.search.substring(1);
-	    var sURLVariables = sPageURL.split('&');
-	    for (var i = 0; i < sURLVariables.length; i++)
-	    {
-	        var sParameterName = sURLVariables[i].split('=');
-	        if (sParameterName[0] == sParam)
-	        {
-	            return sParameterName[1];
-	        }
-	    }
+	var sPageURL = window.location.search.substring(1);
+	var sURLVariables = sPageURL.split('&');
+	for (var i = 0; i < sURLVariables.length; i++)
+	{
+		var sParameterName = sURLVariables[i].split('=');
+		if (sParameterName[0] == sParam)
+		{
+			return sParameterName[1];
+		}
+	}
 }
 
 // If a tool is on the url parameter as "?tool=tool_name" redirect to tool page.
 var tool_on_url=GetURLParameter("tool");
 if (tool_on_url){
-    	window.location.href = page_tool+"?tool="+tool_on_url;
+	window.location.href = page_tool+"?tool="+tool_on_url;
 }
 
 // -----------------------------------------------------
@@ -110,7 +110,7 @@ function fill_tool_list(repo){
 		var tools = res.split("\n");
 		tools.pop();
 		for (var tool in tools) {
-		    $tool_list_obj.append("<OPTION>"+tools[tool]);
+			$tool_list_obj.append("<OPTION>"+tools[tool]);
 		}
 		var $btn_select = $('.btn_select');
 		$btn_select.show();
@@ -121,7 +121,7 @@ function fill_tool_list(repo){
 		console.log($search_tool);
 		$('#search_tool').autocomplete({
 			autoFocus: true,
-		    source: tools
+			source: tools
 		});
 
 
@@ -167,10 +167,10 @@ $('.btn_select').on('click', function(event) {
 
 // -----------------------------------------------------
 $('#search_tool').keypress(function(event){
-var keycode = (event.keyCode ? event.keyCode : event.which);
-if(keycode == '13'){
+	var keycode = (event.keyCode ? event.keyCode : event.which);
+	if(keycode == '13'){
 		search_tool($('#search_tool'));
-}
+	}
 });
 
 // -----------------------------------------------------
