@@ -197,7 +197,7 @@ function store_entry(entry,name="default_master_entry"){
 
 function get_stored_entry(name="default_master_entry"){
 	var stored=sessionStorage.getItem(name);
-	if (stored) return(JSON.parse(stored));
+	if ((stored) && (stored !== undefined) && (stored !== "undefined")) return(JSON.parse(stored));
 	else return false; // TODO manage this false return for callers
 }
 
@@ -415,7 +415,8 @@ function val_to_table(entry,id=""){
         value_to_print += "<tr class=valid id=\""+id+"_tr\" hidden><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td></tr>"  // VALID
         value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>"  // CANCEL
         value_to_print += "</table></td>";
-		value_to_print += "<td class=none><p id=\""+id+"\" class=new>"+val+"</p></td>"
+		value_to_print += "<td class=none id=\""+id+"_td\">";
+		value_to_print += "<p id=\""+id+"\" class=new>"+val+"</p></td>";
 	}
 	// If the entry is an array, create a new inner table and recall the function for every sub-entry
 	else if (Array.isArray(entry)){
@@ -433,7 +434,8 @@ function val_to_table(entry,id=""){
 	//   IF "id" is empty it mean that this is the key ('label' class) 
 	//   ELSE create a cell with the 'value' class and pencill (meaning 'unmodified')
 
-		if (id === "biotoolsID"){
+		// Dont allow user to edit biotoolsID
+		if (id === "biotoolsID"){ 
 			value_to_print += "<td class=\"bt_id\" style=\"text-align:center;vertical-align:middle;\" title=\"You can not edit bio.tools ID\"><i class=\"icon-minus-sign\"></i></td>";
 			value_to_print += "<td class=\"bt_id\" id=\""+id+"_td\" title=\"You can not edit bio.tools ID\">"
 			value_to_print += "<p id=\""+id+"\">";
@@ -454,20 +456,7 @@ function val_to_table(entry,id=""){
 		        value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>"  // CANCEL
 		        value_to_print += "</table></td>";
 			    value_to_print += "<td class=content id=\""+id+"_td\">"
-
-				// Create <p> or <a> tag with value
 				value_to_print += linkit(entry,id)
-				//    value_to_print += "<p id=\""+id+"\" class=value>";
-
-				// //TODO Redundant : Create function 
-				//       	var regex_website=/^http[s]?:\/\/\S*$/;
-				//              	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
-				// if (regex_website.test(entry)){
-				//    		entry="<a href=\"" + entry + "\" target=\"_blank\">" + entry + "</a>";
-				// }
-
-				//    value_to_print += entry;
-				//    value_to_print += "</p>";
 			    value_to_print += "</td>";
 			}
 		}
@@ -820,7 +809,8 @@ function valid_edit(id,orig_v){
 	var motif =  /___/;
 	// Get the position liste of the value from the id (Cf. "val_to_table")
 	var liste = id.split(motif);
-	var orig_val=$value_td.attr("pr_value") || $value_td.attr("title");
+	var default_val= $value_td.attr("title");
+	var orig_val=$value_td.attr("pr_value") || default_val;
 
 	// If the value is the same from the original
 	// We keep original status
@@ -833,10 +823,12 @@ function valid_edit(id,orig_v){
 	}
 	// Else, if the value is found and different
 	// we store it and change the status to "new"
-	else if (orig_val) {
+	else {
+		console.log("log1");
+	//else if (orig_val) {
 	    // Retrieve stored entry
-            var entry_id = tool_metadata["tab_active"];
-            var new_entry_id = entry_id+"_new";
+        var entry_id = tool_metadata["tab_active"];
+        var new_entry_id = entry_id+"_new";
 
 	    // If it is the first time we edit the entry we take the original one
 	    if (!get_stored_entry("changes")){
@@ -850,7 +842,7 @@ function valid_edit(id,orig_v){
 	    new_diff["kind"]="E";
 	    new_diff["lhs"]= new_v;
 	    new_diff["path"]= liste;
-	    new_diff["rhs"]= orig_val;
+	    new_diff["rhs"]= default_val;
 	    // Remove old diff if it concern the same element
 	    for (var diff in entry){
 	    	if (entry[diff]["path"].toString() === new_diff["path"].toString()) {
@@ -1007,8 +999,6 @@ function send_modif(){
 
 	// WIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIPWIPWIPIWPWIP
 	// si pr a sois on remodifie fichier et commit
-	console.log("----------------");
-	console.log(id);
 	if ((tool_metadata[id]) && (tool_metadata[id]['pr_user'] === login)){
 
 		//var branch_name=tool_metadata[id]['pr_branch'];	
@@ -1022,21 +1012,20 @@ function send_modif(){
 		var branch_name=branch_origin;
 		var branch_name=branch_origin+"_up";  // TODO REMOVE?
 
-		var repo_forked = gh.getRepo(login,repo_name);
+
 
 		console.log("-l-l-l-l-l-l-l-l-l-l-l-l-l-");
-		console.log(repo_forked);
 		console.log(branch_origin);
 		console.log(file_path);
 		//console.log(my_bt_entry);
 
 
-
+		// Can not get the Sha with GET request to the file so do it on the repo...
+				// Warning: Can change according to the Github API updates
 		var options = { method: 'GET',
-		  url: 'https://api.github.com/repos/ValentinMarcon/content/contents/data/'+tool_name+'?ref='+branch_origin
+		  url: 'https://api.github.com/repos/'+login+'/content/contents/data/'+tool_name+'?ref='+branch_origin   //TODO DONT WORK IF USER CHANGE THE 
 		};
-		// Can not GET request to the file..
-		// Warning: Can change according to the Github API
+
 		request(options, function (error, response, body) {
 		  	if (error) {
 		  		hide_loader();	
@@ -1059,7 +1048,7 @@ function send_modif(){
 		  		throw new Error(data["message"]);
 			}
 			options = { method: 'PUT',
-			url: 'https://api.github.com/repos/ValentinMarcon/content/contents/'+file_path,
+			url: 'https://api.github.com/repos/'+login+'/content/contents/'+file_path,
 			headers: 
 			{ 
 			 authorization: "Basic " + new Buffer(login + ":" + OAUTH).toString("base64"),
@@ -1071,45 +1060,50 @@ function send_modif(){
 			 branch: branch_origin },
 			json: true };
 			request(options, function (error, response, body) {
-			if(!body){
-				hide_loader();	
-				exit_edit_mode();
-				alert("Error updating Pull Request \n\n'"+error+"'");
-				throw new Error(error);
-			}
-			else{
-				console.log("File updated in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_origin+"/"+file_path);
-				alert("Update Pull Request Done!");
-				hide_loader();	
-				exit_edit_mode();
-				tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
-				// Store the diff entry in memory to manipulate the entry later
-				console.log("tttttttttttttttttttttttttttttt");
-				console.log(tab_modif);
-				console.log("tttttttttttttttttttttttttttttt");
-				store_entry(tab_modif,tool_metadata["tab_active"]);
-				$('.different,.modified_cell').each(function(){
-					// Create <p> or <a> tag with value
-					console.log(this.firstChild)
-			    	var new_html = linkit(this.firstChild.innerText,this.firstChild.id);
-			    	$(this.firstChild).replaceWith(new_html);
-					$(this).removeClass('modified_cell');
-					console.log($(this.firstChild).attr('new_value'));
-					$(this).attr('pr_value',$(this).attr('new_value'));
-					$(this).removeAttr('new_value');
-					$("#"+this.firstChild.id+"_tr.reset").hide();
-				});
+				if(!body){
+					hide_loader();	
+					exit_edit_mode();
+					alert("Error updating Pull Request \n\n'"+error+"'");
+					throw new Error(error);
+				}
+				else{
+					// Update body message of the PR
+					var repo_forked = gh.getRepo(login,repo_name);
+					repo_forked.updatePullRequest(pr_number,{"body": body_message},function(error,res){
+									if (!res) {
+										hide_loader();	
+										exit_edit_mode();
+										alert("Error updating Pull Request \n\n'"+error+"'");
+										throw new Error(error);
+									}
+									else {
+										console.log("File updated in https://github.com/"+login+"/"+repo_name+"/tree/"+branch_origin+"/"+file_path);
+										alert("Update Pull Request Done!");
+										hide_loader();	
+										exit_edit_mode();
+										tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
+										// Store the diff entry in memory to manipulate the entry later
+										console.log("#########")
+										console.log(tab_modif);
+										console.log("#########")
+										store_entry(tab_modif,tool_metadata["tab_active"]);
+										$('.different,.modified_cell').each(function(){
+											// Create <p> or <a> tag with value
+											console.log(this.firstChild)
+									    	var new_html = linkit(this.firstChild.innerText,this.firstChild.id);
+									    	$(this.firstChild).replaceWith(new_html);
+											$(this).removeClass('modified_cell');
+											$(this).addClass('different');
+											$(this).attr('pr_value',$(this).attr('new_value'));
+											$(this).removeAttr('new_value');
+											$("#"+this.firstChild.id+"_tr.reset").hide();
+										});
+									}
+									});
 
-				
-				//TODO REMOVE MODIF MODE
 
-				//remove_diff();
-				//print_diff(entry);
-				//select_tab(id_tab_selected);
-				// Store the json entry in memory to manipulate the entry later
-				// store_entry(entry,id);
-				// display_new_entry(entry,id);
-			}
+
+				}
 			});
 
 		});
@@ -1272,7 +1266,7 @@ function update_header(id){
 	// Change Title
 	$title.text(tool_metadata["name"]);
 	// Change Bio.tools link (behind title)
-	$title.attr("href", "https://bio.tools/"+tool_metadata["name"]);
+	$title.attr("href", "https://bio.tools/"+tool_metadata["name"].toLowerCase());
 
 	// Empty Metadatas
 	$subtitle.text("-");
@@ -1382,19 +1376,20 @@ function change_tab(id_tab_selected){
 	else {
 		// - Retrieve entry
 		var $tab_selected = $('#'+id_tab_selected);
-	     	var entry=get_stored_entry(id_tab_selected);
+	    var entry=get_stored_entry(id_tab_selected);
 
 		if (entry){
-		// - Print diff and Visual select the tab on menu
+			// - Print diff and Visual select the tab on menu
 			remove_diff();
 			print_diff(entry);
 			select_tab(id_tab_selected);
 		}
-		// (Theorical impossible case) 
 		else { 
-			console.log("Entry" + id_tab_selected + "does not exist"); 
-			print_diff(entry);
-			select_tab(id_tab_selected);
+			alert("This tab does not exist or is not well formated (Contact administrator)")
+			console.log("Entry " + id_tab_selected + "does not exist"); 
+			$tab_selected.remove();
+			remove_diff();
+			select_tab(tool_metadata["name"].toLowerCase());
 		}
 	}
 
