@@ -112,19 +112,12 @@ function fill_tool_list(repo){
 		for (var tool in tools) {
 			$tool_list_obj.append("<OPTION>"+tools[tool]);
 		}
-		var $btn_select = $('.btn_select');
-		$btn_select.show();
-		var $option_not_found = $("#tool_list option[id='not_found']");
-		$option_not_found.remove();
-
-		var $search_tool = $('#search_tool');
-		console.log($search_tool);
+		$('.btn_select').show();
+		$("#tool_list option[id='not_found']").remove();
 		$('#search_tool').autocomplete({
 			autoFocus: true,
 			source: tools
 		});
-
-
 	});
 }
 
@@ -172,56 +165,3 @@ $('#search_tool').keypress(function(event){
 		search_tool($('#search_tool'));
 	}
 });
-
-// -----------------------------------------------------
-//   WIP ZONE // WIP ZONE // WIP ZONE // WIP ZONE //
-// -----------------------------------------------------
-// $(document).ready(function(){
-// var liste = [
-//     "Draggable",
-//     "Droppable",
-//     "Resizable",
-//     "Selectable",
-//     "Sortable"
-// ];
-
-// $('#recherche').autocomplete({
-//     source : liste
-// });
-// });
-// ///////////////////////////////////
-// Autocomplete TODO  WIPWIPWIP TODO (JQUERY PROBLEMS)
-/*
-var availableTags = [
-      "ActionScript",
-      "AppleScript",
-      "Asp",
-      "BASIC",
-      "C",
-      "C++",
-      "Clojure",
-      "COBOL",
-      "ColdFusion",
-      "Erlang",
-      "Fortran",
-      "Groovy",
-      "Haskell",
-      "Java",
-      "JavaScript",
-      "Lisp",
-      "Perl",
-      "PHP",
-      "Python",
-      "Ruby",
-      "Scala",
-      "Scheme"
- ];
-
-var $search_tool = $('#search_tool');
-console.log($search_tool);
-('#search_tool').autocomplete({
-     source: availableTags
-});
-*/
-
-// -----------------------------------------------------

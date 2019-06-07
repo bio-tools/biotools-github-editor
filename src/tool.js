@@ -70,11 +70,9 @@ gh.getUser().getProfile(function(err, profile) {
 	}
 	else {
 		login = profile["login"];
-		var avatar = profile["avatar_url"];
-		var $login = $('#username');
-		var $avatar = $('#avatar');
-		$login.text(login);
-		$avatar.attr('src', avatar);
+		let avatar = profile["avatar_url"];
+		$('#username').text(login);
+		$('#avatar').attr('src', avatar);
 	}
 });
 
@@ -87,7 +85,7 @@ var repo = gh.getRepo(gh_bt_user,gh_bt_repo);
 // Get parameter and redirect if necessary
 
 function GetURLParameter(sParam){
-	var sPageURL = window.location.search.substring(1);
+	let sPageURL = window.location.search.substring(1);
 	var sURLVariables = sPageURL.split('&');
 	for (var i = 0; i < sURLVariables.length; i++)
 	{
@@ -108,7 +106,6 @@ if (tool_on_url){
 // If not return to search tool page
 else {
 	window.location.href = page_search;
-
 }
 
 
@@ -117,11 +114,9 @@ else {
 // /////////////////////////////////////////////////////
 
 function fill_search_bar(repo){
-	var $tool_list_obj = $('#tool_list');
 	repo.getContents('master','index.txt',true, function(req, res) {
 		var tools = res.split("\n");
 		tools.pop();
-		var $search_tool = $('#search_tool');
 		$('#search_tool').autocomplete({
 			source: tools
 		});
@@ -133,25 +128,20 @@ fill_search_bar(repo);
 // Buttons events:
 // /////////////////////////////////////////////////////
 
-var $btn_search_other = $('.btn_search_other');
-var $btn_send = $('.btn_send');
-var $btn_cancel = $('.btn_cancel');
-
 // Redirect to search tool page
-$btn_search_other.unbind('click').on('click', function(event) {
+$('.btn_search_other').unbind('click').on('click', function(event) {
 	window.location.href = page_search;
 });
 
 // Send modif made in the form
-$btn_send.unbind('click').on('click', function(event) {
+$('.btn_send').unbind('click').on('click', function(event) {
 	send_modif();
 });
 
-// Cancel modif mode and come back to the "master" tab
-$btn_cancel.unbind('click').on('click', function(event) {
+// Cancel modif made in the form
+$('.btn_cancel').unbind('click').on('click', function(event) {
 	change_tab(tool_metadata["tab_active"]);
 });
-
 
 // ////////////////////////////////////////////////////
 // FUNCTIONS :
@@ -164,12 +154,10 @@ $btn_cancel.unbind('click').on('click', function(event) {
 // Then hide it.
 
 function show_loader(){
-	var $loader = $('#search_loader');
-	$loader.show();
+	$('#search_loader').show();
 }
 function hide_loader(){
-	var $loader = $('#search_loader');
-	$loader.hide();
+	$('#search_loader').hide();
 }
 
 // -----------------------------------------------------
@@ -180,10 +168,8 @@ function hide_loader(){
 
 function store_entry(entry,name="default_master_entry"){
 	sessionStorage.setItem(name,JSON.stringify(entry));
-	if ((name == "mode") && (entry == "display")){
-		// If we change the mode to display we inform the app that there is no changes.
-		store_entry(false,"changes");
-	}
+	// If we change the mode to display we inform the app that there is no changes.
+	if ((name == "mode") && (entry == "display")) store_entry(false,"changes");
 }
 
 // -----------------------------------------------------
@@ -195,7 +181,7 @@ function store_entry(entry,name="default_master_entry"){
 function get_stored_entry(name="default_master_entry"){
 	var stored=sessionStorage.getItem(name);
 	if ((stored) && (stored !== undefined) && (stored !== "undefined")) return(JSON.parse(stored));
-	else return false; // TODO manage this false return for callers
+	else return false;
 }
 
 // -----------------------------------------------------
@@ -278,21 +264,21 @@ function get_pull_requests(tool_name){
 	repo.listPullRequests({},function(req, res) {
 		res.forEach(function(pullrequest){
 			// Search with the branch name if the Pull Request is on the query tool name
-			var branch_name=pullrequest['head']['ref'];	
-			var branch_name_lc=branch_name.toLowerCase();
-			var regex = new RegExp("^.*_(" + tool_name + "_.*)$");
+			let branch_name=pullrequest['head']['ref'];	
+			let branch_name_lc=branch_name.toLowerCase();
+			let regex = new RegExp("^.*_(" + tool_name + "_.*)$");
 			if (regex.test(branch_name_lc)){
 
 				// Get Metadatas
-				var pr_number=pullrequest['number'];
-				var repo_user=pullrequest['head']['repo']['owner']['login'];
-				var repo_name=pullrequest['head']['repo']['name'];
-				var pr_link=pullrequest['html_url'];
-				var pr_date=pullrequest['created_at'];
-				var pr_branch=pullrequest['head']['ref'];
+				let pr_number=pullrequest['number'];
+				let repo_user=pullrequest['head']['repo']['owner']['login'];
+				let repo_name=pullrequest['head']['repo']['name'];
+				let pr_link=pullrequest['html_url'];
+				let pr_date=pullrequest['created_at'];
+				let pr_branch=pullrequest['head']['ref'];
 
 				// ID of the new entry on the app
-				var new_name = "PR_"+pr_number+"_"+tool_name;
+				let new_name = "PR_"+pr_number+"_"+tool_name;
 
 				// Store metadata
 				tool_metadata[new_name]={};
@@ -303,7 +289,7 @@ function get_pull_requests(tool_name){
 				tool_metadata[new_name]['pr_branch']=pr_branch;
 
 				// Search entry corresponding to the Pull Request
-				var my_repo = gh.getRepo(repo_user,repo_name);
+				let my_repo = gh.getRepo(repo_user,repo_name);
 				get_tool_entry(branch_name,tool_name,my_repo,function(entry) {
 					if(entry){
 						// Store the diff between master and the PullRequest in memory to manipulate the entry later
@@ -340,13 +326,13 @@ function get_tool_entry(branch_name,tool_name,my_repo,_callback){
 
 function print_tool(entry){
 	// Select table to add the tool content
-	var $tool_content = $('#tool_content');
+	let $tool_content = $('#tool_content');
 	// Erase content
 	$tool_content.html("");
 	// For every data of the tool entry, print it in a line in the table
 	for (var key in entry) {
 		if (entry.hasOwnProperty(key)) {
-			var new_line = ""
+			let new_line = ""
 			new_line += "<tr>"
 			new_line += val_to_table(key)
 			new_line += val_to_table(entry[key],key)
@@ -357,8 +343,7 @@ function print_tool(entry){
 	//$tool_content.append("<tr><td class=new_line id="+key+" colspan=2>➕ New Line </td></tr>" ); //TODO WIP
 
 	// Change the title with the tool name
-	var $title = $('#title');
-	$title.text(tool_metadata["name"]);
+	$('#title').text(tool_metadata["name"]);
 	
 	// Show cells that are differennt from master
 	show_diff(entry);
@@ -393,7 +378,7 @@ function val_to_table(entry,id=""){
 	var value_to_print="";
 	// If there is an empty entry, create a cell with the 'new' class and a cell with a blank indicator
 	if (((entry == "") || (entry == null)) && entry !==0){
-		var val=""
+		let val=""
 		if (entry == null){
 			val="null"
 		}
@@ -474,20 +459,21 @@ function val_to_table(entry,id=""){
 // Return difference between two dict
 
 function get_diff(entry){
-	var orig_entry=get_stored_entry();
+	let orig_entry=get_stored_entry();
 	return diff(entry, orig_entry);
 }
 
 // -----------------------------------------------------
 // SEARCH_ON_DICT
-// TODO DOC
+// --------------
+// Search a value on the dict a position defined in a table
 
 function search_on_dict(entry,tab_pos){
 	if (!entry){
 		return "value_not_found";
 	}
 	if(entry[tab_pos[0]]){
-		var new_tab_pos=[...tab_pos];
+		let new_tab_pos=[...tab_pos];
 		new_tab_pos.shift();
 		if (new_tab_pos.length !== 0){
 			return search_on_dict(entry[tab_pos[0]],new_tab_pos);
@@ -519,7 +505,6 @@ function show_diff(entry){
 			if (path) path += "___"; // Separator of deepness of the json (Cf. print_tool())
 			path += table_path[j];
 		}
-
 		//Add the "different" class that will color corresponding background <p> tag
 		$('#'+path+"_td").toggleClass('different');
 		//$('#'+path).attr('pr_value', differences[i]["lhs"]);
@@ -561,8 +546,10 @@ function get_diff_message(entry){
 
 
 // -----------------------------------------------------
+// PRINT_DIFF
+// ----------
 //TODO DOC
-// SHOW DIFF ET PRINT DIFF???? TODO
+// SHOW DIFF AND PRINT DIFF???? TODO MERGE?
 function print_diff(tab_diff){
 	// For each differences
 	for (var i in tab_diff) {
@@ -584,15 +571,16 @@ function print_diff(tab_diff){
 	}
 }
 
+
 // -----------------------------------------------------
-//TODO DOC
-//TODO WIP Reset diff
-//TODO callback ?:
+// REMOVE_DIFF
+// -----------
+// Remove all diferences with master entry displayed
+// TODO callback ?:
 function remove_diff(){
 	$('.different,.modified_cell').each(function(){
-		//$(this.firstChild).text($(this).attr('title'));
 		// Create <p> or <a> tag with value
-		var new_html = linkit($(this).attr('title'),this.firstChild.id);
+		let new_html = linkit($(this).attr('title'),this.firstChild.id);
 		$(this.firstChild).replaceWith(new_html);
 		$(this).removeClass('different');
 		$(this).removeClass('modified_cell');
@@ -617,50 +605,38 @@ function remove_diff(){
 function edit_dict(entry,pos,tab_pos,value){
 	var new_tab_pos=tab_pos;
 	new_tab_pos.shift();
-	var new_entry=entry;
 	// While we don't arrived to the end of the table we relaunch the function with next pos entry (deeper in the dict) 
 	if (new_tab_pos.length != 0) {
-		new_entry[pos]=edit_dict(new_entry[pos],tab_pos[0],new_tab_pos,value);
+		entry[pos]=edit_dict(entry[pos],tab_pos[0],new_tab_pos,value);
 	}
 	// Here we arrived to the position to insert the value
 	// We insert it and return then the entry modified
 	else {
-		new_entry[pos]=value;
+		entry[pos]=value;
 	}
-	return new_entry
+	return entry
 }
 
 // -----------------------------------------------------
 // EDIT_VALUE 
 // ----------
-// 
-// TODO : If we change a value two time keep the signal that it is new
+// Change the target tag in "textarea" and hide,show,bind the corresponding buttons
 
 function edit_value(id){
 
-    // Select the tag with this id
-    var $value = $('#'+id);
-    var $value_td = $('#'+id+'_td');
-    // Get the original value on this tag
-    var orig_v = $value.text();
-    var default_v = $value_td.attr('title');
-    var editted_v = $value_td.attr('new_value') || "" 
+    var orig_v = $('#'+id).text();
+    var default_v = $('#'+id+'_td').attr('title');
+    var editted_v = $('#'+id+'_td').attr('new_value') || "" 
 
     // If there is no title it's mean that the value is the same as the master
     if (!default_v) default_v=orig_v;
 
 	edit_mode(function(){ 
-		// Re-select the tag with this id
-		var $value = $('#'+id);
-		var new_html = ""
-
 		// Then, transform the tag to a textarea with the original value
-		var $value_td = $('#'+id+"_td");
-		var h = $value_td.height();
-		//new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit title=\""+default_v+"\" new_value='"+editted_v+"'>"+orig_v+"</textarea>";
-		new_html += "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit>"+orig_v+"</textarea>";
-		$value.replaceWith(new_html);
-		$value_td.attr('title',default_v);
+		let h = $('#'+id+"_td").height();
+		let new_html = "<textarea style='width:100%;height:"+h+"pt' id=\""+id+"\" class=value_edit>"+orig_v+"</textarea>";
+		$('#'+id).replaceWith(new_html);
+		$('#'+id+"_td").attr('title',default_v);
 
 		// Change edit (and reset) buttons by valid and cancel (modifications).
 		$('tr#'+id+'_tr.edit').hide();
@@ -686,26 +662,22 @@ function edit_value(id){
 }
 
 
-
 // -----------------------------------------------------
 // RESET_VALUE 
 // -----------
-// 
-// TODO : Doc
+// Reset original value to the cell
 
 function reset_value(id){
-
-    // Select the tag with this id
-    var $value_td = $('#'+id+'_td');
+    // Select the tag
+    let $value_td = $('#'+id+'_td');
     // Get the original value on this tag
-    var pr_v = $value_td.attr('pr_value') || "";
-    var default_v = $value_td.attr('title') || "";
-    var reset_v= pr_v || default_v;
+    let pr_v = $value_td.attr('pr_value') || "";
+    let default_v = $value_td.attr('title') || "";
+    let reset_v= pr_v || default_v;
 
 	// Create <p> or <a> tag with value
-	var new_html = linkit(reset_v,id);
+	let new_html = linkit(reset_v,id);
 	$('#'+id).replaceWith(new_html);
-	//('#'+id).text(reset_v);
 	$('tr#'+id+'_tr.reset').hide();
 	$value_td.removeClass('modified_cell');
 	$value_td.removeAttr('new_value');
@@ -714,11 +686,14 @@ function reset_value(id){
 	}
 }
 
+
 // -----------------------------------------------------
-// TODO DOC
-// RENAME linkit ==> encapsule it ou truc comme ça
+// LINKIT
+// ------
+// Create a <p> tag with the value and add a <a> tag if necessary
+
 function linkit(value,id){
-	var regex_website=/^http[s]?:\/\/\S*$/;
+	const regex_website=/^http[s]?:\/\/\S*$/;
 	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
 	if (regex_website.test(value)){
 		return "<p id=\""+id+"\" class=value><a href=\"" + value + "\" target=\"_blank\">" + value + "</a></p>";
@@ -739,8 +714,7 @@ function edit_mode(_cb){
     // If we are not currently on 'edit' mode
     if (get_stored_entry("mode") != "edit"){
     	store_entry("edit","mode");
-    	var current_tool = tool_metadata["tab_active"];
-    	console.log(current_tool +" : edit mode")
+    	console.log(tool_metadata["tab_active"]+" : edit mode")
     }
     _cb();
 }
@@ -763,7 +737,7 @@ function exit_edit_mode(){
 // -----------------------------------------------------
 // VALID_EDIT
 // ----------
-// TODO DOC
+// Save value edit 
 
 function valid_edit(id,orig_v){
 
@@ -851,31 +825,212 @@ function valid_edit(id,orig_v){
 
 // -----------------------------------------------------
 // CANCEL_EDIT
-// ----------
-// TODO DOC
-
-// TODO HIDE SHOW p and text area...
+// -----------
+// Reset values and hide,show all the corresponding button
 
 function cancel_edit(id){
 
-	var value=$('#'+id+'_td').attr("new_value") || ($('#'+id+'_td').attr("pr_value") || $('#'+id+'_td').attr("title")); //TODO REPLACE THE IF WITH THAT
-
-	var new_html = "";
+	var value=$('#'+id+'_td').attr("new_value") || ($('#'+id+'_td').attr("pr_value") || $('#'+id+'_td').attr("title")); 
     // Create <p> or <a> tag with value
-    new_html += linkit(value,id);
+    var new_html = linkit(value,id);
     $('#'+id).replaceWith(new_html);
-
     $('tr#'+id+'_tr.valid').hide();
     $('tr#'+id+'_tr.cancel').hide();
     $('tr#'+id+'_tr.edit').show();
     if ($('#'+id+'_td').attr("new_value")){
     	$('tr#'+id+'_tr.reset').show();
     }
-
 	// Edit value rebind
 	$('#'+id+'_edit').unbind('click').on('click', function(event) {
 		edit_value(this.id.replace('_edit', ''));
 	});
+}
+
+
+// -----------------------------------------------------
+// ADD_TAB
+// -------
+// Create a new tab on the menu according to the 'id' provided
+// 'value' is printed on the tab and by default is the id 
+
+function add_tab(id){
+	var $tab = $('#tab');
+	const regex = new RegExp("^(PR|edit|NEW)_[a-zA-Z0-9_-]*$");
+	var classs="master";
+	var value="Master branch";
+	// If it is not the master branch
+	if (regex.test(id)){
+		classs=id.replace(regex,'$1');
+		value="Pull Request n°"+tool_metadata[id]["pr_number"];
+	}
+	$tab.append("<li id="+id+" class="+classs+"><a>"+value+"</a></li>");
+	// Rebind events onclick on the tabs of the menu
+	add_tab_event();
+}
+
+// -----------------------------------------------------
+// SELECT_TAB
+// ----------
+// Select a tab according to the 'id' provided
+
+function select_tab(id){
+	var $tab = $('#'+id);
+	// Unset 'active' the current active tab 
+	var $tab_active = $('#menu li.active');
+	$tab_active.removeClass('active');
+	// Set this new selected tab 'active'
+	$tab.toggleClass('active');
+	// Re-add events onclick on the tabs of the menu
+	add_tab_event();
+	// Display tool metadata according to selected tab
+	update_header(id);
+	// Update id of tab selected
+	tool_metadata["tab_active"]=id;
+}
+
+
+// -----------------------------------------------------
+// ADD_TAB_EVENT
+// ------------
+// Add event 'change_tab()' to all the not active tab
+
+function add_tab_event(){
+	$("#menu li").unbind('click');
+	$("#menu li:not('.active')").on('click', function(event){
+		change_tab(this.id);
+	});
+}
+
+
+// -----------------------------------------------------
+// CHANGE_TAB
+// ----------
+// - Check if the user can leave the active tab
+// - Print the entry of the selected tab
+// - Visual change tab with select_tab() on the selected tab id
+
+function change_tab(id_tab_selected){
+	console.log(id_tab_selected+" : selected");
+
+	// Check if its possible to change tab
+	if ($('.modified_cell').length !== 0){
+		var quit=confirm("All modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
+		if (quit) {
+			exit_edit_mode();
+		}
+		else {
+			let pos = $('.modified_cell').offset();
+			let top = pos.top - 100;
+			let left = pos.left - 20;
+			window.scrollTo((left < 0 ? 0 : left), (top < 0 ? 0 : top));
+			return;
+		}
+	}
+	else if (get_stored_entry("mode")=="edit") {
+		exit_edit_mode();
+	}
+
+	// If the user choose the master tab
+	if (id_tab_selected == tool_metadata['name']) {
+		remove_diff();
+		select_tab(id_tab_selected);
+	}
+	// Else,show diff
+	else {
+		// - Retrieve entry
+		var $tab_selected = $('#'+id_tab_selected);
+		var entry=get_stored_entry(id_tab_selected);
+
+		if (entry){
+			// - Print diff and Visual select the tab on menu
+			remove_diff();
+			print_diff(entry);
+			select_tab(id_tab_selected);
+		}
+		else { 
+			alert("This tab does not exist or is not well formated (Contact administrator)")
+			console.log("Entry " + id_tab_selected + "does not exist"); 
+			$tab_selected.remove();
+			remove_diff();
+			select_tab(tool_metadata["name"].toLowerCase());
+		}
+	}
+}
+
+
+// -----------------------------------------------------
+// UPDATE_HEADER
+// -------------
+// Display tool metadatas in header according to selected tab
+
+function update_header(id){
+
+	// JQUERY select elements
+	var $title = $('#title');
+	var $subtitle = $('p#subtitle');
+	var $subtitle_link = $('a#pr_link');
+	var $subtitle_date = $('p#pr_date');
+	var $subtitle_author = $('p#pr_author');
+	var $subtitle_author_you = $('p#pr_author_you');
+
+	// Change Title
+	$title.text(tool_metadata["name"]);
+	// Change Bio.tools link (behind title)
+	$title.attr("href", "https://bio.tools/"+tool_metadata["name"].toLowerCase());
+
+	// Empty Metadatas
+	$subtitle.text("-");
+	$subtitle_link.text("-");
+	$subtitle_date.text("-");
+	$subtitle_author.text("-");
+	$subtitle_author_you.hide();
+
+	// Search the status of the entry (Master,Pull request or New)
+	var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
+	var status = id.replace(regex, '$1');
+	var status_converter={"PR":"Pull Request n°","NEW":"New Pull Request n°"};
+	var status_long=status_converter[status];
+
+	// Display metadatas
+	if (tool_metadata[id]){
+		let pr_user=tool_metadata[id]['pr_user'];
+		let pr_link=tool_metadata[id]['pr_link'];
+		let pr_date=tool_metadata[id]['pr_date'];
+		let pr_number=tool_metadata[id]['pr_number'];
+		// USER that made the Pull Request
+		if (pr_user) {
+			$subtitle_author.text("By '"+pr_user+"'");
+			if (pr_user === login) {
+				$subtitle_author_you.show();
+			}
+		}
+		// LINK and NUMBER of the Pull Request
+		if (pr_link) {
+			if (pr_number) $subtitle_link.text(" Pull Request #"+pr_number);
+			else $subtitle_link.text(" Pull Request");
+			$subtitle_link.attr("href", pr_link);
+		}
+		// DATE of the Pull Request
+		if (pr_date) {
+			var day=pr_date.split("T")[0];
+			var hour=pr_date.split("T")[1];
+			var print_date=day+" at "+hour.split(":")[0]+":"+hour.split(":")[1];
+			$subtitle_date.text("Created on "+print_date);
+		}
+	}
+
+	// Edit status
+	if (!status_long) {
+		status_long="Origin";
+		$subtitle_link.text("Master");
+		$subtitle_link.attr("href", "https://github.com/"+gh_bt_user+"/"+gh_bt_repo);
+	}
+	else if (status="PR") {
+		status_long += pr_number;
+	}
+	$subtitle.text(status_long);
+
+	
 }
 
 // -----------------------------------------------------
@@ -887,18 +1042,17 @@ function cancel_edit(id){
 // 4) Write a file in this new branch with this new entry
 // 5) Make a pull request to the dev branch
 //
-// TODO : IMprove user experience and error management (learn to use promise)
+// TODO : Improve user experience and error management (learn to use promise)
 //
-
 
 function send_modif(){
 	var repo_name=gh_bt_repo;
 	// If some changes are not validated don't send and show the user the line
 	if ($('.value_edit').length !== 0) {
 		alert("Some changes have not been validated");
-		var pos = $('.value_edit').offset();
-		var top = pos.top - 100;
-		var left = pos.left - 20;
+		let pos = $('.value_edit').offset();
+		let top = pos.top - 100;
+		let left = pos.left - 20;
 		window.scrollTo((left < 0 ? 0 : left), (top < 0 ? 0 : top));
 		return;
 	}
@@ -913,7 +1067,7 @@ function send_modif(){
 	// Ask if the user allow the app to fork the repo in his Github account
 	var repo_forked = gh.getRepo(login,repo_name);
 	if(!repo_forked){
-		var confirm_fork=confirm("You don't have the repo '"+repo_name+"' forked on your account the app will do it for you. Do you allow it?"); 
+		let confirm_fork=confirm("You don't have the repo '"+repo_name+"' forked on your account the app will do it for you. Do you allow it?"); 
 		if (!confirm_fork){
 			return;
 		}
@@ -953,7 +1107,7 @@ function send_modif(){
 		// Get the Sha of the file to update
 		// Can not get the Sha with GET request to the file so do it on the repo...
 		// Warning: Can change according to the Github API updates
-		var options = { method: 'GET',
+		let options = { method: 'GET',
 		  url: 'https://api.github.com/repos/'+login+'/content/contents/data/'+tool_name+'?ref='+branch_origin 
 		};
 		request(options, function (error, res, body) {
@@ -978,7 +1132,7 @@ function send_modif(){
 			}
 			// 3)
 			// New commit with new content
-			options = { method: 'PUT',
+			let options = { method: 'PUT',
 			url: 'https://api.github.com/repos/'+login+'/content/contents/'+file_path,
 			headers: 
 			{ 
@@ -1018,7 +1172,7 @@ function send_modif(){
 							store_entry(tab_modif,tool_metadata["tab_active"]);
 							$('.different,.modified_cell').each(function(){
 								// Create <p> or <a> tag with value
-								var new_html = linkit(this.firstChild.innerText,this.firstChild.id);
+								let new_html = linkit(this.firstChild.innerText,this.firstChild.id);
 								$(this.firstChild).replaceWith(new_html);
 								$(this).removeClass('modified_cell');
 								$(this).addClass('different');
@@ -1036,8 +1190,8 @@ function send_modif(){
 	else {
 		
 		// Current date
-		var d = new Date();
-		var now=d.getFullYear()  + "-" + (d.getMonth()+1) + "-" +  d.getDate() + "-" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + "-" + d.getMilliseconds();
+		const d = new Date();
+		const now=d.getFullYear()  + "-" + (d.getMonth()+1) + "-" +  d.getDate() + "-" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + "-" + d.getMilliseconds();
 		// Branch name with current date and 'new' tag
 		var branch_name="new_"+tool_name+"_"+now;
 		// Origin branch in which the Fork and Pull Request will be done
@@ -1094,8 +1248,8 @@ function send_modif(){
 										hide_loader();	
 										exit_edit_mode();
 										console.log(res);
-										var pr_number=res["number"];
-										var new_name="NEW_PR_"+pr_number+"_"+tool_name;
+										let pr_number=res["number"];
+										let new_name="NEW_PR_"+pr_number+"_"+tool_name;
 
 										// Store metadata
 										tool_metadata[new_name]={};
@@ -1118,190 +1272,5 @@ function send_modif(){
 				});
 			}
 		});	
-	}
-}
-
-// -----------------------------------------------------
-// ADD_TAB
-// -------
-// Create a new tab on the menu according to the 'id' provided
-// 'value' is printed on the tab and by default is the id 
-
-function add_tab(id){
-	var $tab = $('#tab');
-	var regex = new RegExp("^(PR|edit|NEW)_[a-zA-Z0-9_-]*$");
-	var classs="master";
-	var value="Master branch";
-	// If it is not the master branch
-	if (regex.test(id)){
-		classs=id.replace(regex,'$1');
-		value="Pull Request n°"+tool_metadata[id]["pr_number"];
-	}
-	$tab.append("<li id="+id+" class="+classs+"><a>"+value+"</a></li>");
-	// Rebind events onclick on the tabs of the menu
-	add_tab_event();
-}
-
-// -----------------------------------------------------
-// SELECT_TAB
-// ----------
-// Select a tab according to the 'id' provided
-
-function select_tab(id){
-	var $tab = $('#'+id);
-	// Unset 'active' the current active tab 
-	var $tab_active = $('#menu li.active');
-	$tab_active.removeClass('active');
-	// Set this new selected tab 'active'
-	$tab.toggleClass('active');
-	// Re-add events onclick on the tabs of the menu
-	add_tab_event();
-	// Display tool metadata according to selected tab
-	update_header(id);
-	// Update id of tab selected
-	tool_metadata["tab_active"]=id;
-}
-
-// -----------------------------------------------------
-// UPDATE_HEADER
-// -------------
-// Display tool metadatas in header according to selected tab
-
-function update_header(id){
-
-	// JQUERY select elements
-	var $title = $('#title');
-	var $subtitle = $('p#subtitle');
-	var $subtitle_link = $('a#pr_link');
-	var $subtitle_date = $('p#pr_date');
-	var $subtitle_author = $('p#pr_author');
-	var $subtitle_author_you = $('p#pr_author_you');
-
-	// Change Title
-	$title.text(tool_metadata["name"]);
-	// Change Bio.tools link (behind title)
-	$title.attr("href", "https://bio.tools/"+tool_metadata["name"].toLowerCase());
-
-	// Empty Metadatas
-	$subtitle.text("-");
-	$subtitle_link.text("-");
-	$subtitle_date.text("-");
-	$subtitle_author.text("-");
-	$subtitle_author_you.hide();
-
-	// Search the status of the entry (Master,Pull request or New)
-	var regex = new RegExp("^([a-zA-Z0-9]*)_[a-zA-Z0-9_-]*$");
-	var status = id.replace(regex, '$1');
-	var status_converter={"PR":"Pull Request n°","NEW":"New Pull Request n°"};
-	var status_long=status_converter[status];
-
-	// Display metadatas
-	if (tool_metadata[id]){
-		var pr_user=tool_metadata[id]['pr_user'];
-		var pr_link=tool_metadata[id]['pr_link'];
-		var pr_date=tool_metadata[id]['pr_date'];
-		var pr_number=tool_metadata[id]['pr_number'];
-		// USER that made the Pull Request
-		if (pr_user) {
-			$subtitle_author.text("By '"+pr_user+"'");
-			if (pr_user === login) {
-				$subtitle_author_you.show();
-			}
-		}
-		// LINK and NUMBER of the Pull Request
-		if (pr_link) {
-			if (pr_number) $subtitle_link.text(" Pull Request #"+pr_number);
-			else $subtitle_link.text(" Pull Request");
-			$subtitle_link.attr("href", pr_link);
-		}
-		// DATE of the Pull Request
-		if (pr_date) {
-			var day=pr_date.split("T")[0];
-			var hour=pr_date.split("T")[1];
-			var print_date=day+" at "+hour.split(":")[0]+":"+hour.split(":")[1];
-			$subtitle_date.text("Created on "+print_date);
-		}
-	}
-
-	// Edit status
-	if (!status_long) {
-		status_long="Origin";
-		$subtitle_link.text("Master");
-		$subtitle_link.attr("href", "https://github.com/"+gh_bt_user+"/"+gh_bt_repo);
-	}
-	else if (status="PR") {
-		status_long += pr_number;
-	}
-	$subtitle.text(status_long);
-
-	
-}
-
-
-// -----------------------------------------------------
-// ADD_TAB_EVENT
-// ------------
-// Add event 'change_tab()' to all the not active tab
-
-function add_tab_event(){
-	$("#menu li").unbind('click');
-	$("#menu li:not('.active')").on('click', function(event){
-		change_tab(this.id);
-	});
-}
-
-
-// -----------------------------------------------------
-// CHANGE_TAB
-// ----------
-// - Check if the user can leave the active tab
-// - Print the entry of the selected tab
-// - Visual change tab with select_tab() on the selected tab id
-
-function change_tab(id_tab_selected){
-	console.log(id_tab_selected+" : selected");
-
-	// Check if its possible to change tab
-	if ($('.modified_cell').length !== 0){
-		var quit=confirm("All modifications will be lost.\n  -Press OK to leave edit mode\n  -Press \"Cancel\" to return to edit mode");
-		if (quit) {
-			exit_edit_mode();
-		}
-		else {
-			var pos = $('.modified_cell').offset();
-			var top = pos.top - 100;
-			var left = pos.left - 20;
-			window.scrollTo((left < 0 ? 0 : left), (top < 0 ? 0 : top));
-			return;
-		}
-	}
-	else if (get_stored_entry("mode")=="edit") {
-		exit_edit_mode();
-	}
-
-	// If the user choose the master tab
-	if (id_tab_selected == tool_metadata['name']) {
-		remove_diff();
-		select_tab(id_tab_selected);
-	}
-	// Else,show diff
-	else {
-		// - Retrieve entry
-		var $tab_selected = $('#'+id_tab_selected);
-		var entry=get_stored_entry(id_tab_selected);
-
-		if (entry){
-			// - Print diff and Visual select the tab on menu
-			remove_diff();
-			print_diff(entry);
-			select_tab(id_tab_selected);
-		}
-		else { 
-			alert("This tab does not exist or is not well formated (Contact administrator)")
-			console.log("Entry " + id_tab_selected + "does not exist"); 
-			$tab_selected.remove();
-			remove_diff();
-			select_tab(tool_metadata["name"].toLowerCase());
-		}
 	}
 }
