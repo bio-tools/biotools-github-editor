@@ -112,7 +112,7 @@ function fill_tool_list(repo){
 		for (var tool in tools) {
 			$tool_list_obj.append("<OPTION>"+tools[tool]);
 		}
-		$('.btn_select').show();
+		$('.btn_send_search').show();
 		$("#tool_list option[id='not_found']").remove();
 		$('#search_tool').autocomplete({
 			autoFocus: true,

@@ -152,6 +152,22 @@ input[type=button]{
 /* NEEEEEWWWWWWWWW  */
 /* ---------------- */
 
+  body {
+    padding-top: 60px;
+  }
+
+#search_tool, #btn_search_tool{
+  height: 25px;
+}
+
+#search_tool{
+  width:250px;
+}
+/*
+#li_search_tool{
+  height: 50px; 
+}*/
+
 .tool_meta {
   border: 1px solid #999999;
 }
@@ -189,6 +205,16 @@ img.avatar{
 
 .ui-autocomplete{
   z-index: 2000 !important; 
+}
+
+.btn_send_search{
+  width:80px !important;
+  height:35px !important;
+}
+
+.input_search{
+  width:250px !important;
+  height:35px !important;
 }
 
 /* ------ */

@@ -90,24 +90,16 @@ function GetURLParameter(sParam){
 	for (var i = 0; i < sURLVariables.length; i++)
 	{
 		var sParameterName = sURLVariables[i].split('=');
-		if (sParameterName[0] == sParam)
-		{
-			return sParameterName[1];
-		}
+		if (sParameterName[0] == sParam) return sParameterName[1];
 	}
 }
 
 // Get "tool" parameter on the url
 var tool_on_url=GetURLParameter("tool");
 // If a tool is on the parameters search it
-if (tool_on_url){
-	search_tool(tool_on_url);
-}
+if (tool_on_url) search_tool(tool_on_url);
 // If not return to search tool page
-else {
-	window.location.href = page_search;
-}
-
+else window.location.href = page_search;
 
 // /////////////////////////////////////////////////////
 // Search Bar:
@@ -129,9 +121,9 @@ fill_search_bar(repo);
 // /////////////////////////////////////////////////////
 
 // Redirect to search tool page
-$('.btn_search_other').unbind('click').on('click', function(event) {
-	window.location.href = page_search;
-});
+// $('.btn_search_other').unbind('click').on('click', function(event) {
+// 	window.location.href = page_search;
+// });
 
 // Send modif made in the form
 $('.btn_send').unbind('click').on('click', function(event) {
@@ -218,7 +210,7 @@ function search_tool(tool_name){
 
 // -----------------------------------------------------
 // DISPLAY_ENTRY
-// -----------------
+// -------------
 // - Display mode 
 // - Print the tool
 // - Add the tab of the tool on the menu
@@ -234,9 +226,9 @@ function display_entry(entry,name){
 // -----------------------------------------------------
 // DISPLAY_NEW_ENTRY
 // -----------------
-// TODO DOC
 // - Display mode 
-// - Print the tool
+// - Remove the difference with the original entry
+// - Print the difference with the original entry
 // - Add the tab of the tool on the menu
 // - Select this tab
 
@@ -257,8 +249,6 @@ function display_new_entry(diff_tab,name){
 // 1) Store metadata
 // 2) Get and store entry 
 // 3) Print corresponding tabs
-//
-// TODO manage get_tool_entry error
 
 function get_pull_requests(tool_name){
 	repo.listPullRequests({},function(req, res) {
@@ -311,9 +301,9 @@ function get_pull_requests(tool_name){
 // _callback with res of getContents (i.e. entry)
 
 function get_tool_entry(branch_name,tool_name,my_repo,_callback){
-	my_repo.getContents(branch_name,'data/'+tool_name+'/'+tool_name+'.json',true, function(req, res) {
+	my_repo.getContents(branch_name,'data/'+tool_name+'/'+tool_name+'.json',true, function(error, res) {
 		if (!res) {
-			console.log('Error getting content of ' + tool_name + ' in ' + branch_name + "\n" + req);
+			throw new Error('Error getting content of ' + tool_name + ' in ' + branch_name + "\n" + error);
 		}
 		_callback(res);
 	});
@@ -332,11 +322,11 @@ function print_tool(entry){
 	// For every data of the tool entry, print it in a line in the table
 	for (var key in entry) {
 		if (entry.hasOwnProperty(key)) {
-			let new_line = ""
-			new_line += "<tr>"
-			new_line += val_to_table(key)
-			new_line += val_to_table(entry[key],key)
-			new_line += "</tr>"
+			let new_line = "";
+			new_line += "<tr>";
+			new_line += val_to_table(key);
+			new_line += val_to_table(entry[key],key);
+			new_line += "</tr>";
 			$tool_content.append(new_line);
 		}
 	}
@@ -344,9 +334,6 @@ function print_tool(entry){
 
 	// Change the title with the tool name
 	$('#title').text(tool_metadata["name"]);
-	
-	// Show cells that are differennt from master
-	show_diff(entry);
 
 	// Table cell that could be modified are selected thanks to the id "value"
 	$('td.edit').unbind('click').on('click', function(event) {
@@ -378,19 +365,19 @@ function val_to_table(entry,id=""){
 	var value_to_print="";
 	// If there is an empty entry, create a cell with the 'new' class and a cell with a blank indicator
 	if (((entry == "") || (entry == null)) && entry !==0){
-		let val=""
+		let val="";
 		if (entry == null){
-			val="null"
+			val="null";
 		}
 		else if (Array.isArray(entry)){
-			val="[]"
+			val="[]";
 		}
 		// REDUNDANT WITH String Entry
-		value_to_print += "<td><table id=\""+id+"_tab\">"
-        value_to_print += "<tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr>"  // EDIT
-        value_to_print += "<tr class=reset id=\""+id+"_tr\" hidden><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td></tr>"  // RESET
-        value_to_print += "<tr class=valid id=\""+id+"_tr\" hidden><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td></tr>"  // VALID
-        value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>"  // CANCEL
+		value_to_print += "<td><table id=\""+id+"_tab\">";
+        value_to_print += "<tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr>";  // EDIT
+        value_to_print += "<tr class=reset id=\""+id+"_tr\" hidden><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td></tr>";  // RESET
+        value_to_print += "<tr class=valid id=\""+id+"_tr\" hidden><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td></tr>";  // VALID
+        value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>";  // CANCEL
         value_to_print += "</table></td>";
         value_to_print += "<td class=none id=\""+id+"_td\">";
         value_to_print += "<p id=\""+id+"\" class=new>"+val+"</p></td>";
@@ -399,9 +386,9 @@ function val_to_table(entry,id=""){
 	else if (Array.isArray(entry)){
 		value_to_print += "<td class=content colspan=2><table>";
 		for (var key in entry) {
-			value_to_print += "<tr>"
-			value_to_print += val_to_table(entry[key],id+"___"+key)
-			value_to_print += "</tr>"
+			value_to_print += "<tr>";
+			value_to_print += val_to_table(entry[key],id+"___"+key);
+			value_to_print += "</tr>";
 		}
 		//value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //TODO WIP
 		value_to_print += "</table></td>";
@@ -414,7 +401,7 @@ function val_to_table(entry,id=""){
 		// Dont allow user to edit biotoolsID
 		if (id === "biotoolsID"){ 
 			value_to_print += "<td class=\"bt_id\" style=\"text-align:center;vertical-align:middle;\" title=\"You can not edit bio.tools ID\"><i class=\"icon-minus-sign\"></i></td>";
-			value_to_print += "<td class=\"bt_id\" id=\""+id+"_td\" title=\"You can not edit bio.tools ID\">"
+			value_to_print += "<td class=\"bt_id\" id=\""+id+"_td\" title=\"You can not edit bio.tools ID\">";
 			value_to_print += "<p id=\""+id+"\">";
 			value_to_print += entry;
 			value_to_print += "</p></td>";
@@ -427,28 +414,28 @@ function val_to_table(entry,id=""){
 			}
 			else {
 				value_to_print += "<td><table id=\""+id+"_tab\">"
-		        value_to_print += "<tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr>"  // EDIT
-		        value_to_print += "<tr class=reset id=\""+id+"_tr\" hidden><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td></tr>"  // RESET
-		        value_to_print += "<tr class=valid id=\""+id+"_tr\" hidden><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td></tr>"  // VALID
-		        value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>"  // CANCEL
+		        value_to_print += "<tr class=edit id=\""+id+"_tr\" ><td class=\"edit btn\" id=\""+id+"_edit\"><i class=\"icon-edit\"></i></td></tr>";  // EDIT
+		        value_to_print += "<tr class=reset id=\""+id+"_tr\" hidden><td class=\"reset btn\" id=\""+id+"_reset\"><i class=\"icon-remove-circle\"></i></td></tr>";  // RESET
+		        value_to_print += "<tr class=valid id=\""+id+"_tr\" hidden><td class=\"valid btn\" id=\""+id+"_valid\"><i class=\"icon-ok\"></i></td></tr>";  // VALID
+		        value_to_print += "<tr class=cancel id=\""+id+"_tr\" hidden><td class=\"cancel btn\" id=\""+id+"_cancel\"><i class=\"icon-remove\"></i></td></tr>";  // CANCEL
 		        value_to_print += "</table></td>";
-		        value_to_print += "<td class=content id=\""+id+"_td\">"
-		        value_to_print += linkit(entry,id)
+		        value_to_print += "<td class=content id=\""+id+"_td\">";
+		        value_to_print += linkit(entry,id);
 		        value_to_print += "</td>";
 		    }
 		}
 	}
 	// Else, entry is (probably) a dict, recall the function
 	else{
-		value_to_print += "<td class=content colspan=2><table>"
+		value_to_print += "<td class=content colspan=2><table>";
 		for (var key in entry) {
-			value_to_print += "<tr>"
-			value_to_print += val_to_table(key)
-			value_to_print += val_to_table(entry[key],id+"___"+key)
-			value_to_print += "</tr>"
+			value_to_print += "<tr>";
+			value_to_print += val_to_table(key);
+			value_to_print += val_to_table(entry[key],id+"___"+key);
+			value_to_print += "</tr>";
 		}
 		//value_to_print += "<tr><td class=new_line id="+id+" colspan=2>➕ New Line</td></tr>" //TODO WIP
-		value_to_print += "</table></td>"
+		value_to_print += "</table></td>";
 	}
 	return value_to_print;
 }
@@ -475,42 +462,11 @@ function search_on_dict(entry,tab_pos){
 	if(entry[tab_pos[0]]){
 		let new_tab_pos=[...tab_pos];
 		new_tab_pos.shift();
-		if (new_tab_pos.length !== 0){
-			return search_on_dict(entry[tab_pos[0]],new_tab_pos);
-		}
-		else {
-			return entry[tab_pos[0]];
-		}
+		if (new_tab_pos.length !== 0) return search_on_dict(entry[tab_pos[0]],new_tab_pos);
+		else return entry[tab_pos[0]];
 	}
 }
 
-
-// -----------------------------------------------------
-// SHOW_DIFF
-// ---------
-// Color differences in the tool table
-// 1) Get the differences with master entry
-// 2) Search the path of the html element that display the different data
-// 3) Add the class 'different' to this element to color it (Cf. CSS)
-
-function show_diff(entry){
-	// Get diff
-	var differences=get_diff(entry);
-	// For each differences
-	for (var i in differences) {
-		var table_path = differences[i]["path"];
-		//Search path of changed element in html
-		var path=""
-		for (var j in table_path){
-			if (path) path += "___"; // Separator of deepness of the json (Cf. print_tool())
-			path += table_path[j];
-		}
-		//Add the "different" class that will color corresponding background <p> tag
-		$('#'+path+"_td").toggleClass('different');
-		//$('#'+path).attr('pr_value', differences[i]["lhs"]);
-		$('#'+path+"_td").attr('title', differences[i]["rhs"]);
-	}
-}
 
 // -----------------------------------------------------
 // GET_DIFF_MESSAGE
@@ -527,15 +483,16 @@ function get_diff_message(entry){
 	for (var i in differences) {
 		var dif_num=Number(i)+1;
 		var dif=differences[i];
-		message += dif_num+") Diff in **{"
+		message += dif_num+") Diff in **{";
 		var table_path = dif["path"];
-		var path=""
+		var path="";
 		for (var j in table_path){
-			if (path) path += "}{"
-				path += table_path[j]
+			if (path) path += "}{";
+		    path += table_path[j];
 		}
 		path += "}**";
-		message += path + "\n"
+		message += path;
+		message += "\n";
 		message += "-Orig val : "+dif["rhs"]+"\n";
 		message += "-New  val : "+dif["lhs"]+"\n";
 		message += "\n";
@@ -544,12 +501,15 @@ function get_diff_message(entry){
 }
 
 
-
 // -----------------------------------------------------
 // PRINT_DIFF
 // ----------
-//TODO DOC
-// SHOW DIFF AND PRINT DIFF???? TODO MERGE?
+// Color differences in the tool table
+// 1) Search the path of the html element that has different data
+// 2) Print the value that is different
+// 3) Add the class 'different' to the parent <td> to color it (Cf. CSS)
+// 4) Add attribute to the parent <td> to retrieve default and new values
+
 function print_diff(tab_diff){
 	// For each differences
 	for (var i in tab_diff) {
@@ -562,11 +522,13 @@ function print_diff(tab_diff){
 			if (path) path += "___"; // Separator of deepness of the json (Cf. print_tool())
 			path += table_path[j];
 		}
-		////path += "_td"; // To change backgrounf color of <td> tag instead of <p>
-		//Add the "different" class that will color corresponding background <p> tag
+		//Change value
 		$('#'+path).text(difference);
+		//Add the "different" class that will color corresponding background <p> tag
 		$('#'+path+'_td').toggleClass('different');
+		//Add the original value in the 'title' attribute  of the tag to help the user know the default value
 		$('#'+path+'_td').attr('title', String(orig));
+		//Add the diff value in the 'pr_value' attribute of the tag to retrieve it in case of change/reset
 		$('#'+path+'_td').attr('pr_value', difference);
 	}
 }
@@ -576,7 +538,6 @@ function print_diff(tab_diff){
 // REMOVE_DIFF
 // -----------
 // Remove all diferences with master entry displayed
-// TODO callback ?:
 function remove_diff(){
 	$('.different,.modified_cell').each(function(){
 		// Create <p> or <a> tag with value
@@ -600,7 +561,6 @@ function remove_diff(){
 // In input its take the dict (entry), the current position on the dict (pos),
 // the table of position to have the position of the entry if its a complex dict (tab_pos),
 // the value to add to the dict (value).
-//
 
 function edit_dict(entry,pos,tab_pos,value){
 	var new_tab_pos=tab_pos;
@@ -614,7 +574,7 @@ function edit_dict(entry,pos,tab_pos,value){
 	else {
 		entry[pos]=value;
 	}
-	return entry
+	return entry;
 }
 
 // -----------------------------------------------------
@@ -626,7 +586,7 @@ function edit_value(id){
 
     var orig_v = $('#'+id).text();
     var default_v = $('#'+id+'_td').attr('title');
-    var editted_v = $('#'+id+'_td').attr('new_value') || "" 
+    var editted_v = $('#'+id+'_td').attr('new_value') || "" ;
 
     // If there is no title it's mean that the value is the same as the master
     if (!default_v) default_v=orig_v;
@@ -681,9 +641,8 @@ function reset_value(id){
 	$('tr#'+id+'_tr.reset').hide();
 	$value_td.removeClass('modified_cell');
 	$value_td.removeAttr('new_value');
-	if ($('.modified_cell').length === 0){
-		exit_edit_mode();
-	}
+	// If there is no more modified cell: exit the edit mode
+	if ($('.modified_cell').length === 0)exit_edit_mode();
 }
 
 
@@ -693,15 +652,12 @@ function reset_value(id){
 // Create a <p> tag with the value and add a <a> tag if necessary
 
 function linkit(value,id){
+	// Start with 'http(s)://' and don't has whitespace after (i.e. no other words)
 	const regex_website=/^http[s]?:\/\/\S*$/;
-	// Start with 'http(s)://' and don't have whitespace after (i.e. no other words)
-	if (regex_website.test(value)){
-		return "<p id=\""+id+"\" class=value><a href=\"" + value + "\" target=\"_blank\">" + value + "</a></p>";
-	}
-	else{
-		return "<p id=\""+id+"\" class=value>" + value + "</p>";
-	}
-
+	// If it is a url : create a <a> tag in <p>
+	if (regex_website.test(value)) return "<p id=\""+id+"\" class=\"value\"><a href=\"" + value + "\" target=\"_blank\">" + value + "</a></p>";
+	// Else create just the <p> tag
+	else return "<p id=\""+id+"\" class=\"value\">" + value + "</p>";
 }
 
 
@@ -714,7 +670,7 @@ function edit_mode(_cb){
     // If we are not currently on 'edit' mode
     if (get_stored_entry("mode") != "edit"){
     	store_entry("edit","mode");
-    	console.log(tool_metadata["tab_active"]+" : edit mode")
+    	console.log(tool_metadata["tab_active"]+" : edit mode");
     }
     _cb();
 }
@@ -742,7 +698,6 @@ function exit_edit_mode(){
 function valid_edit(id,orig_v){
 
 	var entry_id = tool_metadata["tab_active"];
-	var entry=get_stored_entry(entry_id);
 	var $value_new = $('#'+id);
 	var $value_td = $('#'+id+"_td");
 	var new_v = $value_new.val();
@@ -769,26 +724,26 @@ function valid_edit(id,orig_v){
 
 	    // If it is the first time we edit the entry we take the original one
 	    if (!get_stored_entry("changes")){
-	    	var entry=get_stored_entry(entry_id);
+	    	var tab_diff=get_stored_entry(entry_id);
 	    }
 	    else {
-	    	var entry=get_stored_entry(new_entry_id);
+	    	var tab_diff=get_stored_entry(new_entry_id);
 	    }
 
-	    var new_diff={}
+	    var new_diff={};
 	    new_diff["kind"]="E";
 	    new_diff["lhs"]= new_v;
 	    new_diff["path"]= liste;
 	    new_diff["rhs"]= default_val;
 	    // Remove old diff if it concern the same element
-	    for (var diff in entry){
-	    	if (entry[diff]["path"].toString() === new_diff["path"].toString()) {
-	    		entry.splice(diff,1);
+	    for (var diff in tab_diff){
+	    	if (tab_diff[diff]["path"].toString() === new_diff["path"].toString()) {
+	    		tab_diff.splice(diff,1);
 	    	}
 	    }
-	    entry.push(new_diff);
+	    tab_diff.push(new_diff);
 	    // Store it
-	    store_entry(entry,new_entry_id);
+	    store_entry(tab_diff,new_entry_id);
 
         // Changes have been made, we record the status to true and show the btn to send changes into PR
         store_entry(true,"changes");
@@ -906,7 +861,7 @@ function add_tab_event(){
 // CHANGE_TAB
 // ----------
 // - Check if the user can leave the active tab
-// - Print the entry of the selected tab
+// - Print the differences of the selected tab
 // - Visual change tab with select_tab() on the selected tab id
 
 function change_tab(id_tab_selected){
@@ -939,12 +894,12 @@ function change_tab(id_tab_selected){
 	else {
 		// - Retrieve entry
 		var $tab_selected = $('#'+id_tab_selected);
-		var entry=get_stored_entry(id_tab_selected);
+		var diff_tab=get_stored_entry(id_tab_selected);
 
-		if (entry){
+		if (diff_tab){
 			// - Print diff and Visual select the tab on menu
 			remove_diff();
-			print_diff(entry);
+			print_diff(diff_tab);
 			select_tab(id_tab_selected);
 		}
 		else { 
@@ -993,10 +948,10 @@ function update_header(id){
 
 	// Display metadatas
 	if (tool_metadata[id]){
-		let pr_user=tool_metadata[id]['pr_user'];
-		let pr_link=tool_metadata[id]['pr_link'];
-		let pr_date=tool_metadata[id]['pr_date'];
-		let pr_number=tool_metadata[id]['pr_number'];
+		var pr_user=tool_metadata[id]['pr_user'];
+		var pr_link=tool_metadata[id]['pr_link'];
+		var pr_date=tool_metadata[id]['pr_date'];
+		var pr_number=tool_metadata[id]['pr_number'];
 		// USER that made the Pull Request
 		if (pr_user) {
 			$subtitle_author.text("By '"+pr_user+"'");
@@ -1083,7 +1038,7 @@ function send_modif(){
 	var tab_modif=get_stored_entry(tool_metadata["tab_active"]+"_new");
 	for (var m in tab_modif){
 		var modif=tab_modif[m];
-		entry = edit_dict(entry,modif["path"][0],modif["path"],modif["lhs"])
+		entry = edit_dict(entry,modif["path"][0],modif["path"],modif["lhs"]);
 	}
 	// Lower Case id of the tool
 	var tool_name = tool_metadata["name"].toLowerCase();
@@ -1092,12 +1047,11 @@ function send_modif(){
 	// Path of the file in github
 	var file_path="data/"+tool_name+"/"+file_name;
 
-	var id = tool_metadata["tab_active"]  //TODO top doublon
+	var id = tool_metadata["tab_active"];  //TODO top doublon
 
 	// UPDATE PULL REQUEST
 	if ((tool_metadata[id]) && (tool_metadata[id]['pr_user'] === login)){
 
-		//var branch_name=tool_metadata[id]['pr_branch'];	
 		var pr_number=tool_metadata[id]['pr_number'];	
 		var my_bt_entry=JSON.stringify(entry, null, " ");
 		var body_message=get_diff_message(entry);
@@ -1118,7 +1072,7 @@ function send_modif(){
 				throw new Error(error);
 			}
 			var data = JSON.parse(body);
-			var my_sha =""
+			var my_sha ="";
 			for (var res in data){
 				if (data[res]["path"] === file_path){
 					my_sha = data[res]["sha"];
@@ -1154,8 +1108,8 @@ function send_modif(){
 					else{
 					// 4)
 					// Update body message of the PR
-					var repo_forked = gh.getRepo(login,repo_name);
-					repo_forked.updatePullRequest(pr_number,{"body": body_message},function(error,res){
+					var repo_orig = gh.getRepo(gh_bt_user,repo_name);
+					repo_orig.updatePullRequest(pr_number,{"body": body_message},function(error,res){
 						if (!res) {
 							hide_loader();	
 							exit_edit_mode();

@@ -54,25 +54,21 @@
             </tr> 
             <tr>
                 <td>
-                    <input style='width:100%' type="text" id="search_tool" value="" placeholder="Tool name">
+                    <form class="form-inline">
+                        <input type="text" class="input_search" id="search_tool" value="" placeholder="Tool name">
+                        <input type="button" class="btn_search btn_send_search" value="Search" style='display:none;'>
+                    </form>
                 </td>
+            </tr>            
+            <tr>
                 <td>
-                    <input type="button" class="btn_search" value="Search">
+                    <form class="form-inline">
+                        <select id="tool_list" class="input_search" size="1">
+                            <option id="not_found">No tools found</option>
+                        </select>
+                        <input type="button" class="btn_select btn_send_search" value="Select" style='display:none;'>
+                    </form>
                 </td>
-                <tr>            
-                    <tr>
-                        <td>
-                            <FORM>
-                                <SELECT id="tool_list" size="1">
-                                    <OPTION id="not_found">No tools found</OPTION>
-                                </SELECT>
-                            </FORM>
-                        </td>
-                        <td>
-                            <input type="button" class="btn_select" value="Select" hidden>
-                        </td>
-                    </tr>
-                </tr>
             </tr>
         </table>
     </br><hr></br>

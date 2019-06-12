@@ -1,10 +1,10 @@
-# biotools_to_github
+# biotools-github-editor
 
 ## Install
 
-`git clone https://github.com/ValentinMarcon/biotools_to_github.git`
+`git clone https://github.com/bio-tools/biotools-github-editor.git`
 
-`cd biotools_to_github`
+`cd biotools-github-editor`
 
 `npm install`
 
