@@ -14,4 +14,9 @@
 
 => http://localhost:1234/index.html 
 
+## Notice *[temporary]*
+
+You will need a CORS manager to Allow-Control-Allow-Origin, otherwise the Github OAuth will no work with your local Parcel servor
+
+Example for firefox: https://addons.mozilla.org/fr/firefox/addon/cors-everywhere/
 
