@@ -1,0 +1,131 @@
+<html>
+
+<head>
+    <title>bio.tools editor</title>
+    <link rel="stylesheet" href="/styles.b61e60ae.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+</head>
+
+<body>
+	<br>
+        <hr>
+	<table id="head">
+	    <tr>
+            <td>    
+		<div class="loader" id="search_loader" hidden=""></div><a style="font-size:150%;text-decoration:none;" href="https://github.com/404" id="github_link" target="_blank" hidden="">🔗</a>
+	    </td>
+	    <td class="title">
+		<table><tr><td>
+	        <p id="title">SEARCH A TOOL</p>
+		</td></tr><tr><td>
+		<a id="subtitle" target="_blank" href="https://github.com/404"></a>
+		</td></tr></table>
+	    </td>
+	    <td>
+		<div class="user" align="right">
+        	<table>
+		<tr>
+		<td>
+			<i>Connected as:</i>
+		</td>
+		<td class="avatar" rowspan="3">
+			<img src="https://avatars3.githubusercontent.com/u/18133?s=200&v=4" alt="Github User" class="avatar" id="avatar">
+		</td>
+		</tr>
+		<tr>
+		<td class="username">
+			<p id="username">Authentification problem</p>
+		</td>
+		</tr>
+		<tr>
+		<td>
+			<a href="/index.html">Disconect</a>
+		</td>
+		</tr>
+		</table>
+		</div>
+	</td>
+	</tr>
+	</table>
+        <hr>
+        <br>
+
+        <table class="search_table">
+            <tr>
+                <td>
+                    <FORM>
+                        <SELECT id="tool_list" size="1">
+				<OPTION id="not_found">No tools found</OPTION>
+                        </SELECT>
+                    </FORM>
+                </td>
+                <td>
+                    <input type="button" class="btn_select" value="select" hidden="">
+                </td>
+            </tr>
+            <tr>
+                <td>
+  <!--datalist id="browsers">
+    <option value="Internet Explorer">
+    <option value="Firefox">
+    <option value="Chrome">
+    <option value="Opera">
+    <option value="Safari">
+  </datalist-->
+                    <input style="width:100%" type="text" id="search_tool" value="" placeholder="Tool name">
+                </td>
+                <td>
+                    <input type="button" class="btn_search" value="search">
+                </td>
+            </tr>
+        </table>
+	<div id="menu" hidden="true">
+            <ul id="tab">
+            </ul>
+        </div>
+	<br>
+    <div>
+        <table class="modif_table" hidden="">
+            <tr>
+                <td>
+                    <input type="button" class="btn_search_other" value="search an other tool">
+                </td>
+                <td>
+                    <input type="button" class="btn_cancel" value="cancel modif" hidden="">
+                </td>
+                <td>
+                    <input type="button" class="btn_send" value="send modif" hidden="">
+                </td>
+           </tr>
+        </table>
+    </div>
+    <div>
+        <table id="tool_content">
+        </table>
+    </div>
+    <table class="modif_table" hidden="">
+        <tr>
+                <td>
+                    <input type="button" class="btn_search_other" value="search an other tool">
+                </td>
+                <td>
+                    <input type="button" class="btn_cancel" value="cancel modif" hidden="">
+                </td>
+                <td>
+                    <input type="button" class="btn_send" value="send modif" hidden="">
+                </td>
+        </tr>
+    </table>
+    <br>
+    <br>
+    <hr>
+    <br>
+    <div hidden="">
+        <p>TEST SECTION</p>
+        <input type="button" class="btn_request" value="REQUEST">
+        <a href="https://github.com/login/oauth/authorize?client_id=910ed700e3586d568fc3">Login</a>
+    </div>
+    <script src="/index_search_tool.080f2cfc.js"></script>
+</body>
+
+</html>
