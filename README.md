@@ -1,5 +1,11 @@
 # biotools-github-editor
 
+## Try it
+
+https://bio-tools.github.io/biotools-github-editor
+
+---
+
 ## Install
 
 `git clone https://github.com/bio-tools/biotools-github-editor.git`
@@ -8,11 +14,13 @@
 
 `npm install`
 
-## Run
+#### Run
 
 `npm run all`
 
 => http://localhost:1234/index.html 
+
+---
 
 ## Notice *[temporary]*
 
