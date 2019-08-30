@@ -8,6 +8,8 @@ fork from [https://github.com/bio-tools/biotoolsRegistry](https://github.com/bio
 
 bio.tools content editing driven by GitHub API
 
+See https://developer.github.com/v3/ for more information
+
 ### Motivation
 
 - Transfer to Github the bio.tools entry hosted in b.t. database

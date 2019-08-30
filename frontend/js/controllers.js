@@ -1034,9 +1034,12 @@ angular.module('elixir_front.controllers', [])
 	}
 
 
-	///////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Edit to interact with Github API
-	///////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 
+	// See https://developer.github.com/v3/ for more information
+	//
 	//TODO:
 	//	- Add control on Github api functions
 	//		- Error management
@@ -1052,10 +1055,12 @@ angular.module('elixir_front.controllers', [])
 	$scope.orig_repo="TESTAPI"
 	// branch to make the pull request on the repo
 	$scope.orig_branch="dev"
-	$scope.authorizations="Basic ZmVkODUyYTNlN2ZhYjlhZWYzYzU2Y2RiMTlhZDA3NDEzZDM2ZTJiMQ==" // TO REMOVE
+
 	$scope.pull_request = {}
 	$scope.login = false;
+
 	///////////////////////////////////////////////////////////////////////////
+	// To authentificate to the API with the code return by Github (in the url search param)
 	var searchParams = new URLSearchParams(window.location.search);
 	if (searchParams.has('code')) {
 		var code = searchParams.get('code');
@@ -1084,10 +1089,10 @@ angular.module('elixir_front.controllers', [])
 	    	console.log(err);
 	    })
 	}
-	///////////////////////////////////////////////////////////////////////////
 
+	///////////////////////////////////////////////////////////////////////////
+	// Get the user info from his access_token
 	$scope.gh_user=function(access_token){
-		console.log(access_token);
 		var authorizations=$scope.client_id+":"+$scope.client_secret;
 		authorizations="Basic "+btoa(authorizations);
 		fetch("https://api.github.com/applications/"+$scope.client_id+"/tokens/"+access_token, {method: 'GET',headers : new Headers({"authorization": authorizations})})
@@ -1103,6 +1108,7 @@ angular.module('elixir_front.controllers', [])
 
 	}
 
+	///////////////////////////////////////////////////////////////////////////
 	// SEARCH
 	// Fill the form with a tool from a json in the github repo
 	// TODO: Manage error in GET: non-json entry
@@ -1120,19 +1126,32 @@ angular.module('elixir_front.controllers', [])
 		})
 	}
 
+
+
+	///////////////////////////////////////////////////////////////////////////
+	// SEND
+	// If the software has a name: launch the PR process: Start with the fork
+	// TODO: improve condition of lauchning PR
+	// 1 fork 
+	// 2 new branch
+	// 3 create file
+	// 4 PR
 	$scope.gh_send=function(){
 		console.log($scope.software);
 		if($scope.software){
 			console.log($scope.software.name);
 			if($scope.software.name){
 				$scope.software_name=$scope.software.name;
-				console.log("-----------------------1");
+				//console.log("-----------------------1");
 				$scope.gh_fork();	
 			}
 		}
 	}
 
-
+	///////////////////////////////////////////////////////////////////////////
+	// SEND
+	// Fork the orig repo
+	// TODO:
 	$scope.gh_fork=function(){
 		fetch("https://api.github.com/repos/"+$scope.orig_user+"/"+$scope.orig_repo+"/forks", {
                 method: 'POST',
@@ -1142,8 +1161,7 @@ angular.module('elixir_front.controllers', [])
 	    	return res.json();
 	    })
 	    .then(function (data) {
-	        console.log(data);
-	        console.log("-----------------------2");
+	        //console.log("-----------------------2");
 	        $scope.gh_newbranch();
        })
 	    .catch(function (err) {
@@ -1151,6 +1169,10 @@ angular.module('elixir_front.controllers', [])
 	    })
 	}
 
+	///////////////////////////////////////////////////////////////////////////
+	// NEW BRANCH
+	// create a new branch to add entry edits
+	// TODO:
 	$scope.gh_newbranch=function(){
 		const d = new Date();
 		const now=d.getFullYear()  + "-" + (d.getMonth()+1) + "-" +  d.getDate() + "-" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + "-" + d.getMilliseconds();
@@ -1172,8 +1194,7 @@ angular.module('elixir_front.controllers', [])
 			    	return res.json();
 			    })
 			    .then(function (data) {
-			        console.log(data);
-			        console.log("-----------------------3");
+			        //console.log("-----------------------3");
 			        $scope.gh_newfile(angular.toJson($scope.software, 2));
 		       })
 			    .catch(function (err) {
@@ -1185,6 +1206,10 @@ angular.module('elixir_front.controllers', [])
 		})
 	}
 
+	///////////////////////////////////////////////////////////////////////////
+	// NEWFILE
+	// Create a new file from the software json
+	// TODO:
 	$scope.gh_newfile=function(){
 		$scope.software_file=$scope.software_name+".json"
 		fetch("https://api.github.com/repos/"+$scope.this_user+"/"+$scope.orig_repo+"/contents/"+$scope.software_file+"?ref="+$scope.new_branch, {method: 'GET'})
@@ -1216,6 +1241,11 @@ angular.module('elixir_front.controllers', [])
 		})
 	}
 
+
+	///////////////////////////////////////////////////////////////////////////
+	// NEWFILE
+	// Create a new file from the software json
+	// TODO:
 	$scope.gh_pullrequest=function(){
 		$scope.pull_request.inProgress=true;
 		fetch("https://api.github.com/repos/"+$scope.orig_user+"/"+$scope.orig_repo+"/pulls", {
@@ -1239,42 +1269,19 @@ angular.module('elixir_front.controllers', [])
 	    })
 	}
 
-	// 1 fork 
-	// 2 new branch
-	// 3 create file
-	// 4 PR
-
-	// No error management
 
 	$scope.validateButtonClick = function() {
 		$timeout(function() {
-			//$scope.sendResource(ToolCreateValidator.save, $scope.validationProgress, false, 'create-validate');
-			//console.log("======================================");
-    		// $scope.test7fetch();
-    		// console.log("======================================"); 
-    		//$scope.gh_fork();
-    		// console.log("======================================"); 
-    		// $scope.gh_newbranch();
-    		// console.log("======================================"); 
-    		//$scope.gh_newfile(angular.toJson($scope.software, 2));
-    		//console.log("======================================"); 
-    		//$scope.gh_pullrequest();		
+			//$scope.sendResource(ToolCreateValidator.save, $scope.validationProgress, false, 'create-validate'); // Commented to test the Github API functions (Cf. under)
     		console.log("======================================"); 
     		console.log("-----------------------0");
     		$scope.gh_send();
     		console.log("======================================"); 
-    
-
-
-    		// $scope.new_pr($scope.software);
-    		// console.log("======================================");
 		},100);
 	}
-	///////////////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////
-
-
-
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// END
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	$scope.registerButtonClick = function() {
 		if (confirm("Are you sure you want to save the resource? ")) {
