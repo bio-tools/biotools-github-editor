@@ -1,24 +1,18 @@
 # biotools-github-editor
 
-fork from [https://github.com/bio-tools/biotoolsRegistry](https://github.com/bio-tools/biotoolsRegistry)
+biotools-github-editor is a prototype interface to demonstrate the edition of a bio-tools description directly in a github repository, using a graphical web UI.
+Parts of the UI code have been reused from the current public version of the bio.tools registry repository (see [https://github.com/bio-tools/biotoolsRegistry](https://github.com/bio-tools/biotoolsRegistry))
 
----
-
-## Description
-
-bio.tools content editing driven by GitHub API
-
-See https://developer.github.com/v3/ for more information
+For more information about the GitHub API used in this code, see https://developer.github.com/v3/
 
 ### Motivation
 
-- Transfer to Github the bio.tools entry hosted in b.t. database
-- Have an editing interface to allow every kind of user to update an entry
+- Enable the maintenance of bio.tools tool description directly from the source
+- Provide an editing interface to facilitate the creation and update of an entry
 
 ### Architecture
 
-We kept the 'frontend' part of biotoolsRegistry and edit:
-
+The user interface code reuses the 'frontend' part code of biotoolsRegistry, with a few modifications to the following files:
 - js/controller.js 
 - index.html
 - partials/toolEdit.html
